@@ -53,4 +53,6 @@ if (!function_exists('base_url')) {
 $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
 $scriptDir = preg_replace('#/logic$#', '', $scriptDir);
 $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+
+require_once __DIR__ . '/../app/Helpers/view_helper.php';
 ?>
