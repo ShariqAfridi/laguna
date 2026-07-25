@@ -1,5 +1,5 @@
 <?php
-include 'db.php';
+require_once __DIR__ . '/../../db.php';
 
 // ─── Handle status update ─────────────────────────────────────────────────────
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['update_order_id'], $_POST['update_status'])) {

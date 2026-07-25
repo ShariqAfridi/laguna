@@ -1,12 +1,13 @@
 <?php
-require_once __DIR__ . '/../../Middleware/AdminAuthMiddleware.php';
-check_admin_auth();
+namespace App\Controllers\Admin;
+
+use App\Middleware\AdminAuthMiddleware;
 
 class BoxController {
     public static function index() {
-        require_once __DIR__ . '/../../../views/admin/sidebar.php';
-        require_once __DIR__ . '/../../../views/admin/box.php';
+        AdminAuthMiddleware::handle();
+        view('admin/sidebar');
+        view('admin/box');
     }
 }
-BoxController::index();
 ?>

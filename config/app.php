@@ -49,10 +49,36 @@ if (!function_exists('base_url')) {
     }
 }
 
-// Calculate base path for HTML templates
-$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-$scriptDir = preg_replace('#/logic$#', '', $scriptDir);
-$base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+// Load Composer autoloader if available
+if (file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
+    require_once dirname(__DIR__) . '/vendor/autoload.php';
+}
 
+// Register Autoloader for App\ namespace and Models fallback
+spl_autoload_register(function ($class) {
+    $baseDir = dirname(__DIR__) . '/app/';
+
+    // 1. PSR-4 Autoloading for App\ namespace
+    $prefix = 'App\\';
+    $len = strlen($prefix);
+    if (strncmp($prefix, $class, $len) === 0) {
+        $relativeClass = substr($class, $len);
+        $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
+    }
+
+    // 2. Fallback for Models accessed without namespace prefix
+    $modelFile = $baseDir . 'Models/' . $class . '.php';
+    if (file_exists($modelFile)) {
+        require_once $modelFile;
+        return;
+    }
+});
+
+require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../app/Helpers/view_helper.php';
+require_once __DIR__ . '/../app/Middleware/AdminAuthMiddleware.php';
 ?>

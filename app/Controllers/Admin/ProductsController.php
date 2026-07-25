@@ -1,21 +1,25 @@
 <?php
-require_once __DIR__ . '/../../Middleware/AdminAuthMiddleware.php';
-check_admin_auth();
+namespace App\Controllers\Admin;
+
+use App\Middleware\AdminAuthMiddleware;
 
 class ProductsController {
     public static function list() {
-        require_once __DIR__ . '/../../../views/admin/sidebar.php';
-        require_once __DIR__ . '/../../../views/admin/list_product.php';
+        AdminAuthMiddleware::handle();
+        view('admin/sidebar');
+        view('admin/list_product');
     }
 
     public static function add() {
-        require_once __DIR__ . '/../../../views/admin/sidebar.php';
-        require_once __DIR__ . '/../../../views/admin/add_product.php';
+        AdminAuthMiddleware::handle();
+        view('admin/sidebar');
+        view('admin/add_product');
     }
 
     public static function edit() {
-        require_once __DIR__ . '/../../../views/admin/sidebar.php';
-        require_once __DIR__ . '/../../../views/admin/edit_product.php';
+        AdminAuthMiddleware::handle();
+        view('admin/sidebar');
+        view('admin/edit_product');
     }
 }
 ?>

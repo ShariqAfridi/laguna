@@ -1,18 +1,25 @@
 <?php
 // app/Middleware/AdminAuthMiddleware.php — Protection Middleware for Admin Endpoints
 
-if (!function_exists('check_admin_auth')) {
-    function check_admin_auth() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+namespace App\Middleware {
+    class AdminAuthMiddleware {
+        public static function handle() {
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+            if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+                header('Location: ' . base_url('/admin'));
+                exit;
+            }
         }
-        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-            $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-            $scriptDir = preg_replace('#/logic$#', '', $scriptDir);
-            $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
-            
-            header('Location: ' . $base . '/admin');
-            exit;
+    }
+}
+
+namespace {
+    // Global helper function for backward compatibility
+    if (!function_exists('check_admin_auth')) {
+        function check_admin_auth() {
+            \App\Middleware\AdminAuthMiddleware::handle();
         }
     }
 }

@@ -1,8 +1,9 @@
 <?php
+namespace App\Controllers\Frontend;
+
 class AboutController {
     public static function index() {
-        require_once __DIR__ . '/../../../views/frontend/about.php';
+        view('frontend/about');
     }
 }
-AboutController::index();
 ?>

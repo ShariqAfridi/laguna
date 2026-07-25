@@ -2,7 +2,7 @@
 // thankyou.php - Fixed path and error handling
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
-include "db.php";
+require_once __DIR__ . '/../../../db.php';
 
 // Get order parameters from URL
 $order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;
@@ -10,7 +10,12 @@ $order_number = isset($_GET['order_number']) ? trim($_GET['order_number']) : '';
 
 // Redirect if no valid order reference
 if ($order_id <= 0 && empty($order_number)) {
-    header('Location: /shop');
+    $redirectUrl = base_url('/shop');
+    if (!headers_sent()) {
+        header('Location: ' . $redirectUrl);
+    } else {
+        echo "<script>window.location.href='" . addslashes($redirectUrl) . "';</script>";
+    }
     exit;
 }
 

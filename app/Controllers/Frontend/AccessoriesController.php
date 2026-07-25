@@ -1,8 +1,9 @@
 <?php
+namespace App\Controllers\Frontend;
+
 class AccessoriesController {
     public static function index() {
-        require_once __DIR__ . '/../../../views/frontend/accessories.php';
+        view('frontend/accessories');
     }
 }
-AccessoriesController::index();
 ?>

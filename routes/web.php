@@ -1,19 +1,20 @@
 <?php
-// routes/web.php — Frontend Public Storefront Route Table
+// routes/web.php — Storefront Route Definitions
 
 return [
-    '/'             => 'app/Controllers/Frontend/HomeController.php',
-    '/about'        => 'app/Controllers/Frontend/AboutController.php',
-    '/contact'      => 'app/Controllers/Frontend/ContactController.php',
-    '/journal'      => 'app/Controllers/Frontend/JournalController.php',
-    '/shop'         => 'app/Controllers/Frontend/ShopController.php',
-    '/accessories'  => 'app/Controllers/Frontend/AccessoriesController.php',
-    '/builder'      => 'app/Controllers/Frontend/DesignController.php',
-    '/checkout'     => 'app/Controllers/Frontend/CheckoutController.php',
-    '/thankyou'     => 'app/Controllers/Frontend/ThankyouController.php',
-    '/privacy'      => 'app/Controllers/Frontend/PrivacyController.php',
-    '/terms'        => 'app/Controllers/Frontend/TermsController.php',
-    '/returns'      => 'app/Controllers/Frontend/ReturnsController.php',
-    '/maintainance' => 'app/Controllers/Frontend/MaintainanceController.php',
+    '/'             => 'Frontend\HomeController@index',
+    '/about'        => 'Frontend\AboutController@index',
+    '/contact'      => 'Frontend\ContactController@index',
+    '/journal'      => 'Frontend\JournalController@index',
+    '/shop'         => 'Frontend\ShopController@index',
+    '/accessories'  => 'Frontend\AccessoriesController@index',
+    '/builder'      => 'Frontend\DesignController@index',
+    '/checkout'     => 'Frontend\CheckoutController@index',
+    '/thankyou'     => 'Frontend\ThankyouController@index',
+    '/privacy'      => 'Frontend\PrivacyController@index',
+    '/terms'        => 'Frontend\TermsController@index',
+    '/returns'      => 'Frontend\ReturnsController@index',
+    '/maintenance'  => 'Frontend\MaintenanceController@index',
+    '/maintainance' => 'Frontend\MaintenanceController@index', // Typo fallback alias
 ];
 ?>

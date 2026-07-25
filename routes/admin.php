@@ -1,23 +1,23 @@
 <?php
-// routes/admin.php — Admin Dashboard Route Table & Legacy Redirects
+// routes/admin.php — Admin Dashboard Route Definitions & Legacy Redirects
 
 return [
     'routes' => [
-        '/admin'                => 'app/Controllers/Admin/AdminLoginController.php',
-        '/admin/dashboard'      => 'app/Controllers/Admin/DashboardController.php',
-        '/admin/users'          => 'app/Controllers/Admin/UsersController.php',
-        '/admin/orders'         => 'app/Controllers/Admin/OrdersController.php',
-        '/admin/add_product'    => 'controllers/admin/add_product.php',
-        '/admin/edit_product'   => 'controllers/admin/edit_product.php',
-        '/admin/list_product'   => 'controllers/admin/list_product.php',
-        '/admin/fragrance'      => 'app/Controllers/Admin/FragranceController.php',
-        '/admin/boxes'          => 'app/Controllers/Admin/BoxController.php',
-        '/admin/colors'         => 'app/Controllers/Admin/ColorsController.php',
-        '/admin/sizes'          => 'app/Controllers/Admin/SizesController.php',
-        '/admin/add_accessory'  => 'controllers/admin/add_accessory.php',
-        '/admin/edit_accessory' => 'controllers/admin/edit_accessory.php',
-        '/admin/list_accessory' => 'controllers/admin/list_accessory.php',
-        '/admin/logout'         => 'logic/admin_logout.php',
+        '/admin'                => 'Admin\AdminLoginController@index',
+        '/admin/dashboard'      => 'Admin\DashboardController@index',
+        '/admin/users'          => 'Admin\UsersController@index',
+        '/admin/orders'         => 'Admin\OrdersController@index',
+        '/admin/add_product'    => 'Admin\ProductsController@add',
+        '/admin/edit_product'   => 'Admin\ProductsController@edit',
+        '/admin/list_product'   => 'Admin\ProductsController@list',
+        '/admin/fragrance'      => 'Admin\FragranceController@index',
+        '/admin/boxes'          => 'Admin\BoxController@index',
+        '/admin/colors'         => 'Admin\ColorsController@index',
+        '/admin/sizes'          => 'Admin\SizesController@index',
+        '/admin/add_accessory'  => 'Admin\AccessoriesController@add',
+        '/admin/edit_accessory' => 'Admin\AccessoriesController@edit',
+        '/admin/list_accessory' => 'Admin\AccessoriesController@list',
+        '/admin/logout'         => 'Admin\AdminLoginController@logout',
     ],
     'redirects' => [
         '/admin_dashboard' => '/admin/dashboard',

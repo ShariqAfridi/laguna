@@ -1,14 +1,15 @@
 <?php
-require_once __DIR__ . '/../../Middleware/AdminAuthMiddleware.php';
-require_once __DIR__ . '/../../Models/Order.php';
-check_admin_auth();
+namespace App\Controllers\Admin;
+
+use App\Middleware\AdminAuthMiddleware;
+use App\Models\Order;
 
 class DashboardController {
     public static function index() {
+        AdminAuthMiddleware::handle();
         $stats = Order::getStats();
         view('admin/sidebar');
         view('admin/dashboard', ['stats' => $stats]);
     }
 }
-DashboardController::index();
 ?>

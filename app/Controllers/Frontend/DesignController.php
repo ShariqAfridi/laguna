@@ -1,8 +1,9 @@
 <?php
+namespace App\Controllers\Frontend;
+
 class DesignController {
     public static function index() {
-        require_once __DIR__ . '/../../../views/frontend/design.php';
+        view('frontend/builder');
     }
 }
-DesignController::index();
 ?>

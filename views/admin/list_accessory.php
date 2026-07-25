@@ -1,6 +1,6 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-include_once("db.php");
+require_once __DIR__ . '/../../db.php';
 
 // Handle accessory deletion
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
@@ -344,46 +344,22 @@ $accessories = $conn->query($query);
                             <!-- Image Column -->
                             <td>
                                 <?php 
-                                $image_html = '';
-                                $image_file = $row['image'];
-                                
+                                $image_file = $row['image'] ?? '';
                                 if (!empty($image_file)) {
-                                    $found = false;
+                                    $clean_name = ltrim(preg_replace('#^/?(img/)?#i', '', $image_file), '/');
+                                    $disk_path = dirname(__DIR__, 2) . '/img/' . $clean_name;
                                     
-                                    // Option 1: Root img folder
-                                    $path1 = $_SERVER['DOCUMENT_ROOT'] . '/img/' . $image_file;
-                                    if (file_exists($path1)) {
-                                        $image_html = '<img src="' . $base . '/img/' . htmlspecialchars($image_file) . '" class="accessory-image" alt="' . htmlspecialchars($row['name']) . '">';
-                                        $found = true;
-                                    }
-                                    
-                                    // Option 2: Two levels up (from admin folder)
-                                    if (!$found) {
-                                        $path2 = dirname(__DIR__, 2) . '/img/' . $image_file;
-                                        if (file_exists($path2)) {
-                                            $relative_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $path2);
-                                            $image_html = '<img src="' . htmlspecialchars($relative_path) . '" class="accessory-image" alt="' . htmlspecialchars($row['name']) . '">';
-                                            $found = true;
-                                        }
-                                    }
-                                    
-                                    // Option 3: Relative img folder
-                                    if (!$found) {
-                                        $path3 = __DIR__ . '/../img/' . $image_file;
-                                        if (file_exists($path3)) {
-                                            $image_html = '<img src="../img/' . htmlspecialchars($image_file) . '" class="accessory-image" alt="' . htmlspecialchars($row['name']) . '">';
-                                            $found = true;
-                                        }
-                                    }
-                                    
-                                    if (!$found) {
-                                        $image_html = '<div class="no-image">No image</div>';
+                                    if (file_exists($disk_path)) {
+                                        $img_url = base_url('/img/' . $clean_name);
+                                        echo '<img src="' . htmlspecialchars($img_url) . '" class="accessory-image" alt="' . htmlspecialchars($row['name'] ?? '') . '">';
+                                    } else if (preg_match('#^https?://#i', $image_file)) {
+                                        echo '<img src="' . htmlspecialchars($image_file) . '" class="accessory-image" alt="' . htmlspecialchars($row['name'] ?? '') . '">';
+                                    } else {
+                                        echo '<div class="no-image">No image</div>';
                                     }
                                 } else {
-                                    $image_html = '<div class="no-image">No image</div>';
+                                    echo '<div class="no-image">No image</div>';
                                 }
-                                
-                                echo $image_html;
                                 ?>
                             </td>
                             

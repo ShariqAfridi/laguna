@@ -1,9 +1,9 @@
 <?php
 namespace App\Controllers\Frontend;
 
-class HomeController {
+class MaintenanceController {
     public static function index() {
-        view('frontend/home');
+        view('frontend/maintainance');
     }
 }
 ?>

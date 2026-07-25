@@ -1,29 +1,31 @@
 <?php
 // Remove any whitespace before <?php and fix session start
 ob_start();
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
-include_once("db.php");
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../db.php';
 
-$show_success  = false;
+$show_success = false;
 $error_message = '';
-$accessory_id  = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$accessory_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
 // Redirect if no ID provided
 if ($accessory_id <= 0) {
-     echo "<script>window.location.href='/list_accessory';</script>";
-exit;
+    echo "<script>window.location.href='/list_accessory';</script>";
+    exit;
 }
 
 // Fetch existing accessory data
-$query = "SELECT * FROM accessory WHERE accessory_id = ?";
+$query = 'SELECT * FROM accessory WHERE accessory_id = ?';
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $accessory_id);
+$stmt->bind_param('i', $accessory_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
-      echo "<script>window.location.href='/list_accessory';</script>";
-exit;
+    echo "<script>window.location.href='/list_accessory';</script>";
+    exit;
 }
 
 $accessory = $result->fetch_assoc();
@@ -35,25 +37,24 @@ ini_set('display_errors', 1);
 
 // ── FORM SUBMISSION ───────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name      = trim($_POST['name'] ?? '');
-    $sku       = trim($_POST['sku'] ?? '');
-    $price     = floatval(str_replace(',', '', $_POST['price'] ?? 0));
-    $quantity  = (int)($_POST['quantity'] ?? 0);
-    
+    $name = trim($_POST['name'] ?? '');
+    $sku = trim($_POST['sku'] ?? '');
+    $price = floatval(str_replace(',', '', $_POST['price'] ?? 0));
+    $quantity = (int) ($_POST['quantity'] ?? 0);
+
     // Keep existing image by default
     $image = $accessory['image'];
-    
+
     // ── IMAGE UPLOAD ──────────────────────────────────────────────────
     if (!empty($_FILES['image']) && isset($_FILES['image']['tmp_name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        
         $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        
+
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime  = finfo_file($finfo, $_FILES['image']['tmp_name']);
+        $mime = finfo_file($finfo, $_FILES['image']['tmp_name']);
         finfo_close($finfo);
-        
+
         if (!in_array($mime, $allowed_types)) {
-            $error_message = "Invalid image type. Supported: JPG, PNG, GIF, WEBP.";
+            $error_message = 'Invalid image type. Supported: JPG, PNG, GIF, WEBP.';
         } else {
             // Delete old image if exists
             if (!empty($accessory['image'])) {
@@ -69,62 +70,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
-            
+
             $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
             $image_name = uniqid('accessory_', true) . '.' . strtolower($ext);
-            
-            $img_dir = dirname(__DIR__, 2) . "/img/";
+
+            $img_dir = dirname(__DIR__, 2) . '/img/';
             $image_path = $img_dir . $image_name;
-            
+
             if (!file_exists($img_dir)) {
                 mkdir($img_dir, 0755, true);
             }
-            
+
             if (move_uploaded_file($_FILES['image']['tmp_name'], $image_path)) {
                 $image = $image_name;
             } else {
-                $error_message = "Failed to move uploaded image.";
+                $error_message = 'Failed to move uploaded image.';
             }
         }
     }
-    
+
     // ── VALIDATION ────────────────────────────────────────────────────
     if (empty($error_message)) {
         if (empty($name)) {
-            $error_message = "Accessory name is required.";
+            $error_message = 'Accessory name is required.';
         } elseif (empty($sku)) {
-            $error_message = "SKU is required.";
+            $error_message = 'SKU is required.';
         } elseif ($price <= 0) {
-            $error_message = "Please enter a valid price greater than 0.";
+            $error_message = 'Please enter a valid price greater than 0.';
         }
     }
-    
+
     // Check if SKU already exists (excluding current accessory)
     if (empty($error_message)) {
-        $check_sku = $conn->prepare("SELECT accessory_id FROM accessory WHERE sku = ? AND accessory_id != ?");
-        $check_sku->bind_param("si", $sku, $accessory_id);
+        $check_sku = $conn->prepare('SELECT accessory_id FROM accessory WHERE sku = ? AND accessory_id != ?');
+        $check_sku->bind_param('si', $sku, $accessory_id);
         $check_sku->execute();
         $check_sku->store_result();
-        
+
         if ($check_sku->num_rows > 0) {
-            $error_message = "SKU already exists. Please use a unique SKU.";
+            $error_message = 'SKU already exists. Please use a unique SKU.';
         }
         $check_sku->close();
     }
-    
+
     // ── UPDATE DATABASE ───────────────────────────────────────────────
     if (empty($error_message)) {
-        $update_stmt = $conn->prepare("
+        $update_stmt = $conn->prepare('
             UPDATE accessory 
             SET name = ?, sku = ?, price = ?, quantity = ?, image = ?, updated_at = NOW()
             WHERE accessory_id = ?
-        ");
-        
+        ');
+
         if (!$update_stmt) {
-            $error_message = "Prepare failed: " . $conn->error;
+            $error_message = 'Prepare failed: ' . $conn->error;
         } else {
-            $update_stmt->bind_param("ssdisi", $name, $sku, $price, $quantity, $image, $accessory_id);
-            
+            $update_stmt->bind_param('ssdisi', $name, $sku, $price, $quantity, $image, $accessory_id);
+
             if ($update_stmt->execute()) {
                 $show_success = true;
                 // Refresh accessory data
@@ -133,10 +134,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $accessory['price'] = $price;
                 $accessory['quantity'] = $quantity;
                 $accessory['image'] = $image;
-                
+
                 echo '<script>setTimeout(function(){ window.location.href = "/list_accessory?updated=1"; }, 1000);</script>';
             } else {
-                $error_message = "Update failed: " . $update_stmt->error;
+                $error_message = 'Update failed: ' . $update_stmt->error;
             }
             $update_stmt->close();
         }
@@ -482,7 +483,7 @@ input:focus, textarea:focus, select:focus {
                     <input type="number" name="quantity"
                            placeholder="0"
                            min="0"
-                           value="<?= (int)$accessory['quantity'] ?>">
+                           value="<?= (int) $accessory['quantity'] ?>">
                     <small style="font-size: 0.7rem; color: var(--muted); margin-top: 4px; display: block;">
                         Number of units available for sale
                     </small>
@@ -503,21 +504,13 @@ input:focus, textarea:focus, select:focus {
                 <?php if (!empty($accessory['image'])): ?>
                     <div class="current-image">
                         <div class="current-image-label">Current Image:</div>
-                        <?php 
-                        $current_image_path = '';
-                        $paths_to_check = [
-                            $_SERVER['DOCUMENT_ROOT'] . '/img/' . $accessory['image'],
-                            dirname(__DIR__, 2) . '/img/' . $accessory['image'],
-                            __DIR__ . '/../img/' . $accessory['image']
-                        ];
-                        foreach ($paths_to_check as $path) {
-                            if (file_exists($path)) {
-                                $current_image_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $path);
-                                break;
-                            }
-                        }
+                        <?php
+                        $image_file = $accessory['image'] ?? '';
+                        $clean_name = ltrim(preg_replace('#^/?(img/)?#i', '', $image_file), '/');
+                        $disk_path = dirname(__DIR__, 2) . '/img/' . $clean_name;
+                        $preview_url = file_exists($disk_path) ? base_url('/img/' . $clean_name) : base_url('/img/' . $image_file);
                         ?>
-                        <img src="<?= htmlspecialchars($current_image_path ?: '/img/' . $accessory['image']) ?>" 
+                        <img src="<?= htmlspecialchars($preview_url) ?>" 
                              class="current-image-preview" 
                              alt="<?= htmlspecialchars($accessory['name']) ?>">
                     </div>

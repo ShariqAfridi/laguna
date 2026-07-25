@@ -1,12 +1,13 @@
 <?php
-require_once __DIR__ . '/../../Middleware/AdminAuthMiddleware.php';
-check_admin_auth();
+namespace App\Controllers\Admin;
+
+use App\Middleware\AdminAuthMiddleware;
 
 class SizesController {
     public static function index() {
-        require_once __DIR__ . '/../../../views/admin/sidebar.php';
-        require_once __DIR__ . '/../../../views/admin/sizes.php';
+        AdminAuthMiddleware::handle();
+        view('admin/sidebar');
+        view('admin/sizes');
     }
 }
-SizesController::index();
 ?>

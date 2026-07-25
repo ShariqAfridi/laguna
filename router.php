@@ -40,12 +40,59 @@ if (array_key_exists($uri, $legacyAdminRedirects)) {
 
 // 2. Dispatch route
 if (array_key_exists($uri, $routes)) {
-    $controllerFile = __DIR__ . '/' . $routes[$uri];
-    if (file_exists($controllerFile)) {
-        require $controllerFile;
-    } else {
-        http_response_code(404);
-        echo "404 - Controller file not found: " . htmlspecialchars($routes[$uri]);
+    $target = $routes[$uri];
+
+    if (is_callable($target)) {
+        call_user_func($target);
+    } elseif (is_array($target) && count($target) === 2) {
+        list($class, $method) = $target;
+        if (class_exists($class)) {
+            $instance = new $class();
+            if (method_exists($instance, $method)) {
+                $instance->$method();
+            } elseif (method_exists($class, $method)) {
+                $class::$method();
+            } else {
+                http_response_code(500);
+                echo "500 - Method {$method} not found in {$class}";
+            }
+        } else {
+            http_response_code(500);
+            echo "500 - Class {$class} not found";
+        }
+    } elseif (is_string($target) && strpos($target, '@') !== false) {
+        list($class, $method) = explode('@', $target, 2);
+        
+        // Try exact class name first, then fallback to App\Controllers namespace prefix
+        if (!class_exists($class)) {
+            $class = 'App\\Controllers\\' . ltrim($class, '\\');
+        }
+        
+        if (class_exists($class)) {
+            if (method_exists($class, $method)) {
+                // Static method call
+                $class::$method();
+            } else {
+                $instance = new $class();
+                if (method_exists($instance, $method)) {
+                    $instance->$method();
+                } else {
+                    http_response_code(500);
+                    echo "500 - Method {$method} not found in class {$class}";
+                }
+            }
+        } else {
+            http_response_code(500);
+            echo "500 - Controller Class {$class} not found";
+        }
+    } elseif (is_string($target)) {
+        $controllerFile = __DIR__ . '/' . ltrim($target, '/');
+        if (file_exists($controllerFile)) {
+            require $controllerFile;
+        } else {
+            http_response_code(404);
+            echo "404 - Controller file not found: " . htmlspecialchars($target);
+        }
     }
 } else {
     http_response_code(404);

@@ -1,10 +1,10 @@
 <?php
 // app/Models/Product.php — Candle Products Database Model
-require_once __DIR__ . '/../../config/database.php';
+namespace App\Models;
 
 class Product {
     public static function all() {
-        $conn = get_db_connection();
+        $conn = \get_db_connection();
         return $conn->query("SELECT p.*, f.fragrance_name, b.box_name, c.color_name, s.size_name 
                              FROM product p 
                              LEFT JOIN fragrance f ON p.fragrance_id = f.fragrance_id 
@@ -15,7 +15,7 @@ class Product {
     }
 
     public static function find($id) {
-        $conn = get_db_connection();
+        $conn = \get_db_connection();
         $stmt = $conn->prepare("SELECT * FROM product WHERE product_id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -23,10 +23,14 @@ class Product {
     }
 
     public static function delete($id) {
-        $conn = get_db_connection();
+        $conn = \get_db_connection();
         $stmt = $conn->prepare("DELETE FROM product WHERE product_id = ?");
         $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
+}
+
+if (!class_exists('Product', false)) {
+    class_alias('App\Models\Product', 'Product');
 }
 ?>

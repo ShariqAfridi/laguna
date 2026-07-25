@@ -1,4 +1,4 @@
-<?php include 'db.php';
+<?php require_once __DIR__ . '/../../db.php';
 
 // ======================= DASHBOARD STATS (from orders table) =======================
 // Total sales (sum of total from orders where status != cancelled)

@@ -1,6 +1,6 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-include_once("db.php");
+require_once __DIR__ . '/../../../db.php';
 
 // Fetch all accessories from database
 $query = "SELECT * FROM accessory WHERE quantity > 0 ORDER BY created_at DESC";

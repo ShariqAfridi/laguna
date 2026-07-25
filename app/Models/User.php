@@ -1,10 +1,10 @@
 <?php
 // app/Models/User.php — User Data Access Model
-require_once __DIR__ . '/../../config/database.php';
+namespace App\Models;
 
 class User {
     public static function getAllExcept($excludeUserId = 0, $excludeAdminName = '', $excludeAdminEmail = '') {
-        $conn = get_db_connection();
+        $conn = \get_db_connection();
         $sql = "SELECT id, username, email, role, status, created_at FROM users WHERE 1=1";
         
         $excludes = [];
@@ -27,5 +27,9 @@ class User {
         
         return $conn->query($sql);
     }
+}
+
+if (!class_exists('User', false)) {
+    class_alias('App\Models\User', 'User');
 }
 ?>

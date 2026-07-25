@@ -1,8 +1,9 @@
 <?php
+namespace App\Controllers\Frontend;
+
 class ReturnsController {
     public static function index() {
-        require_once __DIR__ . '/../../../views/frontend/returns.php';
+        view('frontend/returns');
     }
 }
-ReturnsController::index();
 ?>

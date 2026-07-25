@@ -2,7 +2,7 @@
 // Remove any whitespace before <?php and fix session start
 ob_start(); // Add output buffering
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-include_once("db.php");
+require_once __DIR__ . '/../../db.php';
 
 $show_success  = false;
 $error_message = '';

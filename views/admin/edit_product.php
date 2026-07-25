@@ -1,6 +1,6 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-include_once("db.php");
+require_once __DIR__ . '/../../db.php';
 
 $show_success  = false;
 $error_message = '';
@@ -52,33 +52,18 @@ if ($sizes)      while ($r = $sizes->fetch_assoc())      $sizes_arr[]      = $r;
 if ($boxes)      while ($r = $boxes->fetch_assoc())      $boxes_arr[]      = $r;
 if ($colors)     while ($r = $colors->fetch_assoc())     $colors_arr[]     = $r;
 
-// Helper function to get image path for display (same logic as add.php)
 function getImagePathForDisplay($image_filename) {
     if (empty($image_filename)) {
         return null;
     }
-    
-    // Check if image exists in the same location where add.php saves
-    $img_path = dirname(__DIR__, 2) . "/img/" . $image_filename;
+    $clean_name = ltrim(preg_replace('#^/?(img/)?#i', '', $image_filename), '/');
+    $img_path = dirname(__DIR__, 2) . "/img/" . $clean_name;
     if (file_exists($img_path)) {
-        // Convert to web path - adjust based on your folder structure
-        // If your admin folder is at /admin, then images are at /img/
-        return '/img/' . $image_filename;
+        return base_url('/img/' . $clean_name);
     }
-    
-    // Fallback to other common locations
-    $fallback_paths = [
-        $_SERVER['DOCUMENT_ROOT'] . '/img/' . $image_filename,
-        __DIR__ . '/../img/' . $image_filename,
-        __DIR__ . '/../../img/' . $image_filename
-    ];
-    
-    foreach ($fallback_paths as $path) {
-        if (file_exists($path)) {
-            return '/img/' . $image_filename;
-        }
+    if (preg_match('#^https?://#i', $image_filename)) {
+        return $image_filename;
     }
-    
     return null;
 }
 

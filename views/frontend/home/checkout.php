@@ -1,6 +1,6 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-include "../db.php";
+require_once __DIR__ . '/../../../db.php';
 
 $cart = $_SESSION['cart'] ?? [];
 
@@ -1000,24 +1000,26 @@ textarea { resize: vertical; min-height: 80px; }
             <!-- Cart Items -->
             <div id="cartItemsContainer">
                 <?php if (!empty($cart)): ?>
-                        <?php 
-                            $imgSrc = !empty($item['image']) ? $item['image'] : '/img/placeholder.jpg';
-                            if (strpos($imgSrc, 'http') !== 0 && strpos($imgSrc, $base) !== 0) {
-                                $imgSrc = $base . '/' . ltrim($imgSrc, '/');
-                            }
-                        ?>
-                        <img class="item-img" src="<?php echo htmlspecialchars($imgSrc); ?>" alt="<?php echo htmlspecialchars($item['name'] ?? ''); ?>">
-                        <div class="item-details">
-                            <div class="item-name"><?php echo htmlspecialchars($item['name'] ?? 'Product'); ?></div>
-                            <div class="item-variant"><?php echo htmlspecialchars($item['scent'] ?? 'Standard'); ?></div>
-                            <div class="item-qty-row">
-                                <button type="button" class="qty-btn" onclick="changeQty(this, -1)">−</button>
-                                <span class="qty-val"><?php echo intval($item['qty'] ?? 1); ?></span>
-                                <button type="button" class="qty-btn" onclick="changeQty(this, 1)">+</button>
+                    <?php foreach ($cart as $item): ?>
+                        <div class="cart-item">
+                            <?php 
+                                $imgSrc = !empty($item['image']) ? $item['image'] : '/img/placeholder.jpg';
+                                if (strpos($imgSrc, 'http') !== 0 && strpos($imgSrc, $base) !== 0) {
+                                    $imgSrc = $base . '/' . ltrim($imgSrc, '/');
+                                }
+                            ?>
+                            <img class="item-img" src="<?php echo htmlspecialchars($imgSrc); ?>" alt="<?php echo htmlspecialchars($item['name'] ?? ''); ?>">
+                            <div class="item-details">
+                                <div class="item-name"><?php echo htmlspecialchars($item['name'] ?? 'Product'); ?></div>
+                                <div class="item-variant"><?php echo htmlspecialchars($item['scent'] ?? 'Standard'); ?></div>
+                                <div class="item-qty-row">
+                                    <button type="button" class="qty-btn" onclick="changeQty(this, -1)">−</button>
+                                    <span class="qty-val"><?php echo intval($item['qty'] ?? 1); ?></span>
+                                    <button type="button" class="qty-btn" onclick="changeQty(this, 1)">+</button>
+                                </div>
                             </div>
+                            <div class="item-price">$<?php echo number_format(floatval($item['price'] ?? 0) * intval($item['qty'] ?? 1), 2); ?></div>
                         </div>
-                        <div class="item-price">$<?php echo number_format(floatval($item['price'] ?? 0) * intval($item['qty'] ?? 1), 2); ?></div>
-                    </div>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="empty-cart" id="emptyCartMsg">

@@ -1,4 +1,4 @@
 <?php
-require_once __DIR__ . '/../../views/admin/sidebar.php';
-require_once __DIR__ . '/../../views/admin/list_accessory.php';
+require_once __DIR__ . '/../../config/app.php';
+App\Controllers\Admin\AccessoriesController::list();
 ?>
