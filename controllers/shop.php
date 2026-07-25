@@ -1,1 +1,0 @@
-<?php include("views/shop.view.php")?>

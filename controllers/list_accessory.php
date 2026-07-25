@@ -1,1 +1,0 @@
-<?php include("views/list_accessory.view.php")?>

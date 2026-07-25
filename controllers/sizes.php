@@ -1,1 +1,0 @@
-<?php include("views/sizes.view.php")?>

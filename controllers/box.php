@@ -1,1 +1,0 @@
-<?php include("views/box.view.php")?>

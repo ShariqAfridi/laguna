@@ -1,1 +1,0 @@
-<?php include("views/edit_product.view.php")?>

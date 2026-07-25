@@ -1,1 +1,0 @@
-<?php include("views/admin.view.php")?>
