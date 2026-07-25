@@ -37,7 +37,7 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $delete_stmt->execute();
     $delete_stmt->close();
     
-    echo "<script>window.location.href='/list_accessory?deleted=1';</script>";
+    echo "<script>window.location.href='" . base_url('/admin/list_accessory?deleted=1') . "';</script>";
     exit();
 }
 

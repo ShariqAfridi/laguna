@@ -1,7 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 if (!isset($base)) {
   $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
   if (substr($scriptDir, -6) === '/logic') {
@@ -10,6 +10,9 @@ if (!isset($base)) {
   $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
 }
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
   <base href="<?php echo rtrim($base, '/') . '/'; ?>">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -211,12 +214,223 @@ if (!isset($base)) {
     <a href="<?php echo $base; ?>/contact">Contact</a>
   </nav>
 
-  <div class="cart-wrapper" id="desktopCartBtn">
-    <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0"/>
-    </svg>
+  <?php
+    if (session_status() === PHP_SESSION_NONE) { session_start(); }
+    $isCustomerLoggedIn = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+    $customerName   = $_SESSION['user_name'] ?? ($_SESSION['user_email'] ?? 'Customer Account');
+    $customerEmail  = $_SESSION['user_email'] ?? '';
+    $customerAvatar = $_SESSION['user_avatar'] ?? '';
+  ?>
+
+  <style>
+    .user-dropdown-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    .user-dropdown-trigger {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: inherit;
+      outline: none;
+    }
+    .user-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: -8px;
+      width: 240px;
+      background: #FFFFFF;
+      border: 1px solid #E2E9EF;
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+      padding: 8px 0;
+      display: none;
+      z-index: 9999;
+    }
+    /* Invisible hover bridge to prevent closing when moving cursor from icon to menu */
+    .user-dropdown-menu::before {
+      content: '';
+      position: absolute;
+      top: -15px;
+      left: -10px;
+      right: -10px;
+      height: 20px;
+      background: transparent;
+    }
+    .user-dropdown-wrapper:hover .user-dropdown-menu,
+    .user-dropdown-menu:hover,
+    .user-dropdown-menu.show-menu {
+      display: block;
+      animation: navDropdownFade 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes navDropdownFade {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .dropdown-user-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid #EEF3F6;
+      margin-bottom: 4px;
+      background: #F8FBFD;
+      border-radius: 11px 11px 0 0;
+    }
+    .dropdown-user-name {
+      font-weight: 600;
+      font-size: 13px;
+      color: #1E2F3A;
+      font-family: 'Inter', sans-serif;
+    }
+    .dropdown-user-email {
+      font-size: 11px;
+      color: #6D8491;
+      margin-top: 2px;
+      word-break: break-all;
+    }
+    .user-dropdown-menu a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #2C3E4E;
+      text-decoration: none;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .user-dropdown-menu a:hover {
+      background: #F4F8FA;
+      color: #14222B;
+    }
+    .user-dropdown-menu a svg {
+      width: 15px;
+      height: 15px;
+      stroke: #6D8491;
+      stroke-width: 1.7;
+      fill: none;
+    }
+    .user-dropdown-menu a:hover svg {
+      stroke: #14222B;
+    }
+    .dropdown-divider {
+      height: 1px;
+      background: #EEF3F6;
+      margin: 6px 0;
+    }
+  </style>
+
+  <div style="display:flex; align-items:center; gap:20px;">
+    <!-- User Icon Dropdown Container -->
+    <div class="user-dropdown-wrapper" id="userDropdownWrapper">
+      <button class="user-dropdown-trigger" id="userDropdownTrigger" aria-label="User Account">
+        <?php if (!empty($customerAvatar)): ?>
+          <img src="<?php echo $base . '/' . ltrim(htmlspecialchars($customerAvatar), '/'); ?>" style="width:24px; height:24px; border-radius:50%; object-fit:cover; border:1.5px solid #D6E8F0;">
+        <?php else: ?>
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        <?php endif; ?>
+      </button>
+
+      <div class="user-dropdown-menu" id="userDropdownMenu">
+        <?php if ($isCustomerLoggedIn): ?>
+          <div class="dropdown-user-header">
+            <div class="dropdown-user-name"><?php echo htmlspecialchars($customerName); ?></div>
+            <div class="dropdown-user-email"><?php echo htmlspecialchars($customerEmail); ?></div>
+          </div>
+          <a href="<?php echo $base; ?>/dashboard">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Dashboard
+          </a>
+          <a href="<?php echo $base; ?>/dashboard/orders">
+            <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            My Orders
+          </a>
+          <a href="<?php echo $base; ?>/dashboard/addresses">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Saved Addresses
+          </a>
+          <a href="<?php echo $base; ?>/dashboard/profile">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            My Profile
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="<?php echo $base; ?>/logout" style="color:#C5221F;">
+            <svg viewBox="0 0 24 24" style="stroke:#C5221F;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign Out
+          </a>
+        <?php else: ?>
+          <div class="dropdown-user-header">
+            <div class="dropdown-user-name">Welcome to LVB</div>
+            <div class="dropdown-user-email">Sign in to access your account</div>
+          </div>
+          <a href="<?php echo $base; ?>/login">
+            <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Sign In
+          </a>
+          <a href="<?php echo $base; ?>/register">
+            <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            Create Account
+          </a>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <!-- Cart Icon -->
+    <div class="cart-wrapper" id="desktopCartBtn">
+      <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0"/>
+      </svg>
+    </div>
   </div>
 </header>
+
+<script>
+  (function() {
+    const wrapper = document.getElementById('userDropdownWrapper');
+    const trigger = document.getElementById('userDropdownTrigger');
+    const menu    = document.getElementById('userDropdownMenu');
+    let leaveTimer = null;
+    
+    if (wrapper && trigger && menu) {
+      function showMenu() {
+        if (leaveTimer) clearTimeout(leaveTimer);
+        menu.classList.add('show-menu');
+      }
+
+      function hideMenuWithDelay() {
+        leaveTimer = setTimeout(function() {
+          menu.classList.remove('show-menu');
+        }, 200);
+      }
+
+      wrapper.addEventListener('mouseenter', showMenu);
+      wrapper.addEventListener('mouseleave', hideMenuWithDelay);
+
+      trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (menu.classList.contains('show-menu')) {
+          menu.classList.remove('show-menu');
+        } else {
+          showMenu();
+        }
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!wrapper.contains(e.target)) {
+          menu.classList.remove('show-menu');
+        }
+      });
+    }
+  })();
+</script>
 
 
 <script>

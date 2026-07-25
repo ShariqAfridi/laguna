@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $stmt->execute();
-    echo "<script>window.location.href='/sizes';</script>";
+    echo "<script>window.location.href='<?php echo base_url('/admin/sizes'); ?>';</script>";
     exit;
 }
 
@@ -25,7 +25,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete') {
     $stmt = $conn->prepare("DELETE FROM sizes WHERE size_id=?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
-    echo "<script>window.location.href='/sizes';</script>";
+    echo "<script>window.location.href='<?php echo base_url('/admin/sizes'); ?>';</script>";
     exit;
 }
 

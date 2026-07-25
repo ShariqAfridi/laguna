@@ -84,20 +84,25 @@ if ($roleRes) {
 }
 $roleCounts['all'] = array_sum($roleCounts);
 
-$statusCounts = ['active' => 0, 'inactive' => 0, 'banned' => 0];
+$statusCounts = ['all' => 0, 'active' => 0, 'inactive' => 0, 'banned' => 0];
 $statusRes = mysqli_query($conn, "SELECT status, COUNT(*) as count FROM users $roleWhere GROUP BY status");
 if ($statusRes) {
     while ($row = mysqli_fetch_assoc($statusRes)) {
         $statusCounts[$row['status']] = (int)$row['count'];
     }
 }
+$statusCounts['all'] = array_sum($statusCounts);
 
 function userQs($page, $role, $status, $search) {
-    $q = '?page=' . $page;
-    if (!empty($role))   $q .= '&role=' . urlencode($role);
-    if (!empty($status)) $q .= '&status=' . urlencode($status);
-    if (!empty($search)) $q .= '&search=' . urlencode($search);
-    return $q;
+    global $base;
+    $params = [];
+    if ($page > 1) { $params['page'] = $page; }
+    if (!empty($role) && $role !== 'all') { $params['role'] = $role; }
+    if (!empty($status) && $status !== 'all') { $params['status'] = $status; }
+    if (!empty($search)) { $params['search'] = $search; }
+
+    $qs = !empty($params) ? '?' . http_build_query($params) : '';
+    return ($base ?? '') . '/admin/users' . $qs;
 }
 ?>
 
@@ -164,22 +169,22 @@ function userQs($page, $role, $status, $search) {
         .b-inactive { background:#f5f5f5; color:#616161; }
         .b-banned { background:#ffebee; color:#c62828; }
 
-        /* Action Dropdown Menu */
-        .status-wrap { position:relative; display:inline-block; }
-        .status-wrap > input[type=checkbox] { display:none; }
-        .status-wrap > label { cursor:pointer; background:none; border:none; font-size:1.1rem; color:#999; padding:6px 10px; border-radius:8px; display:inline-block; transition:all .2s; user-select:none; }
-        .status-wrap > label:hover { background:#f0f0f0; color:#333; }
-        .status-menu { display:none; position:absolute; right:0; top:38px; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15); min-width:190px; z-index:999; overflow:hidden; }
-        .status-wrap > input[type=checkbox]:checked ~ .status-menu { display:block; }
-        .status-menu form { margin:0; padding:0; }
-        .status-menu button { display:flex; align-items:center; gap:10px; width:100%; padding:11px 16px; border:none; background:none; cursor:pointer; font-size:.85rem; color:#333; text-align:left; transition:background .2s; }
-        .status-menu button:hover { background:#f5f5f5; }
-        .status-menu button i { width:18px; color:#888; font-size:.9rem; }
-        .btn-cancel { color:#c62828 !important; }
-        .btn-cancel i { color:#c62828 !important; }
+        /* Action Buttons */
+        .act-btn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; border:1px solid #e0e0e0; background:#ffffff; cursor:pointer; font-size:13px; transition:all 0.2s ease; }
+        .act-btn.btn-view { color:#3498db; border-color:#bbdefb; background:#e3f2fd; }
+        .act-btn.btn-view:hover { background:#3498db; color:#fff; border-color:#3498db; }
 
-        .view-btn { background:none; border:none; cursor:pointer; font-size:1.1rem; color:#3498db; padding:6px 10px; border-radius:8px; transition:all .2s; }
-        .view-btn:hover { background:#e3f2fd; }
+        .act-btn.btn-active { color:#2ecc71; border-color:#a5d6a7; background:#e8f5e9; }
+        .act-btn.btn-active:hover { background:#2ecc71; color:#fff; border-color:#2ecc71; }
+
+        .act-btn.btn-inactive { color:#f39c12; border-color:#ffe0b2; background:#fff3e0; }
+        .act-btn.btn-inactive:hover { background:#f39c12; color:#fff; border-color:#f39c12; }
+
+        .act-btn.btn-ban { color:#e74c3c; border-color:#ffcdd2; background:#ffebee; }
+        .act-btn.btn-ban:hover { background:#e74c3c; color:#fff; border-color:#e74c3c; }
+
+        .act-btn.btn-delete { color:#c62828; border-color:#ef9a9a; background:#ffebee; }
+        .act-btn.btn-delete:hover { background:#c62828; color:#fff; border-color:#c62828; }
 
         /* Pagination */
         .pagination { display:flex; justify-content:center; gap:8px; margin-top:30px; flex-wrap:wrap; }
@@ -247,7 +252,7 @@ function userQs($page, $role, $status, $search) {
 
         <!-- Role & Status Pills -->
         <div class="status-filters">
-            <a href="<?php echo userQs(1, 'all', $statusFilter, $searchTerm); ?>" class="status-pill <?php echo (empty($roleFilter) || $roleFilter === 'all') ? 'active' : ''; ?>">
+            <a href="<?php echo userQs(1, '', $statusFilter, $searchTerm); ?>" class="status-pill <?php echo (empty($roleFilter) || $roleFilter === 'all') ? 'active' : ''; ?>">
                 All Roles <span class="count"><?php echo $roleCounts['all']; ?></span>
             </a>
             <a href="<?php echo userQs(1, 'customer', $statusFilter, $searchTerm); ?>" class="status-pill <?php echo $roleFilter === 'customer' ? 'active' : ''; ?>">
@@ -257,8 +262,14 @@ function userQs($page, $role, $status, $search) {
                 Admins <span class="count"><?php echo $roleCounts['admin']; ?></span>
             </a>
             <span style="border-right:1px solid #e0e0e0; margin:0 4px;"></span>
+            <a href="<?php echo userQs(1, $roleFilter, '', $searchTerm); ?>" class="status-pill <?php echo (empty($statusFilter) || $statusFilter === 'all') ? 'active' : ''; ?>">
+                All Statuses <span class="count"><?php echo $statusCounts['all']; ?></span>
+            </a>
             <a href="<?php echo userQs(1, $roleFilter, 'active', $searchTerm); ?>" class="status-pill <?php echo $statusFilter === 'active' ? 'active' : ''; ?>">
                 Active <span class="count"><?php echo $statusCounts['active']; ?></span>
+            </a>
+            <a href="<?php echo userQs(1, $roleFilter, 'inactive', $searchTerm); ?>" class="status-pill <?php echo $statusFilter === 'inactive' ? 'active' : ''; ?>">
+                Inactive <span class="count"><?php echo $statusCounts['inactive']; ?></span>
             </a>
             <a href="<?php echo userQs(1, $roleFilter, 'banned', $searchTerm); ?>" class="status-pill <?php echo $statusFilter === 'banned' ? 'active' : ''; ?>">
                 Banned <span class="count"><?php echo $statusCounts['banned']; ?></span>
@@ -336,55 +347,50 @@ function userQs($page, $role, $status, $search) {
                                         <?php echo date('M d, Y', strtotime($u['created_at'])); ?>
                                     </span>
                                 </td>
-                                <td style="text-align:right;">
-                                    <!-- Action Eye Modal Button -->
-                                    <button class="view-btn" title="View Profile" onclick="openUserModal('<?php echo $modalId; ?>')">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                                <td style="text-align:right; white-space:nowrap;">
+                                    <div style="display:inline-flex; align-items:center; gap:6px;">
+                                        <!-- View Profile -->
+                                        <button class="act-btn btn-view" title="View Profile" onclick="openUserModal('<?php echo $modalId; ?>')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
 
-                                    <!-- Dropdown menu for role/status toggle & delete -->
-                                    <div class="status-wrap">
-                                        <input type="checkbox" id="chk_<?php echo $u['id']; ?>">
-                                        <label for="chk_<?php echo $u['id']; ?>"><i class="fas fa-ellipsis-v"></i></label>
-                                        <div class="status-menu">
-                                            <!-- Toggle Status -->
-                                            <form method="POST">
+                                        <!-- Status Action Buttons -->
+                                        <?php if ($u['status'] !== 'active'): ?>
+                                            <form method="POST" style="display:inline-block; margin:0;">
                                                 <input type="hidden" name="action" value="update_status">
                                                 <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                                <?php if ($u['status'] !== 'active'): ?>
-                                                    <input type="hidden" name="status" value="active">
-                                                    <button type="submit"><i class="fas fa-check-circle" style="color:#2ecc71;"></i> Set Active</button>
-                                                <?php endif; ?>
-                                                <?php if ($u['status'] !== 'inactive'): ?>
-                                                    <input type="hidden" name="status" value="inactive">
-                                                    <button type="submit"><i class="fas fa-pause-circle" style="color:#95a5a6;"></i> Set Inactive</button>
-                                                <?php endif; ?>
-                                                <?php if ($u['status'] !== 'banned'): ?>
-                                                    <input type="hidden" name="status" value="banned">
-                                                    <button type="submit"><i class="fas fa-ban" style="color:#e74c3c;"></i> Ban User</button>
-                                                <?php endif; ?>
+                                                <input type="hidden" name="status" value="active">
+                                                <button type="submit" class="act-btn btn-active" title="Activate User">
+                                                    <i class="fas fa-check-circle"></i>
+                                                </button>
                                             </form>
-
-                                            <!-- Toggle Role -->
-                                            <form method="POST">
-                                                <input type="hidden" name="action" value="update_role">
+                                        <?php else: ?>
+                                            <form method="POST" style="display:inline-block; margin:0;">
+                                                <input type="hidden" name="action" value="update_status">
                                                 <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                                <?php if ($u['role'] === 'customer'): ?>
-                                                    <input type="hidden" name="role" value="admin">
-                                                    <button type="submit"><i class="fas fa-user-shield" style="color:#f39c12;"></i> Make Admin</button>
-                                                <?php else: ?>
-                                                    <input type="hidden" name="role" value="customer">
-                                                    <button type="submit"><i class="fas fa-user" style="color:#3498db;"></i> Make Customer</button>
-                                                <?php endif; ?>
+                                                <input type="hidden" name="status" value="inactive">
+                                                <button type="submit" class="act-btn btn-inactive" title="Set Inactive">
+                                                    <i class="fas fa-pause-circle"></i>
+                                                </button>
                                             </form>
-
-                                            <!-- Delete User -->
-                                            <form method="POST" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                                <input type="hidden" name="action" value="delete_user">
+                                            <form method="POST" style="display:inline-block; margin:0;">
+                                                <input type="hidden" name="action" value="update_status">
                                                 <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                                <button type="submit" class="btn-cancel"><i class="fas fa-trash-alt"></i> Delete User</button>
+                                                <input type="hidden" name="status" value="banned">
+                                                <button type="submit" class="act-btn btn-ban" title="Ban User">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
                                             </form>
-                                        </div>
+                                        <?php endif; ?>
+
+                                        <!-- Delete User -->
+                                        <form method="POST" style="display:inline-block; margin:0;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                            <input type="hidden" name="action" value="delete_user">
+                                            <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
+                                            <button type="submit" class="act-btn btn-delete" title="Delete User">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

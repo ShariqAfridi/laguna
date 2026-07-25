@@ -698,7 +698,7 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
             <div class="subtitle"><?= ucfirst($wickLabel) ?> Collection</div>
            
         </div>
-        <a href="/shop" class="back-btn">← Back to Vessels</a>
+        <a href="<?php echo $base; ?>/shop" class="back-btn">← Back to Vessels</a>
     </div>
 
     <div class="product-grid">

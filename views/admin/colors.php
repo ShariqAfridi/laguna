@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $stmt->execute();
-    echo "<script>window.location.href='/colors';</script>";
+    echo "<script>window.location.href='<?php echo base_url('/admin/colors'); ?>';</script>";
     exit;
 }
 
@@ -30,7 +30,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete') {
     $stmt = $conn->prepare("DELETE FROM colors WHERE color_id=?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
-    echo "<script>window.location.href='/colors';</script>";
+    echo "<script>window.location.href='<?php echo base_url('/admin/colors'); ?>';</script>";
     exit;
 }
 

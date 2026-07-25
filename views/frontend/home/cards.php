@@ -221,7 +221,14 @@
             <div class="promo-icon"><i data-lucide="sparkles"></i></div>
             <h2 class="promo-title">Spring Promotion</h2>
             <p class="promo-text">Build any custom candle this season and receive a complimentary keepsake matchbox with your order.</p>
-            <a href="/design" class="promo-link">Start the Builder →</a>
+<?php
+if (!isset($base)) {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
+    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+}
+?>
+            <a href="<?php echo $base; ?>/builder" class="promo-link">Start the Builder →</a>
         </div>
 
         <div class="promo-card card-white">

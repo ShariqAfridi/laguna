@@ -12,7 +12,7 @@ $accessory_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
 // Redirect if no ID provided
 if ($accessory_id <= 0) {
-    echo "<script>window.location.href='/list_accessory';</script>";
+    echo "<script>window.location.href='<?php echo base_url('/admin/list_accessory'); ?>';</script>";
     exit;
 }
 
@@ -24,7 +24,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
-    echo "<script>window.location.href='/list_accessory';</script>";
+    echo "<script>window.location.href='<?php echo base_url('/admin/list_accessory'); ?>';</script>";
     exit;
 }
 
@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $accessory['quantity'] = $quantity;
                 $accessory['image'] = $image;
 
-                echo '<script>setTimeout(function(){ window.location.href = "/list_accessory?updated=1"; }, 1000);</script>';
+                echo '<script>setTimeout(function(){ window.location.href = "<?php echo base_url('/admin/list_accessory?updated=1'); ?>"; }, 1000);</script>';
             } else {
                 $error_message = 'Update failed: ' . $update_stmt->error;
             }

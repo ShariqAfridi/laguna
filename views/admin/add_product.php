@@ -181,7 +181,7 @@ if (empty($error_message)) {
         $conn->commit();
 
         $show_success = true;
-        echo '<script>setTimeout(function(){ window.location.href = "/list_product"; }, 1000);</script>';
+        echo '<script>setTimeout(function(){ window.location.href = "<?php echo base_url('/admin/list_product'); ?>"; }, 1000);</script>';
 
     } catch (Exception $e) {
         $conn->rollback();

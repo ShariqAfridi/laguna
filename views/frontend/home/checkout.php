@@ -782,7 +782,7 @@ textarea { resize: vertical; min-height: 80px; }
 
     <!-- ═══════════════ LEFT COLUMN ═══════════════ -->
     <div class="left-col">
-    <form id="checkoutForm" method="POST" action="/logic/place_order.php" novalidate>
+    <form id="checkoutForm" method="POST" action="<?php echo $base; ?>/logic/place_order.php" novalidate>
     <input type="hidden" name="place_order" value="1">
     <input type="hidden" name="cart_data" id="cartData" value="">
     <input type="hidden" name="payment_method" id="paymentMethodInput" value="stripe">
@@ -1406,7 +1406,8 @@ textarea { resize: vertical; min-height: 80px; }
             const cart = sessionStorage.getItem('lvb_cart') || document.getElementById('cartData').value;
             formData.set('cart', cart);
 
-            const res = await fetch('/stripe/create-checkout-session.php', {
+            var baseApiUrl = (typeof window.basePath !== 'undefined') ? window.basePath : (window.location.pathname.startsWith('/laguna') ? '/laguna' : '');
+            const res = await fetch(baseApiUrl + '/api/stripe/create-checkout-session', {
                 method: 'POST',
                 body: formData
             });

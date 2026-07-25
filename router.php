@@ -30,12 +30,16 @@ if (empty($uri)) {
     $uri = '/';
 }
 
-// Static asset fallback handler for /img/, /assets/, /videos/, and /public/
-if (preg_match('#^/(img|assets|videos|public/assets/img|public/videos)/(.*)$#i', $uri, $matches)) {
+// Static asset fallback handler for /img/, /assets/, /videos/, /uploads/, and /public/
+if (preg_match('#^/(img|assets|videos|uploads|public)/(.*)$#i', $uri, $matches)) {
     $type = strtolower($matches[1]);
     $subPath = $matches[2];
     
     $possiblePaths = [
+        __DIR__ . '/public/uploads/' . $subPath,
+        __DIR__ . '/public/uploads/avatars/' . $subPath,
+        __DIR__ . '/uploads/avatars/' . $subPath,
+        __DIR__ . '/uploads/' . $subPath,
         __DIR__ . '/public/videos/' . $subPath,
         __DIR__ . '/public/assets/img/' . $subPath,
         __DIR__ . '/public/assets/' . $subPath,

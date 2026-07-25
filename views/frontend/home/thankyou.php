@@ -336,8 +336,8 @@ $customer_email = $order['email'] ?? 'your email';
                 <p>We couldn't locate your order details.</p>
                 <p style="margin-top: 0.5rem;">Please contact support if you have any questions.</p>
                 <div class="action-buttons" style="margin-top: 1.5rem;">
-                    <a href="/shop.php" class="btn btn-primary">Continue Shopping</a>
-                    <a href="/contact" class="btn btn-outline">Contact Support</a>
+                    <a href="<?php echo $base; ?>/shop" class="btn btn-primary">Continue Shopping</a>
+                    <a href="<?php echo $base; ?>/contact" class="btn btn-outline">Contact Support</a>
                 </div>
             </div>
         <?php else: ?>
@@ -396,8 +396,8 @@ $customer_email = $order['email'] ?? 'your email';
                 </div>
 
                 <div class="action-buttons">
-                    <a href="/shop" class="btn btn-primary"><i class="fa-solid fa-shop"></i> Continue shopping</a>
-                    <a href="/contact" class="btn btn-outline"><i class="fa-regular fa-message"></i> Support</a>
+                    <a href="<?php echo $base; ?>/shop" class="btn btn-primary"><i class="fa-solid fa-shop"></i> Continue shopping</a>
+                    <a href="<?php echo $base; ?>/contact" class="btn btn-outline"><i class="fa-regular fa-message"></i> Support</a>
                 </div>
 
                 <div class="support-links">

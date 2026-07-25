@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -219,17 +219,17 @@
             <div class="lvb-column">
                 <h3 class="lvb-heading-small">Shop</h3>
                 <ul class="lvb-nav-list">
-                    <li class="lvb-nav-item"><a href="/shop" class="lvb-nav-link">Collection</a></li>
-                    <li class="lvb-nav-item"><a href="/builder" class="lvb-nav-link">Design Yours</a></li>
+                    <li class="lvb-nav-item"><a href="<?php echo $base; ?>/shop" class="lvb-nav-link">Collection</a></li>
+                    <li class="lvb-nav-item"><a href="<?php echo $base; ?>/builder" class="lvb-nav-link">Design Yours</a></li>
                 </ul>
             </div>
 
             <div class="lvb-column">
                 <h3 class="lvb-heading-small">Studio</h3>
                 <ul class="lvb-nav-list">
-                    <li class="lvb-nav-item"><a href="/about" class="lvb-nav-link">About</a></li>
-                    <li class="lvb-nav-item"><a href="/journal" class="lvb-nav-link">Journal</a></li>
-                    <li class="lvb-nav-item"><a href="/contact" class="lvb-nav-link">Contact</a></li>
+                    <li class="lvb-nav-item"><a href="<?php echo $base; ?>/about" class="lvb-nav-link">About</a></li>
+                    <li class="lvb-nav-item"><a href="<?php echo $base; ?>/journal" class="lvb-nav-link">Journal</a></li>
+                    <li class="lvb-nav-item"><a href="<?php echo $base; ?>/contact" class="lvb-nav-link">Contact</a></li>
                 </ul>
             </div>
 
@@ -241,14 +241,14 @@
         </div>
 
         <div class="lvb-bottom-bar">
-            <span>� 2026 Laguna Vibe</span>
+            <span>© 2026 Laguna Vibe</span>
             
             <div class="lvb-policy-links">
-                <a href="/privacy" class="lvb-policy-link">Privacy Policy</a>
+                <a href="<?php echo $base; ?>/privacy" class="lvb-policy-link">Privacy Policy</a>
                 <span class="lvb-divider">|</span>
-                <a href="/terms" class="lvb-policy-link">Terms of Service</a>
+                <a href="<?php echo $base; ?>/terms" class="lvb-policy-link">Terms of Service</a>
                 <span class="lvb-divider">|</span>
-                <a href="/returns" class="lvb-policy-link">Return Policy</a>
+                <a href="<?php echo $base; ?>/returns" class="lvb-policy-link">Return Policy</a>
             </div>
 
             <span>Handcrafted candles in the Spirit of Laguna Beach</span>

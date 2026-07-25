@@ -396,8 +396,9 @@
       if (e.target.classList.contains('lvb-checkout')) {
         // Store cart data in sessionStorage for checkout page
         sessionStorage.setItem('checkout_cart', JSON.stringify(items));
-        // Redirect to checkout page
-        window.location.href = '/checkout';
+        // Redirect to checkout page with base path support
+        var base = (typeof window.basePath !== 'undefined') ? window.basePath : (window.location.pathname.startsWith('/laguna') ? '/laguna' : '');
+        window.location.href = base + '/checkout';
       }
     });
   }

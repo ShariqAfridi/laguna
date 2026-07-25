@@ -114,6 +114,44 @@ class Order {
             'total'    => $total,
         ];
     }
+
+    public static function getByUser(int $userId = 0, string $email = ''): array {
+        $conn = \get_db_connection();
+        $email = trim(strtolower($email));
+
+        $where = [];
+        if ($userId > 0) {
+            $where[] = "user_id = " . intval($userId);
+        }
+        if (!empty($email)) {
+            $where[] = "LOWER(email) = '" . $conn->real_escape_string($email) . "'";
+        }
+
+        if (empty($where)) {
+            return [];
+        }
+
+        $sql = "SELECT * FROM orders WHERE (" . implode(" OR ", $where) . ") ORDER BY id DESC";
+        $res = $conn->query($sql);
+
+        $orders = [];
+        if ($res && $res->num_rows > 0) {
+            while ($row = $res->fetch_assoc()) {
+                // Attach order items if order_items table exists or parse items JSON/metadata
+                $orderId = intval($row['id']);
+                $itemsRes = $conn->query("SELECT * FROM order_items WHERE order_id = {$orderId}");
+                $items = [];
+                if ($itemsRes && $itemsRes->num_rows > 0) {
+                    while ($item = $itemsRes->fetch_assoc()) {
+                        $items[] = $item;
+                    }
+                }
+                $row['items'] = $items;
+                $orders[] = $row;
+            }
+        }
+        return $orders;
+    }
 }
 ?>
 

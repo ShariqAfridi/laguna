@@ -142,7 +142,14 @@
             two blocks from the Pacific.
         </h1>
 
-        <a href="/about" class="studio-story-link">
+<?php
+if (!isset($base)) {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
+    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+}
+?>
+        <a href="<?php echo $base; ?>/about" class="studio-story-link">
             Our Story <span class="studio-arrow">→</span>
         </a>
     </section>

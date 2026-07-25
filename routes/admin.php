@@ -33,7 +33,6 @@ return [
         '/add_accessory'   => '/admin/add_accessory',
         '/edit_accessory'  => '/admin/edit_accessory',
         '/list_accessory'  => '/admin/list_accessory',
-        '/logout'          => '/admin/logout',
     ]
 ];
 ?>

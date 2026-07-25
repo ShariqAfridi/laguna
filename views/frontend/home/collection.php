@@ -1,10 +1,17 @@
+<?php
+if (!isset($base)) {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
+    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+}
+?>
 <section class="lvc-collection">
   <div class="lvc-header">
     <div class="lvc-title-group">
       <span class="lvc-overline">THE COLLECTION</span>
       <h2 class="lvc-main-title">Ready to be lit.</h2>
     </div>
-    <a href="/shop" class="lvc-shop-all">SHOP ALL →</a>
+    <a href="<?php echo $base; ?>/shop" class="lvc-shop-all">SHOP ALL →</a>
   </div>
 
   <div class="lvc-grid">

@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($stmt->execute()) {
 
-          echo "<script>window.location.href='/list_accessory';</script>";
+          echo "<script>window.location.href='<?php echo base_url('/admin/list_accessory'); ?>';</script>";
 exit;
 
         } else {

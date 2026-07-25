@@ -208,6 +208,13 @@ if (!isset($base)) {
     <img class="logo-img" src="<?php echo $base; ?>/img/newlogo.jpg" alt="L V B luxury brand logo">
 </a>
     <div class="mobile-actions">
+        <!-- Account icon -->
+        <a href="<?php echo $base; ?>/dashboard" aria-label="Account" class="mobile-cart-btn" style="display:flex; text-decoration:none;">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+        </a>
         <!-- Cart icon — plain button, cart.js targets #mobileCartBtn -->
         <button class="mobile-cart-btn" id="mobileCartBtn" aria-label="Open cart">
             <svg class="icon-svg" viewBox="0 0 24 24">

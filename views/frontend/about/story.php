@@ -156,7 +156,14 @@
                 </p>
             </div>
 
-            <a href="/builder" class="vibe-cta-link">Begin Your Candle &rarr;</a>
+<?php
+if (!isset($base)) {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
+    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+}
+?>
+            <a href="<?php echo $base; ?>/builder" class="vibe-cta-link">Begin Your Candle &rarr;</a>
         </div>
     </section>
 
