@@ -233,24 +233,13 @@ $accessories = $conn->query($query);
                 $has_image = false;
 
                 if (!empty($row['image'])) {
-                    $paths_to_check = [
-                        $_SERVER['DOCUMENT_ROOT'] . '/img/' . $row['image'],
-                        dirname(__DIR__, 2) . '/img/' . $row['image'],
-                        __DIR__ . '/../img/' . $row['image']
-                    ];
-
-                    foreach ($paths_to_check as $path) {
-                        if (file_exists($path)) {
-                            $image_path = str_replace($_SERVER['DOCUMENT_ROOT'], '', $path);
-                            $has_image = true;
-                            break;
-                        }
+                    $img_file = $row['image'];
+                    if (strpos($img_file, 'http') === 0) {
+                        $image_path = $img_file;
+                    } else {
+                        $image_path = $base . '/img/' . ltrim($img_file, '/');
                     }
-
-                    if (!$has_image) {
-                        $image_path = '/img/' . $row['image'];
-                        $has_image = true;
-                    }
+                    $has_image = true;
                 }
                 ?>
                 <div class="exact-product-card" data-accessory-id="<?= $row['accessory_id'] ?>">

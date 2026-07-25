@@ -78,17 +78,8 @@ if (!$showVesselSelection) {
             // Get image URL
             $image_name = $row['image'];
             $image_path = '';
-            $paths_to_check = [
-                $_SERVER['DOCUMENT_ROOT'] . '/img/' . $image_name,
-                dirname(__DIR__, 3) . '/img/' . $image_name,
-                __DIR__ . '/../img/' . $image_name,
-                __DIR__ . '/../../img/' . $image_name
-            ];
-            foreach ($paths_to_check as $path) {
-                if (file_exists($path)) {
-                    $image_path = '/img/' . $image_name;
-                    break;
-                }
+            if (!empty($image_name)) {
+                $image_path = (strpos($image_name, 'http') === 0) ? $image_name : $base . '/img/' . ltrim($image_name, '/');
             }
             $row['image_url'] = $image_path ?: 'https://placehold.co/600x600?text=No+Image';
 
@@ -118,32 +109,7 @@ if (!$showVesselSelection) {
                 
                 $fragranceFileName = $fragranceImageMap[$fragrance_id] ?? '';
                 if ($fragranceFileName) {
-                    // Check for webp version first
-                    $webp_path = '/img/' . $fragranceFileName . '.webp';
-                    $png_path = '/img/' . $fragranceFileName . '.png';
-                    
-                    // Check if webp exists
-                    $webp_full_path = $_SERVER['DOCUMENT_ROOT'] . $webp_path;
-                    $png_full_path = $_SERVER['DOCUMENT_ROOT'] . $png_path;
-                    
-                    if (file_exists($webp_full_path)) {
-                        $fragrance_image_name = $webp_path;
-                    } elseif (file_exists($png_full_path)) {
-                        $fragrance_image_name = $png_path;
-                    } else {
-                        // Try alternative paths
-                        $paths_to_check_frag = [
-                            dirname(__DIR__, 3) . '/img/' . $fragranceFileName . '.webp',
-                            __DIR__ . '/../img/' . $fragranceFileName . '.webp',
-                            __DIR__ . '/../../img/' . $fragranceFileName . '.webp'
-                        ];
-                        foreach ($paths_to_check_frag as $path) {
-                            if (file_exists($path)) {
-                                $fragrance_image_name = '/img/' . $fragranceFileName . '.webp';
-                                break;
-                            }
-                        }
-                    }
+                    $fragrance_image_name = $base . '/img/' . $fragranceFileName . '.webp';
                 }
             }
             $row['fragrance_image'] = $fragrance_image_name;
