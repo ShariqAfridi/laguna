@@ -342,9 +342,9 @@
             <p class="lvh-tagline-text">Where the ocean meets the flame.</p>
             
             <div class="lvh-button-group">
-                <a href="/builder" class="lvh-btn-modern lvh-btn-primary">Create Your Candle</a>
-                <a href="/shop" class="lvh-btn-modern lvh-btn-outline">Most Popular Candles</a>
-                <a href="/accessories" class="lvh-btn-modern lvh-btn-outline">Accessories</a>
+                <a href="<?php echo $base; ?>/builder" class="lvh-btn-modern lvh-btn-primary">Create Your Candle</a>
+                <a href="<?php echo $base; ?>/shop" class="lvh-btn-modern lvh-btn-outline">Most Popular Candles</a>
+                <a href="<?php echo $base; ?>/accessories" class="lvh-btn-modern lvh-btn-outline">Accessories</a>
             </div>
         </div>
         

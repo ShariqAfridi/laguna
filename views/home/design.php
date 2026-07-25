@@ -12,21 +12,21 @@
       <span class="dyc-card-number">01</span>
       <h2 class="dyc-card-title">Everyday Candles</h2>
       <p class="dyc-card-text">Hand-poured rituals for daily moments. A single signature scent in your chosen vessel.</p>
-      <a href="/builder" class="dyc-link">BEGIN →</a>
+      <a href="<?php echo $base; ?>/builder" class="dyc-link">BEGIN →</a>
     </div>
 
     <div class="dyc-card dyc-card-pink">
       <span class="dyc-card-number">02</span>
       <h2 class="dyc-card-title">Gift Sets</h2>
       <p class="dyc-card-text">Thoughtfully composed pairings, presented in a keepsake box ready to be given.</p>
-      <a href="/builder" class="dyc-link">BEGIN →</a>
+      <a href="<?php echo $base; ?>/builder" class="dyc-link">BEGIN →</a>
     </div>
 
     <div class="dyc-card dyc-card-gray">
       <span class="dyc-card-number">03</span>
       <h2 class="dyc-card-title">Collection Candles</h2>
       <p class="dyc-card-text">Limited compositions inspired by Laguna Beach — vessel, fragrance and box considered as one.</p>
-      <a href="/builder" class="dyc-link">BEGIN →</a>
+      <a href="<?php echo $base; ?>/builder" class="dyc-link">BEGIN →</a>
     </div>
   </div>
 </section>

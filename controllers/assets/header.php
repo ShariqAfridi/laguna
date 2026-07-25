@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<?php
+if (!isset($base)) {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
+    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+}
+?>
+  <base href="<?php echo rtrim($base, '/') . '/'; ?>">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>L V B — Luxury Fashion | Desktop Header</title>
@@ -182,14 +190,21 @@
 </head>
 <body>
 
+<?php
+if (!isset($base)) {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
+    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+}
+?>
 <header class="header-desktop" id="mainHeader">
-  <a href="/" class="logo-link">
+  <a href="<?php echo $base; ?>/" class="logo-link">
     <img class="logo-img" src="/img/newlogo.jpg" alt="L V B luxury brand logo">
   </a>
 
   <nav class="nav-links">
-    <a href="/about">About</a>
-    <a href="/contact">Contact</a>
+    <a href="<?php echo $base; ?>/about">About</a>
+    <a href="<?php echo $base; ?>/contact">Contact</a>
   </nav>
 
   <div class="cart-wrapper" id="desktopCartBtn">

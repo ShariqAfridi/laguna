@@ -192,12 +192,19 @@
 }
 </style>
 
+<?php
+if (!isset($base)) {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
+    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+}
+?>
 <!-- Backdrop: only used by mobile menu (cart has its own overlay) -->
 <div class="mobile-backdrop" id="mobileBackdrop"></div>
 
 <!-- MOBILE HEADER -->
 <header class="header-mobile" id="mobileHeader">
-   <a href="/" class="logo-link">
+   <a href="<?php echo $base; ?>/" class="logo-link">
     <img class="logo-img" src="/img/newlogo.jpg" alt="L V B luxury brand logo">
 </a>
     <div class="mobile-actions">
@@ -222,8 +229,8 @@
 <!-- Slide-down mobile nav menu -->
 <div class="mobile-menu-container" id="mobileMenuPanel">
     <div class="mobile-nav-links">
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
+        <a href="<?php echo $base; ?>/about">About</a>
+        <a href="<?php echo $base; ?>/contact">Contact</a>
     </div>
 </div>
 

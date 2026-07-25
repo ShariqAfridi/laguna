@@ -8,6 +8,7 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <base href="<?php echo rtrim($base, '/') . '/'; ?>">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>LVB Admin | Dashboard</title>
