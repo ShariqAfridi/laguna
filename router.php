@@ -24,6 +24,7 @@ $routes = [
     '/checkout' => 'controllers/checkout.php',
     '/thankyou' => 'controllers/thankyou.php',
     '/orders' => 'controllers/orders.php',
+    '/users' => 'controllers/users.php',
     '/admin_dashboard' => 'controllers/dashboard.php',
     '/accessories' => 'controllers/accessories.php',
     '/add_accessory' => 'controllers/add_accessory.php',

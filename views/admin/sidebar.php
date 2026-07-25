@@ -445,6 +445,16 @@ require_once __DIR__ . '/../../logic/admin_auth.php';
                     </svg>
                     Orders
                 </a></li>
+                <!-- Users - customer and admin management -->
+                <li><a href="/users" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    Users
+                </a></li>
                 <!-- Logout option (end session & redirect to /admin) -->
                 <li class="logout-item"><a href="/logout" id="logoutBtn" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -515,6 +525,7 @@ require_once __DIR__ . '/../../logic/admin_auth.php';
                 if (currentPath === '/colors' && href === '/colors') link.classList.add('active');
                 if (currentPath === '/boxes' && href === '/boxes') link.classList.add('active');
                 if (currentPath === '/orders' && href === '/orders') link.classList.add('active');
+                if (currentPath === '/users' && href === '/users') link.classList.add('active');
             });
 
             // Additional: if no match, set dashboard active by default if path is /admin_dashboard or similar
