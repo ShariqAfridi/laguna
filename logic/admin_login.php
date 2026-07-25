@@ -20,7 +20,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ($row = $result->fetch_assoc()) {
                 if (password_verify($password, $row['password']) || $password === $row['password']) {
                     $authenticated = true;
-                    $adminName = $row['username'];
+                    $adminId    = $row['id'];
+                    $adminName  = $row['username'];
+                    $adminEmail = $row['email'];
                 }
             }
             $stmt->close();
@@ -37,7 +39,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // Set admin session
         $_SESSION['admin_logged_in'] = true;
-        $_SESSION['admin_name'] = "Admin";
+        $_SESSION['user_id']        = $adminId;
+        $_SESSION['admin_name']      = $adminName;
+        $_SESSION['admin_email']     = $adminEmail;
 
         // Remove any agent session if exists
         unset($_SESSION['agent_user']);

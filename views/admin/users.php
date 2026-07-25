@@ -63,7 +63,27 @@ $searchTerm   = isset($_GET['search']) ? trim($_GET['search']) : '';
 $msg          = isset($_GET['msg']) ? trim($_GET['msg']) : '';
 
 // ─── Query Building ───────────────────────────────────────────────────────────
-$where = "WHERE 1=1";
+$currentUserId     = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+$currentAdminName  = isset($_SESSION['admin_name']) ? mysqli_real_escape_string($conn, $_SESSION['admin_name']) : '';
+$currentAdminEmail = isset($_SESSION['admin_email']) ? mysqli_real_escape_string($conn, $_SESSION['admin_email']) : '';
+
+$excludeConds = [];
+if ($currentUserId > 0) {
+    $excludeConds[] = "u.id != $currentUserId";
+}
+if (!empty($currentAdminName) && $currentAdminName !== 'Admin') {
+    $excludeConds[] = "u.username != '$currentAdminName'";
+}
+if (!empty($currentAdminEmail)) {
+    $excludeConds[] = "u.email != '$currentAdminEmail'";
+}
+// Always exclude primary admin credentials
+$excludeConds[] = "u.username != 'laguna'";
+$excludeConds[] = "u.email != 'admin@lagunavibe.com'";
+
+$excludeSql = " AND " . implode(" AND ", array_unique($excludeConds));
+
+$where = "WHERE 1=1" . $excludeSql;
 if (!empty($roleFilter) && $roleFilter !== 'all') {
     $r = mysqli_real_escape_string($conn, $roleFilter);
     $where .= " AND u.role = '$r'";
@@ -103,8 +123,9 @@ if ($result && mysqli_num_rows($result) > 0) {
 }
 
 // ─── Status & Role Counts for Pills ──────────────────────────────────────────
+$roleWhere = !empty($excludeSql) ? "WHERE 1=1 " . str_replace('u.', '', $excludeSql) : "";
 $roleCounts = ['all' => 0, 'customer' => 0, 'admin' => 0];
-$roleRes = mysqli_query($conn, "SELECT role, COUNT(*) as count FROM users GROUP BY role");
+$roleRes = mysqli_query($conn, "SELECT role, COUNT(*) as count FROM users $roleWhere GROUP BY role");
 if ($roleRes) {
     while ($row = mysqli_fetch_assoc($roleRes)) {
         $roleCounts[$row['role']] = (int)$row['count'];
@@ -113,7 +134,7 @@ if ($roleRes) {
 $roleCounts['all'] = array_sum($roleCounts);
 
 $statusCounts = ['active' => 0, 'inactive' => 0, 'banned' => 0];
-$statusRes = mysqli_query($conn, "SELECT status, COUNT(*) as count FROM users GROUP BY status");
+$statusRes = mysqli_query($conn, "SELECT status, COUNT(*) as count FROM users $roleWhere GROUP BY status");
 if ($statusRes) {
     while ($row = mysqli_fetch_assoc($statusRes)) {
         $statusCounts[$row['status']] = (int)$row['count'];
