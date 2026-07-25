@@ -7,5 +7,6 @@ error_log
 *.webm
 *.avi
 *.mov
+*.zip
 !public/videos/.gitkeep
 !public/assets/videos/.gitkeep
