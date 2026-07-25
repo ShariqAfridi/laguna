@@ -1,0 +1,1 @@
+<?php include("views/thankyou.view.php")?>

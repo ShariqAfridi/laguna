@@ -1,0 +1,1 @@
+<?php include("views/edit_accessory.view.php")?>

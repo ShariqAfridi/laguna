@@ -1,0 +1,1 @@
+<?php include("views/list_product.view.php")?>
