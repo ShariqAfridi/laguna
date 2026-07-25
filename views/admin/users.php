@@ -1,151 +1,132 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
-include_once("db.php");
+include 'db.php';
 
-$toast_message = '';
-$toast_type = 'success';
-
-// Detect base directory
-$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
-$base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
-
-// Handle Actions: Status Toggle, Role Toggle, Delete
+// ─── Handle Actions: Status / Role / Delete ──────────────────────────────────
+$updateMsg = '';
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
-    $user_id = intval($_POST['user_id'] ?? 0);
+    $userId = (int)($_POST['user_id'] ?? 0);
 
-    if ($user_id > 0) {
+    if ($userId > 0) {
         if ($action === 'update_status') {
-            $new_status = $_POST['status'] ?? 'active';
-            if (in_array($new_status, ['active', 'inactive', 'banned'])) {
+            $newStatus = trim($_POST['status'] ?? 'active');
+            $allowed   = ['active', 'inactive', 'banned'];
+            if (in_array($newStatus, $allowed)) {
                 $stmt = $conn->prepare("UPDATE users SET status = ? WHERE id = ?");
-                $stmt->bind_param("si", $new_status, $user_id);
-                if ($stmt->execute()) {
-                    $_SESSION['toast'] = ['msg' => 'User status updated successfully!', 'type' => 'success'];
-                }
+                $stmt->bind_param("si", $newStatus, $userId);
+                $stmt->execute();
                 $stmt->close();
+                $updateMsg = 'status_updated';
             }
         } elseif ($action === 'update_role') {
-            $new_role = $_POST['role'] ?? 'customer';
-            if (in_array($new_role, ['admin', 'customer'])) {
+            $newRole = trim($_POST['role'] ?? 'customer');
+            $allowed = ['admin', 'customer'];
+            if (in_array($newRole, $allowed)) {
                 $stmt = $conn->prepare("UPDATE users SET role = ? WHERE id = ?");
-                $stmt->bind_param("si", $new_role, $user_id);
-                if ($stmt->execute()) {
-                    $_SESSION['toast'] = ['msg' => 'User role updated successfully!', 'type' => 'success'];
-                }
+                $stmt->bind_param("si", $newRole, $userId);
+                $stmt->execute();
                 $stmt->close();
+                $updateMsg = 'role_updated';
             }
         } elseif ($action === 'delete_user') {
-            // Check if user is not deleting themselves
+            // Check self deletion
             $stmt_check = $conn->prepare("SELECT username FROM users WHERE id = ?");
-            $stmt_check->bind_param("i", $user_id);
+            $stmt_check->bind_param("i", $userId);
             $stmt_check->execute();
             $u_res = $stmt_check->get_result()->fetch_assoc();
             $stmt_check->close();
 
             if ($u_res && isset($_SESSION['admin_name']) && $_SESSION['admin_name'] === $u_res['username']) {
-                $_SESSION['toast'] = ['msg' => 'You cannot delete your own logged-in admin account!', 'type' => 'error'];
+                $updateMsg = 'self_delete_error';
             } else {
                 $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
-                $stmt->bind_param("i", $user_id);
-                if ($stmt->execute()) {
-                    $_SESSION['toast'] = ['msg' => 'User deleted successfully!', 'type' => 'success'];
-                } else {
-                    $_SESSION['toast'] = ['msg' => 'Error deleting user: ' . $conn->error, 'type' => 'error'];
-                }
+                $stmt->bind_param("i", $userId);
+                $stmt->execute();
                 $stmt->close();
+                $updateMsg = 'deleted';
             }
         }
     }
-    header("Location: " . $base . "/users");
+
+    echo "<script>window.location.href='/users?msg=" . urlencode($updateMsg) . "';</script>";
     exit();
 }
 
-// Read toast message from session if set
-if (isset($_SESSION['toast'])) {
-    $toast_message = $_SESSION['toast']['msg'];
-    $toast_type = $_SESSION['toast']['type'];
-    unset($_SESSION['toast']);
+// ─── Pagination & filters ─────────────────────────────────────────────────────
+$page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$limit  = 10;
+$offset = ($page - 1) * $limit;
+
+$roleFilter   = isset($_GET['role']) ? trim($_GET['role']) : '';
+$statusFilter = isset($_GET['status']) ? trim($_GET['status']) : '';
+$searchTerm   = isset($_GET['search']) ? trim($_GET['search']) : '';
+$msg          = isset($_GET['msg']) ? trim($_GET['msg']) : '';
+
+// ─── Query Building ───────────────────────────────────────────────────────────
+$where = "WHERE 1=1";
+if (!empty($roleFilter) && $roleFilter !== 'all') {
+    $r = mysqli_real_escape_string($conn, $roleFilter);
+    $where .= " AND u.role = '$r'";
+}
+if (!empty($statusFilter) && $statusFilter !== 'all') {
+    $s = mysqli_real_escape_string($conn, $statusFilter);
+    $where .= " AND u.status = '$s'";
+}
+if (!empty($searchTerm)) {
+    $st = mysqli_real_escape_string($conn, $searchTerm);
+    $where .= " AND (u.username LIKE '%$st%' OR u.full_name LIKE '%$st%' OR u.email LIKE '%$st%' OR u.phone LIKE '%$st%' OR u.city LIKE '%$st%')";
 }
 
-// Filtering & Search
-$search = trim($_GET['search'] ?? '');
-$role_filter = trim($_GET['role'] ?? '');
-$status_filter = trim($_GET['status'] ?? '');
+// Total Count & Pagination
+$countSql = "SELECT COUNT(*) as total FROM users u $where";
+$countRes = mysqli_query($conn, $countSql);
+$totalUsers = $countRes ? mysqli_fetch_assoc($countRes)['total'] : 0;
+$totalPages = ceil($totalUsers / $limit);
 
-$where_clauses = [];
-$params = [];
-$types = "";
+// Main Users Data Query
+$sql = "SELECT u.*, 
+               COUNT(o.id) as order_count, 
+               COALESCE(SUM(o.total), 0) as total_spent
+        FROM users u
+        LEFT JOIN orders o ON o.user_id = u.id OR (o.email IS NOT NULL AND o.email = u.email)
+        $where
+        GROUP BY u.id
+        ORDER BY u.created_at DESC
+        LIMIT $limit OFFSET $offset";
 
-if (!empty($search)) {
-    $where_clauses[] = "(u.username LIKE ? OR u.full_name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)";
-    $search_param = '%' . $search . '%';
-    $params[] = $search_param;
-    $params[] = $search_param;
-    $params[] = $search_param;
-    $params[] = $search_param;
-    $types .= "ssss";
-}
-
-if (!empty($role_filter)) {
-    $where_clauses[] = "u.role = ?";
-    $params[] = $role_filter;
-    $types .= "s";
-}
-
-if (!empty($status_filter)) {
-    $where_clauses[] = "u.status = ?";
-    $params[] = $status_filter;
-    $types .= "s";
-}
-
-$where_sql = count($where_clauses) > 0 ? "WHERE " . implode(" AND ", $where_clauses) : "";
-
-// Summary Metrics Query
-$metrics = [
-    'total' => 0,
-    'customers' => 0,
-    'admins' => 0,
-    'active' => 0
-];
-$m_res = $conn->query("SELECT 
-    COUNT(*) as total,
-    SUM(CASE WHEN role = 'customer' THEN 1 ELSE 0 END) as customers,
-    SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admins,
-    SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active
-    FROM users");
-if ($m_res && $row = $m_res->fetch_assoc()) {
-    $metrics['total'] = (int)$row['total'];
-    $metrics['customers'] = (int)$row['customers'];
-    $metrics['admins'] = (int)$row['admins'];
-    $metrics['active'] = (int)$row['active'];
-}
-
-// Main Users Query with Order Stats
-$query = "
-    SELECT 
-        u.*,
-        COUNT(o.id) as order_count,
-        COALESCE(SUM(o.total), 0) as total_spent
-    FROM users u
-    LEFT JOIN orders o ON o.user_id = u.id OR (o.email IS NOT NULL AND o.email = u.email)
-    $where_sql
-    GROUP BY u.id
-    ORDER BY u.created_at DESC
-";
-
-$stmt = $conn->prepare($query);
-if (!empty($types)) {
-    $stmt->bind_param($types, ...$params);
-}
-$stmt->execute();
-$users_result = $stmt->get_result();
+$result = mysqli_query($conn, $sql);
 $users = [];
-while ($row = $users_result->fetch_assoc()) {
-    $users[] = $row;
+if ($result && mysqli_num_rows($result) > 0) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        $users[] = $row;
+    }
 }
-$stmt->close();
+
+// ─── Status & Role Counts for Pills ──────────────────────────────────────────
+$roleCounts = ['all' => 0, 'customer' => 0, 'admin' => 0];
+$roleRes = mysqli_query($conn, "SELECT role, COUNT(*) as count FROM users GROUP BY role");
+if ($roleRes) {
+    while ($row = mysqli_fetch_assoc($roleRes)) {
+        $roleCounts[$row['role']] = (int)$row['count'];
+    }
+}
+$roleCounts['all'] = array_sum($roleCounts);
+
+$statusCounts = ['active' => 0, 'inactive' => 0, 'banned' => 0];
+$statusRes = mysqli_query($conn, "SELECT status, COUNT(*) as count FROM users GROUP BY status");
+if ($statusRes) {
+    while ($row = mysqli_fetch_assoc($statusRes)) {
+        $statusCounts[$row['status']] = (int)$row['count'];
+    }
+}
+
+function userQs($page, $role, $status, $search) {
+    $q = '?page=' . $page;
+    if (!empty($role))   $q .= '&role=' . urlencode($role);
+    if (!empty($status)) $q .= '&status=' . urlencode($status);
+    if (!empty($search)) $q .= '&search=' . urlencode($search);
+    return $q;
+}
 ?>
 
 <!DOCTYPE html>
@@ -153,686 +134,406 @@ $stmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Management — LVB Atelier Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    
+    <title>Users | LVB Atelier</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --bg-body: #f4f7f6;
-            --card-bg: #ffffff;
-            --primary: #0b506e;
-            --primary-light: #e6f0f5;
-            --text-dark: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --radius: 10px;
-            --shadow: 0 4px 12px rgba(0,0,0,0.04);
-        }
-
-        .main-content {
-            margin-left: 260px;
-            padding: 30px;
-            background: var(--bg-body);
-            min-height: 100vh;
-            transition: all 0.3s ease;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                margin-left: 0;
-                padding: 15px;
-            }
-        }
-
-        /* Page Header */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .page-header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .page-header p {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-top: 4px;
-        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:#f1f3f6; }
+        .main-content { padding:24px 0px; }
+        .users-section { background:#f7f7f7; border-radius:16px; padding:30px; min-height:80vh; color:#1a1a1a; }
 
         /* Toast Alert */
-        .toast {
-            position: fixed;
-            top: 25px;
-            right: 25px;
-            padding: 14px 20px;
-            border-radius: 8px;
-            color: #fff;
-            font-weight: 500;
-            z-index: 9999;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: slideIn 0.3s ease-out;
-        }
+        .toast { display:none; padding:12px 22px; border-radius:10px; margin-bottom:20px; font-size:.9rem; align-items:center; gap:10px; }
+        .toast.show { display:flex; }
+        .toast.success { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; }
+        .toast.error { background:#ffebee; color:#c62828; border:1px solid #ef9a9a; }
 
-        .toast.success { background: #059669; }
-        .toast.error { background: #dc2626; }
+        /* Header */
+        .users-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; flex-wrap:wrap; gap:15px; }
+        .users-header h2 { font-size:1.5rem; font-weight:700; }
+        .users-controls { display:flex; gap:10px; flex-wrap:wrap; }
 
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+        .search-box { display:flex; align-items:center; background:#fff; border-radius:25px; border:1px solid #e0e0e0; padding:5px 15px; }
+        .search-box input { border:none; padding:8px 10px; outline:none; width:220px; font-size:14px; }
+        .search-box button { background:none; border:none; color:#888; cursor:pointer; }
 
-        /* Metric Cards */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
+        .btn-reset { background:#e0e0e0; border:none; padding:8px 15px; border-radius:20px; font-size:.8rem; cursor:pointer; color:#555; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+        .btn-reset:hover { background:#ccc; }
+        .export-btn { background:#2ecc71; color:#fff; border:none; padding:8px 15px; border-radius:20px; font-size:.85rem; display:flex; align-items:center; gap:8px; cursor:pointer; }
+        .export-btn:hover { background:#27ae60; }
 
-        .metric-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .metric-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .metric-icon.blue { background: #e0f2fe; color: #0284c7; }
-        .metric-icon.purple { background: #f3e8ff; color: #9333ea; }
-        .metric-icon.gold { background: #fef3c7; color: #d97706; }
-        .metric-icon.green { background: #dcfce7; color: #16a34a; }
-
-        .metric-info h3 {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .metric-info p {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        /* Controls Card */
-        .controls-card {
-            background: var(--card-bg);
-            padding: 18px 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            margin-bottom: 25px;
-        }
-
-        .filter-form {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .search-box {
-            position: relative;
-            flex: 1;
-            min-width: 240px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 10px 14px 10px 38px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            outline: none;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-
-        .search-box input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(11, 80, 110, 0.1);
-        }
-
-        .search-box i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-        }
-
-        .filter-select {
-            padding: 10px 14px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            font-size: 14px;
-            color: var(--text-dark);
-            outline: none;
-            background: #fff;
-        }
-
-        .btn-filter, .btn-reset {
-            padding: 10px 18px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-filter {
-            background: var(--primary);
-            color: #fff;
-        }
-        .btn-filter:hover { background: #083c53; }
-
-        .btn-reset {
-            background: #e2e8f0;
-            color: var(--text-dark);
-        }
-        .btn-reset:hover { background: #cbd5e1; }
+        /* Status & Role Filter Pills */
+        .status-filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+        .status-pill { background:#fff; border:1px solid #e0e0e0; padding:6px 16px; border-radius:30px; font-size:.8rem; color:#555; text-decoration:none; display:inline-block; transition:all .2s; }
+        .status-pill:hover { background:#e8e8e8; }
+        .status-pill.active { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
+        .status-pill .count { background:rgba(0,0,0,.1); border-radius:20px; padding:2px 8px; margin-left:8px; font-size:.7rem; }
+        .status-pill.active .count { background:rgba(255,255,255,.2); }
 
         /* Table Card */
-        .table-card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-        }
+        .users-card { background:#fff; border-radius:16px; overflow-x:auto; box-shadow:0 2px 10px rgba(0,0,0,.05); }
+        .users-table { width:100%; border-collapse:collapse; min-width:950px; }
+        .users-table th { text-align:left; padding:16px 20px; border-bottom:1px solid #f0f0f0; font-size:.8rem; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+        .users-table td { padding:16px 20px; border-bottom:1px solid #f5f5f5; font-size:.9rem; color:#333; vertical-align:middle; }
+        .users-table tr:hover td { background:#fafafa; }
 
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        .users-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 14px;
-        }
-
-        .users-table th {
-            background: #f8fafc;
-            padding: 14px 18px;
-            font-weight: 600;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
-        }
-
-        .users-table td {
-            padding: 16px 18px;
-            border-bottom: 1px solid var(--border-color);
-            vertical-align: middle;
-        }
-
-        .users-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .users-table tr:hover {
-            background: #fafafa;
-        }
-
-        /* User Profile Badge */
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .avatar-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--primary-light);
-            color: var(--primary);
-            font-weight: 700;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-transform: uppercase;
-            border: 1px solid rgba(11, 80, 110, 0.2);
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: var(--text-dark);
-            font-size: 14px;
-        }
-
-        .user-username {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
+        /* User Profile Pill */
+        .user-flex { display:flex; align-items:center; gap:12px; }
+        .user-avatar { width:38px; height:38px; border-radius:50%; background:#e3f2fd; color:#1565c0; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; text-transform:uppercase; border:1px solid #bbdefb; }
+        .user-info-name { font-weight:600; color:#1a1a1a; font-size:.9rem; }
+        .user-info-username { font-size:.75rem; color:#777; }
 
         /* Badges */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: capitalize;
-        }
+        .badge { display:inline-block; padding:4px 12px; border-radius:30px; font-size:.75rem; font-weight:600; white-space:nowrap; text-transform:capitalize; }
+        .b-admin { background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; }
+        .b-customer { background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb; }
 
-        .badge-admin { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-        .badge-customer { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .b-active { background:#e8f5e9; color:#2e7d32; }
+        .b-inactive { background:#f5f5f5; color:#616161; }
+        .b-banned { background:#ffebee; color:#c62828; }
 
-        .badge-active { background: #dcfce7; color: #15803d; }
-        .badge-inactive { background: #f1f5f9; color: #64748b; }
-        .badge-banned { background: #fee2e2; color: #b91c1c; }
+        /* Action Dropdown Menu */
+        .status-wrap { position:relative; display:inline-block; }
+        .status-wrap > input[type=checkbox] { display:none; }
+        .status-wrap > label { cursor:pointer; background:none; border:none; font-size:1.1rem; color:#999; padding:6px 10px; border-radius:8px; display:inline-block; transition:all .2s; user-select:none; }
+        .status-wrap > label:hover { background:#f0f0f0; color:#333; }
+        .status-menu { display:none; position:absolute; right:0; top:38px; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15); min-width:190px; z-index:999; overflow:hidden; }
+        .status-wrap > input[type=checkbox]:checked ~ .status-menu { display:block; }
+        .status-menu form { margin:0; padding:0; }
+        .status-menu button { display:flex; align-items:center; gap:10px; width:100%; padding:11px 16px; border:none; background:none; cursor:pointer; font-size:.85rem; color:#333; text-align:left; transition:background .2s; }
+        .status-menu button:hover { background:#f5f5f5; }
+        .status-menu button i { width:18px; color:#888; font-size:.9rem; }
+        .btn-cancel { color:#c62828 !important; }
+        .btn-cancel i { color:#c62828 !important; }
 
-        /* Action Buttons */
-        .actions-cell {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .view-btn { background:none; border:none; cursor:pointer; font-size:1.1rem; color:#3498db; padding:6px 10px; border-radius:8px; transition:all .2s; }
+        .view-btn:hover { background:#e3f2fd; }
 
-        .btn-action {
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background: #fff;
-            color: var(--text-muted);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+        /* Pagination */
+        .pagination { display:flex; justify-content:center; gap:8px; margin-top:30px; flex-wrap:wrap; }
+        .pagination a,.pagination span { padding:8px 14px; border-radius:10px; text-decoration:none; color:#555; background:#fff; border:1px solid #e0e0e0; font-size:.85rem; transition:all .2s; }
+        .pagination a:hover { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
+        .pagination .active { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
+        .pagination .disabled { opacity:.5; pointer-events:none; }
 
-        .btn-action:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            background: var(--primary-light);
-        }
+        .empty-state { text-align:center; padding:60px 20px; color:#888; }
+        .empty-state i { font-size:48px; margin-bottom:15px; color:#ccc; display:block; }
 
-        .btn-action.danger:hover {
-            border-color: var(--danger);
-            color: var(--danger);
-            background: #fee2e2;
-        }
+        /* Modal */
+        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:2000; align-items:center; justify-content:center; padding:16px; }
+        .modal-overlay.open { display:flex; animation:mFadeIn .2s ease; }
+        @keyframes mFadeIn { from{opacity:0} to{opacity:1} }
 
-        .status-select {
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            font-size: 12px;
-            outline: none;
-            background: #fff;
-            cursor: pointer;
-        }
+        .modal-box { background:#fff; border-radius:16px; width:100%; max-width:540px; box-shadow:0 20px 50px rgba(0,0,0,.2); overflow:hidden; }
+        .modal-header { padding:20px 24px; background:#fafafa; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; }
+        .modal-header h3 { font-size:1.1rem; font-weight:700; color:#1a1a1a; }
+        .modal-close { background:none; border:none; font-size:1.4rem; color:#888; cursor:pointer; }
+        .modal-body { padding:24px; max-height:80vh; overflow-y:auto; }
 
-        /* Modal styling */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            z-index: 9990;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal-overlay.open { display: flex; }
-
-        .modal-card {
-            background: #fff;
-            border-radius: 12px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            overflow: hidden;
-            animation: modalFadeIn 0.2s ease-out;
-        }
-
-        @keyframes modalFadeIn {
-            from { transform: scale(0.95); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .modal-header {
-            padding: 18px 24px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #f8fafc;
-        }
-
-        .modal-header h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
-        .modal-body {
-            padding: 24px;
-        }
-
-        .detail-row {
-            display: flex;
-            margin-bottom: 12px;
-            border-bottom: 1px dashed var(--border-color);
-            padding-bottom: 8px;
-        }
-
-        .detail-row:last-child { border-bottom: none; }
-
-        .detail-label {
-            width: 140px;
-            font-weight: 600;
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-
-        .detail-val {
-            flex: 1;
-            color: var(--text-dark);
-            font-size: 13px;
-            word-break: break-word;
-        }
+        .detail-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f5f5f5; font-size:.88rem; }
+        .detail-row:last-child { border-bottom:none; }
+        .detail-label { color:#777; font-weight:500; width:140px; }
+        .detail-val { color:#1a1a1a; font-weight:600; text-align:right; flex:1; word-break:break-word; }
     </style>
 </head>
 <body>
 
 <div class="main-content">
+    <div class="users-section">
 
-    <?php if (!empty($toast_message)): ?>
-        <div class="toast <?php echo $toast_type; ?>" id="toastBox">
-            <i class="fas fa-check-circle"></i>
-            <span><?php echo htmlspecialchars($toast_message); ?></span>
-        </div>
-    <?php endif; ?>
-
-    <!-- Page Header -->
-    <div class="page-header">
-        <div>
-            <h1><i class="fas fa-users-cog" style="color:var(--primary);"></i> User Management</h1>
-            <p>View, manage roles, update account status, and track registered customer activity.</p>
-        </div>
-    </div>
-
-    <!-- Summary Metrics -->
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="metric-icon blue"><i class="fas fa-users"></i></div>
-            <div class="metric-info">
-                <h3><?php echo number_format($metrics['total']); ?></h3>
-                <p>Total Registered Users</p>
-            </div>
-        </div>
-
-        <div class="metric-card">
-            <div class="metric-icon purple"><i class="fas fa-user-tag"></i></div>
-            <div class="metric-info">
-                <h3><?php echo number_format($metrics['customers']); ?></h3>
-                <p>Customers</p>
-            </div>
-        </div>
-
-        <div class="metric-card">
-            <div class="metric-icon gold"><i class="fas fa-user-shield"></i></div>
-            <div class="metric-info">
-                <h3><?php echo number_format($metrics['admins']); ?></h3>
-                <p>Administrators</p>
-            </div>
-        </div>
-
-        <div class="metric-card">
-            <div class="metric-icon green"><i class="fas fa-user-check"></i></div>
-            <div class="metric-info">
-                <h3><?php echo number_format($metrics['active']); ?></h3>
-                <p>Active Accounts</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search & Filter Controls -->
-    <div class="controls-card">
-        <form method="GET" class="filter-form">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" name="search" placeholder="Search by name, username, email, phone..." value="<?php echo htmlspecialchars($search); ?>">
-            </div>
-
-            <select name="role" class="filter-select">
-                <option value="">All Roles</option>
-                <option value="customer" <?php echo $role_filter === 'customer' ? 'selected' : ''; ?>>Customer</option>
-                <option value="admin" <?php echo $role_filter === 'admin' ? 'selected' : ''; ?>>Admin</option>
-            </select>
-
-            <select name="status" class="filter-select">
-                <option value="">All Statuses</option>
-                <option value="active" <?php echo $status_filter === 'active' ? 'selected' : ''; ?>>Active</option>
-                <option value="inactive" <?php echo $status_filter === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
-                <option value="banned" <?php echo $status_filter === 'banned' ? 'selected' : ''; ?>>Banned</option>
-            </select>
-
-            <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
-            <?php if (!empty($search) || !empty($role_filter) || !empty($status_filter)): ?>
-                <a href="<?php echo $base; ?>/users" class="btn-reset"><i class="fas fa-times"></i> Clear</a>
+        <!-- Toast Notifications -->
+        <?php if (!empty($msg)): ?>
+            <?php if ($msg === 'status_updated'): ?>
+                <div class="toast success show"><i class="fas fa-check-circle"></i> User status updated successfully.</div>
+            <?php elseif ($msg === 'role_updated'): ?>
+                <div class="toast success show"><i class="fas fa-check-circle"></i> User role updated successfully.</div>
+            <?php elseif ($msg === 'deleted'): ?>
+                <div class="toast success show"><i class="fas fa-check-circle"></i> User deleted successfully.</div>
+            <?php elseif ($msg === 'self_delete_error'): ?>
+                <div class="toast error show"><i class="fas fa-exclamation-circle"></i> You cannot delete your logged-in admin account!</div>
             <?php endif; ?>
-        </form>
-    </div>
+        <?php endif; ?>
 
-    <!-- Users Table -->
-    <div class="table-card">
-        <div class="table-wrapper">
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th>User Profile</th>
-                        <th>Email & Phone</th>
-                        <th>Location</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Orders / Spent</th>
-                        <th>Joined Date</th>
-                        <th style="text-align: right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (count($users) === 0): ?>
+        <!-- Header -->
+        <div class="users-header">
+            <h2>Users Management (<?php echo $totalUsers; ?>)</h2>
+            <div class="users-controls">
+                <form method="GET" action="" style="display:flex; gap:10px;">
+                    <?php if (!empty($roleFilter)): ?><input type="hidden" name="role" value="<?php echo htmlspecialchars($roleFilter); ?>"><?php endif; ?>
+                    <?php if (!empty($statusFilter)): ?><input type="hidden" name="status" value="<?php echo htmlspecialchars($statusFilter); ?>"><?php endif; ?>
+                    <div class="search-box">
+                        <input type="text" name="search" placeholder="Search user, email, city..." value="<?php echo htmlspecialchars($searchTerm); ?>">
+                        <button type="submit"><i class="fas fa-search"></i></button>
+                    </div>
+                    <?php if (!empty($searchTerm) || !empty($roleFilter) || !empty($statusFilter)): ?>
+                        <a href="/users" class="btn-reset"><i class="fas fa-times"></i> Reset</a>
+                    <?php endif; ?>
+                </form>
+                <button class="export-btn" onclick="exportToCSV()"><i class="fas fa-file-export"></i> Export CSV</button>
+            </div>
+        </div>
+
+        <!-- Role & Status Pills -->
+        <div class="status-filters">
+            <a href="<?php echo userQs(1, 'all', $statusFilter, $searchTerm); ?>" class="status-pill <?php echo (empty($roleFilter) || $roleFilter === 'all') ? 'active' : ''; ?>">
+                All Roles <span class="count"><?php echo $roleCounts['all']; ?></span>
+            </a>
+            <a href="<?php echo userQs(1, 'customer', $statusFilter, $searchTerm); ?>" class="status-pill <?php echo $roleFilter === 'customer' ? 'active' : ''; ?>">
+                Customers <span class="count"><?php echo $roleCounts['customer']; ?></span>
+            </a>
+            <a href="<?php echo userQs(1, 'admin', $statusFilter, $searchTerm); ?>" class="status-pill <?php echo $roleFilter === 'admin' ? 'active' : ''; ?>">
+                Admins <span class="count"><?php echo $roleCounts['admin']; ?></span>
+            </a>
+            <span style="border-right:1px solid #e0e0e0; margin:0 4px;"></span>
+            <a href="<?php echo userQs(1, $roleFilter, 'active', $searchTerm); ?>" class="status-pill <?php echo $statusFilter === 'active' ? 'active' : ''; ?>">
+                Active <span class="count"><?php echo $statusCounts['active']; ?></span>
+            </a>
+            <a href="<?php echo userQs(1, $roleFilter, 'banned', $searchTerm); ?>" class="status-pill <?php echo $statusFilter === 'banned' ? 'active' : ''; ?>">
+                Banned <span class="count"><?php echo $statusCounts['banned']; ?></span>
+            </a>
+        </div>
+
+        <!-- Users Table Card -->
+        <div class="users-card">
+            <?php if (count($users) === 0): ?>
+                <div class="empty-state">
+                    <i class="fas fa-user-slash"></i>
+                    <p>No users found matching your search or filter options.</p>
+                </div>
+            <?php else: ?>
+                <table class="users-table">
+                    <thead>
                         <tr>
-                            <td colspan="8" style="text-align:center; padding: 40px; color: var(--text-muted);">
-                                <i class="fas fa-user-slash" style="font-size: 32px; margin-bottom: 10px; display:block;"></i>
-                                No users found matching your query criteria.
-                            </td>
+                            <th>S.No</th>
+                            <th>User Name</th>
+                            <th>Email / Phone</th>
+                            <th>Location</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Orders / Spent</th>
+                            <th>Joined</th>
+                            <th style="text-align:right;">Actions</th>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($users as $u): ?>
-                            <?php 
-                                $display_name = !empty($u['full_name']) ? $u['full_name'] : (!empty($u['first_name']) ? $u['first_name'] . ' ' . $u['last_name'] : $u['username']);
-                                $initials = strtoupper(substr($display_name ?? 'U', 0, 1));
-                                $loc = array_filter([$u['city'], $u['state'], $u['country']]);
-                                $location_str = count($loc) > 0 ? implode(', ', $loc) : 'N/A';
-                            ?>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        $sno = $offset + 1;
+                        foreach ($users as $u): 
+                            $name = !empty($u['full_name']) ? $u['full_name'] : (!empty($u['first_name']) ? $u['first_name'] . ' ' . $u['last_name'] : $u['username']);
+                            $initial = strtoupper(substr($name ?? 'U', 0, 1));
+                            $locParts = array_filter([$u['city'], $u['state'], $u['country']]);
+                            $locStr = count($locParts) > 0 ? implode(', ', $locParts) : 'N/A';
+                            $modalId = 'modal_user_' . $u['id'];
+                        ?>
                             <tr>
+                                <td><strong>#<?php echo $sno++; ?></strong></td>
                                 <td>
-                                    <div class="user-profile">
-                                        <div class="avatar-circle"><?php echo htmlspecialchars($initials); ?></div>
+                                    <div class="user-flex">
+                                        <div class="user-avatar"><?php echo htmlspecialchars($initial); ?></div>
                                         <div>
-                                            <div class="user-name"><?php echo htmlspecialchars($display_name); ?></div>
-                                            <div class="user-username">@<?php echo htmlspecialchars($u['username'] ?? 'user_' . $u['id']); ?></div>
+                                            <div class="user-info-name"><?php echo htmlspecialchars($name); ?></div>
+                                            <div class="user-info-username">@<?php echo htmlspecialchars($u['username'] ?? 'user_' . $u['id']); ?></div>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <div><i class="fas fa-envelope" style="color:var(--text-muted); font-size:12px;"></i> <?php echo htmlspecialchars($u['email']); ?></div>
+                                    <div><i class="fas fa-envelope" style="color:#aaa; font-size:.75rem;"></i> <?php echo htmlspecialchars($u['email']); ?></div>
                                     <?php if (!empty($u['phone'])): ?>
-                                        <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">
-                                            <i class="fas fa-phone" style="font-size:11px;"></i> <?php echo htmlspecialchars($u['phone']); ?>
+                                        <div style="font-size:.8rem; color:#777; margin-top:2px;">
+                                            <i class="fas fa-phone" style="font-size:.7rem;"></i> <?php echo htmlspecialchars($u['phone']); ?>
                                         </div>
                                     <?php endif; ?>
                                 </td>
+                                <td><?php echo htmlspecialchars($locStr); ?></td>
                                 <td>
-                                    <span style="font-size: 13px; color: var(--text-dark);">
-                                        <i class="fas fa-map-marker-alt" style="color: #ef4444; font-size: 12px;"></i> 
-                                        <?php echo htmlspecialchars($location_str); ?>
+                                    <span class="badge <?php echo $u['role'] === 'admin' ? 'b-admin' : 'b-customer'; ?>">
+                                        <?php echo ucfirst($u['role']); ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <form method="POST" inline-form style="display:inline-block;">
-                                        <input type="hidden" name="action" value="update_role">
-                                        <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                        <select name="role" class="status-select" onchange="this.form.submit()">
-                                            <option value="customer" <?php echo $u['role'] === 'customer' ? 'selected' : ''; ?>>Customer</option>
-                                            <option value="admin" <?php echo $u['role'] === 'admin' ? 'selected' : ''; ?>>Admin</option>
-                                        </select>
-                                    </form>
+                                    <span class="badge <?php echo $u['status'] === 'active' ? 'b-active' : ($u['status'] === 'banned' ? 'b-banned' : 'b-inactive'); ?>">
+                                        <?php echo ucfirst($u['status']); ?>
+                                    </span>
                                 </td>
                                 <td>
-                                    <form method="POST" inline-form style="display:inline-block;">
-                                        <input type="hidden" name="action" value="update_status">
-                                        <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                        <select name="status" class="status-select" onchange="this.form.submit()">
-                                            <option value="active" <?php echo $u['status'] === 'active' ? 'selected' : ''; ?>>Active</option>
-                                            <option value="inactive" <?php echo $u['status'] === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
-                                            <option value="banned" <?php echo $u['status'] === 'banned' ? 'selected' : ''; ?>>Banned</option>
-                                        </select>
-                                    </form>
+                                    <div><strong><?php echo (int)$u['order_count']; ?></strong> orders</div>
+                                    <div style="font-size:.8rem; color:#2ecc71; font-weight:600;">$<?php echo number_format($u['total_spent'], 2); ?></div>
                                 </td>
                                 <td>
-                                    <div><strong><?php echo number_format($u['order_count']); ?></strong> orders</div>
-                                    <div style="font-size:12px; color:var(--success); font-weight:600;">$<?php echo number_format($u['total_spent'], 2); ?></div>
-                                </td>
-                                <td>
-                                    <span style="font-size:13px; color:var(--text-muted);">
+                                    <span style="font-size:.8rem; color:#777;">
                                         <?php echo date('M d, Y', strtotime($u['created_at'])); ?>
                                     </span>
                                 </td>
-                                <td style="text-align: right;">
-                                    <div class="actions-cell" style="justify-content: flex-end;">
-                                        <button type="button" class="btn-action" title="View Profile" onclick="openProfileModal(<?php echo htmlspecialchars(json_encode($u)); ?>)">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                            <input type="hidden" name="action" value="delete_user">
-                                            <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                            <button type="submit" class="btn-action danger" title="Delete User">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </form>
+                                <td style="text-align:right;">
+                                    <!-- Action Eye Modal Button -->
+                                    <button class="view-btn" title="View Profile" onclick="openUserModal('<?php echo $modalId; ?>')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+
+                                    <!-- Dropdown menu for role/status toggle & delete -->
+                                    <div class="status-wrap">
+                                        <input type="checkbox" id="chk_<?php echo $u['id']; ?>">
+                                        <label for="chk_<?php echo $u['id']; ?>"><i class="fas fa-ellipsis-v"></i></label>
+                                        <div class="status-menu">
+                                            <!-- Toggle Status -->
+                                            <form method="POST">
+                                                <input type="hidden" name="action" value="update_status">
+                                                <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
+                                                <?php if ($u['status'] !== 'active'): ?>
+                                                    <input type="hidden" name="status" value="active">
+                                                    <button type="submit"><i class="fas fa-check-circle" style="color:#2ecc71;"></i> Set Active</button>
+                                                <?php endif; ?>
+                                                <?php if ($u['status'] !== 'inactive'): ?>
+                                                    <input type="hidden" name="status" value="inactive">
+                                                    <button type="submit"><i class="fas fa-pause-circle" style="color:#95a5a6;"></i> Set Inactive</button>
+                                                <?php endif; ?>
+                                                <?php if ($u['status'] !== 'banned'): ?>
+                                                    <input type="hidden" name="status" value="banned">
+                                                    <button type="submit"><i class="fas fa-ban" style="color:#e74c3c;"></i> Ban User</button>
+                                                <?php endif; ?>
+                                            </form>
+
+                                            <!-- Toggle Role -->
+                                            <form method="POST">
+                                                <input type="hidden" name="action" value="update_role">
+                                                <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
+                                                <?php if ($u['role'] === 'customer'): ?>
+                                                    <input type="hidden" name="role" value="admin">
+                                                    <button type="submit"><i class="fas fa-user-shield" style="color:#f39c12;"></i> Make Admin</button>
+                                                <?php else: ?>
+                                                    <input type="hidden" name="role" value="customer">
+                                                    <button type="submit"><i class="fas fa-user" style="color:#3498db;"></i> Make Customer</button>
+                                                <?php endif; ?>
+                                            </form>
+
+                                            <!-- Delete User -->
+                                            <form method="POST" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                <input type="hidden" name="action" value="delete_user">
+                                                <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
+                                                <button type="submit" class="btn-cancel"><i class="fas fa-trash-alt"></i> Delete User</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
+
+                            <!-- User Detail Modal -->
+                            <div class="modal-overlay" id="<?php echo $modalId; ?>">
+                                <div class="modal-box">
+                                    <div class="modal-header">
+                                        <h3>User Profile — <?php echo htmlspecialchars($name); ?></h3>
+                                        <button class="modal-close" onclick="closeUserModal('<?php echo $modalId; ?>')">&times;</button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="detail-row"><div class="detail-label">User ID</div><div class="detail-val">#<?php echo $u['id']; ?></div></div>
+                                        <div class="detail-row"><div class="detail-label">Full Name</div><div class="detail-val"><?php echo htmlspecialchars($name); ?></div></div>
+                                        <div class="detail-row"><div class="detail-label">Username</div><div class="detail-val">@<?php echo htmlspecialchars($u['username'] ?? 'N/A'); ?></div></div>
+                                        <div class="detail-row"><div class="detail-label">Email</div><div class="detail-val"><?php echo htmlspecialchars($u['email']); ?></div></div>
+                                        <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-val"><?php echo htmlspecialchars($u['phone'] ?? 'N/A'); ?></div></div>
+                                        <div class="detail-row"><div class="detail-label">Role</div><div class="detail-val"><span class="badge <?php echo $u['role'] === 'admin' ? 'b-admin' : 'b-customer'; ?>"><?php echo ucfirst($u['role']); ?></span></div></div>
+                                        <div class="detail-row"><div class="detail-label">Account Status</div><div class="detail-val"><span class="badge <?php echo $u['status'] === 'active' ? 'b-active' : ($u['status'] === 'banned' ? 'b-banned' : 'b-inactive'); ?>"><?php echo ucfirst($u['status']); ?></span></div></div>
+                                        <div class="detail-row"><div class="detail-label">Shipping Address</div><div class="detail-val"><?php echo htmlspecialchars(implode(', ', array_filter([$u['address'], $u['apartment'], $u['city'], $u['state'], $u['zip'], $u['country']])) ?: 'No address saved'); ?></div></div>
+                                        <div class="detail-row"><div class="detail-label">Orders Placed</div><div class="detail-val"><?php echo (int)$u['order_count']; ?> orders ($<?php echo number_format($u['total_spent'], 2); ?>)</div></div>
+                                        <div class="detail-row"><div class="detail-label">Registration Date</div><div class="detail-val"><?php echo date('M d, Y h:i A', strtotime($u['created_at'])); ?></div></div>
+                                    </div>
+                                </div>
+                            </div>
+
                         <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+
+        <!-- Pagination -->
+        <?php if ($totalPages > 1): ?>
+            <div class="pagination">
+                <?php if ($page > 1): ?>
+                    <a href="<?php echo userQs($page - 1, $roleFilter, $statusFilter, $searchTerm); ?>">&laquo; Prev</a>
+                <?php else: ?>
+                    <span class="disabled">&laquo; Prev</span>
+                <?php endif; ?>
+
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <?php if ($i === $page): ?>
+                        <span class="active"><?php echo $i; ?></span>
+                    <?php else: ?>
+                        <a href="<?php echo userQs($i, $roleFilter, $statusFilter, $searchTerm); ?>"><?php echo $i; ?></a>
                     <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+                <?php endfor; ?>
 
-</div>
+                <?php if ($page < $totalPages): ?>
+                    <a href="<?php echo userQs($page + 1, $roleFilter, $statusFilter, $searchTerm); ?>">Next &raquo;</a>
+                <?php else: ?>
+                    <span class="disabled">Next &raquo;</span>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
 
-<!-- User Profile Modal -->
-<div class="modal-overlay" id="profileModal">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h3>User Profile Details</h3>
-            <button class="modal-close" onclick="closeProfileModal()">&times;</button>
-        </div>
-        <div class="modal-body" id="modalBody">
-            <!-- Dynamic profile content filled by JS -->
-        </div>
     </div>
 </div>
 
 <script>
-// Auto-hide toast notification
-window.addEventListener('load', function() {
-    const t = id => document.getElementById(id);
-    const toast = t('toastBox');
-    if (toast) {
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transition = 'opacity 0.5s ease';
-            setTimeout(() => toast.remove(), 500);
-        }, 4000);
+/* ── Dropdown close on outside click ── */
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.status-wrap')) {
+        document.querySelectorAll('.status-wrap input[type=checkbox]').forEach(cb => cb.checked = false);
     }
 });
 
-function openProfileModal(u) {
-    const modal = document.getElementById('profileModal');
-    const body = document.getElementById('modalBody');
-
-    const addressFull = [u.address, u.apartment, u.city, u.state, u.zip, u.country].filter(Boolean).join(', ');
-
-    body.innerHTML = `
-        <div class="detail-row"><div class="detail-label">User ID:</div><div class="detail-val">#${u.id}</div></div>
-        <div class="detail-row"><div class="detail-label">Full Name:</div><div class="detail-val"><strong>${u.full_name || u.first_name || 'N/A'}</strong></div></div>
-        <div class="detail-row"><div class="detail-label">Username:</div><div class="detail-val">@${u.username || 'N/A'}</div></div>
-        <div class="detail-row"><div class="detail-label">Email:</div><div class="detail-val">${u.email}</div></div>
-        <div class="detail-row"><div class="detail-label">Phone:</div><div class="detail-val">${u.phone || 'N/A'}</div></div>
-        <div class="detail-row"><div class="detail-label">Role:</div><div class="detail-val"><span class="badge badge-${u.role}">${u.role}</span></div></div>
-        <div class="detail-row"><div class="detail-label">Status:</div><div class="detail-val"><span class="badge badge-${u.status}">${u.status}</span></div></div>
-        <div class="detail-row"><div class="detail-label">Shipping Address:</div><div class="detail-val">${addressFull || 'No address saved.'}</div></div>
-        <div class="detail-row"><div class="detail-label">Total Orders:</div><div class="detail-val">${u.order_count} orders ($${parseFloat(u.total_spent).toFixed(2)})</div></div>
-        <div class="detail-row"><div class="detail-label">Registered On:</div><div class="detail-val">${new Date(u.created_at).toLocaleString()}</div></div>
-    `;
-
-    modal.classList.add('open');
-}
-
-function closeProfileModal() {
-    document.getElementById('profileModal').classList.remove('open');
-}
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeProfileModal();
+/* ── Auto-hide toast ── */
+window.addEventListener('load', function() {
+    const t = document.querySelector('.toast.show');
+    if (t) setTimeout(() => t.style.display = 'none', 4000);
 });
+
+/* ── Modal open / close ── */
+function openUserModal(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+}
+function closeUserModal(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.open').forEach(m => {
+            m.classList.remove('open');
+            document.body.style.overflow = '';
+        });
+    }
+});
+
+/* ── CSV export ── */
+function exportToCSV() {
+    let csv = "S.No,Full Name,Username,Email,Phone,Location,Role,Status,Orders,Total Spent,Joined Date\n";
+    document.querySelectorAll('.users-table tbody tr').forEach(row => {
+        const c = row.querySelectorAll('td');
+        if (c.length < 8) return;
+        csv += [
+            c[0].innerText.trim(),
+            '"' + c[1].querySelector('.user-info-name').innerText.replace(/"/g,'""').trim() + '"',
+            '"' + c[1].querySelector('.user-info-username').innerText.replace(/"/g,'""').trim() + '"',
+            '"' + c[2].innerText.replace(/"/g,'""').trim() + '"',
+            '"' + c[3].innerText.trim() + '"',
+            '"' + c[4].innerText.trim() + '"',
+            '"' + c[5].innerText.trim() + '"',
+            '"' + c[6].innerText.trim() + '"',
+            '"' + c[7].innerText.trim() + '"'
+        ].join(',') + '\n';
+    });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+    a.download = 'users_export.csv';
+    a.click();
+}
 </script>
 
 </body>
