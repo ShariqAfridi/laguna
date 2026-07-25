@@ -418,7 +418,7 @@ input:focus, textarea:focus, select:focus {
     <div class="page-header">
         <h2>✏️ Edit Accessory</h2>
         <div class="header-actions">
-            <a href="/list_accessory" class="btn-back">← Back to List</a>
+            <a href="<?php echo $base; ?>/admin/list_accessory" class="btn-back">← Back to List</a>
             <button type="button" onclick="submitForm()" class="btn-primary">💾 Save Changes</button>
         </div>
     </div>
@@ -559,7 +559,7 @@ function formatPrice(input) {
     }
 }
 
-/* ── IMAGE PREVIEW ── */
+// /* ── IMAGE PREVIEW ── */
 function previewImage(input) {
     const previewArea = document.getElementById('image-preview-area');
     if (input.files && input.files[0]) {

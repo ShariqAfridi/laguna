@@ -91,7 +91,7 @@ $result = $conn->query("SELECT box_id, box_name FROM boxes ORDER BY box_id DESC"
                                    '<?= htmlspecialchars($row['box_name'], ENT_QUOTES); ?>'
                                )">✏️</button>
 
-                            <a href="/boxes?action=delete&id=<?= $row['box_id']; ?>"
+                            <a href="<?php echo $base; ?>/admin/boxes?action=delete&id=<?= $row['box_id']; ?>"
                                class="action-btn delete"
                                onclick="return confirm('Delete this box?')">🗑️</a>
                         </td>

@@ -392,7 +392,7 @@ $products = $conn->query($query);
     <div class="page-header">
         <h2>🕯️ Product Management</h2>
         <div class="header-actions">
-            <a href="/add_product" class="btn-primary">+ Add New Product</a>
+            <a href="<?php echo $base; ?>/admin/add_product" class="btn-primary">+ Add New Product</a>
         </div>
     </div>
 
@@ -650,8 +650,11 @@ if ($wick_type === 'double') {
                             
                             <td>
                                 <div class="action-buttons">
-                                    <a href="/edit_product?id=<?= $row['product_id'] ?>" class="btn-edit">✏️ Edit</a>
-                                    <button onclick="confirmDelete(<?= $row['product_id'] ?>, '<?= htmlspecialchars(addslashes($row['product_name'])) ?>')" class="btn-delete">🗑️ Delete</button>
+                                                         <a href="<?php echo $base; ?>/admin/edit_product?id=<?= $row['product_id'] ?>" class="btn-edit">✏️ Edit</a>
+                                    <form method="POST" action="" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                        <input type="hidden" name="delete_id" value="<?= $row['product_id'] ?>">
+                                        <button type="submit" class="btn-delete">🗑️ Delete</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -660,8 +663,8 @@ if ($wick_type === 'double') {
             </table>
         <?php else: ?>
             <div class="empty-state">
-                <p>📦 No products found</p>
-                <a href="/add_product" style="display: inline-block; margin-top: 16px;" class="btn-primary">Add Your First Product</a>
+                <p>No products found in the database.</p>
+                <a href="<?php echo $base; ?>/admin/add_product" style="display: inline-block; margin-top: 16px;" class="btn-primary">Add Your First Product</a>
             </div>
         <?php endif; ?>
     </div>

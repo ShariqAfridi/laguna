@@ -301,7 +301,7 @@ input[type=number]{
         <h2>📦 Add Accessory</h2>
 
         <div class="header-actions">
-            <a href="/list_accessory" class="btn-back">
+            <a href="<?php echo $base; ?>/admin/list_accessory" class="btn-back">
                 ← Back
             </a>
 

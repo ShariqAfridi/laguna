@@ -313,7 +313,7 @@ $accessories = $conn->query($query);
     <div class="page-header">
         <h2>🛍️ Accessory Management</h2>
         <div class="header-actions">
-            <a href="/add_accessory" class="btn-primary">+ Add New Accessory</a>
+            <a href="<?php echo $base; ?>/admin/add_accessory" class="btn-primary">+ Add New Accessory</a>
         </div>
     </div>
 
@@ -411,8 +411,11 @@ $accessories = $conn->query($query);
                             
                             <td>
                                 <div class="action-buttons">
-                                    <a href="/edit_accessory?id=<?= $row['accessory_id'] ?>" class="btn-edit">✏️ Edit</a>
-                                    <button onclick="confirmDelete(<?= $row['accessory_id'] ?>, '<?= htmlspecialchars(addslashes($row['name'])) ?>')" class="btn-delete">🗑️ Delete</button>
+                                    <a href="<?php echo $base; ?>/admin/edit_accessory?id=<?= $row['accessory_id'] ?>" class="btn-edit">✏️ Edit</a>
+                                    <form method="POST" action="" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this accessory?');">
+                                        <input type="hidden" name="delete_id" value="<?= $row['accessory_id'] ?>">
+                                        <button type="submit" class="btn-delete">🗑️ Delete</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -421,8 +424,8 @@ $accessories = $conn->query($query);
             </table>
         <?php else: ?>
             <div class="empty-state">
-                <p>🎀 No accessories found</p>
-                <a href="/add_accessory" style="display: inline-block; margin-top: 16px;" class="btn-primary">Add Your First Accessory</a>
+                <p>📦 No accessories found</p>
+                <a href="<?php echo $base; ?>/admin/add_accessory" style="display: inline-block; margin-top: 16px;" class="btn-primary">Add Your First Accessory</a>
             </div>
         <?php endif; ?>
     </div>

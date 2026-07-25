@@ -667,7 +667,7 @@ select {
     <div class="page-header">
         <h2>🕯️ Add New Product</h2>
         <div class="header-actions">
-            <a href="/list_product" class="btn-back">← Back</a>
+            <a href="<?php echo $base; ?>/admin/list_product" class="btn-back">← Back</a>
             <button type="button" onclick="submitForm()" class="btn-primary">+ Add Product</button>
         </div>
     </div>

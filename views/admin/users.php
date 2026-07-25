@@ -287,7 +287,7 @@ function userQs($page, $role, $status, $search) {
                         <button type="submit"><i class="fas fa-search"></i></button>
                     </div>
                     <?php if (!empty($searchTerm) || !empty($roleFilter) || !empty($statusFilter)): ?>
-                        <a href="/users" class="btn-reset"><i class="fas fa-times"></i> Reset</a>
+                        <a href="<?php echo $base; ?>/admin/users" class="btn-reset"><i class="fas fa-times"></i> Reset</a>
                     <?php endif; ?>
                 </form>
                 <button class="export-btn" onclick="exportToCSV()"><i class="fas fa-file-export"></i> Export CSV</button>
