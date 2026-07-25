@@ -1,18 +1,11 @@
 <?php
-// db.php  --  STAGING: update these 3 values after creating the DB in cPanel
-// (MySQL Databases -> create DB + user -> add user to DB with ALL PRIVILEGES)
+// db.php — Database Connection powered by .env configuration
+require_once __DIR__ . '/config.php';
 
-/*
- * $host     = 'localhost';
- * $username = 'onlifwko_laguna';   // e.g. lagunavi_be  (cPanel prefixes apply)
- * $password = 'PTm(zZYZTtvCqhV]';
- * $database = 'onlifwko_laguna';   // the DB you import lagunavi_be.sql into
- */
-
-$host = 'localhost';
-$username = 'root';  // e.g. lagunavi_be  (cPanel prefixes apply)
-$password = '';
-$database = 'laguna';  // the DB you import lagunavi_be.sql into
+$host     = env('DB_HOST', 'localhost');
+$username = env('DB_USER', 'root');
+$password = env('DB_PASS', '');
+$database = env('DB_NAME', 'laguna');
 
 $conn = new mysqli($host, $username, $password, $database);
 

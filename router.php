@@ -4,6 +4,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . '/config.php';
+
 $routes = [
     '/' => 'controllers/home.php',
     '/about' => 'controllers/about.php',
