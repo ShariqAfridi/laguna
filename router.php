@@ -30,6 +30,53 @@ if (empty($uri)) {
     $uri = '/';
 }
 
+// Static asset fallback handler for /img/, /assets/, /videos/, and /public/
+if (preg_match('#^/(img|assets|videos|public/assets/img|public/videos)/(.*)$#i', $uri, $matches)) {
+    $type = strtolower($matches[1]);
+    $subPath = $matches[2];
+    
+    $possiblePaths = [
+        __DIR__ . '/public/videos/' . $subPath,
+        __DIR__ . '/public/assets/img/' . $subPath,
+        __DIR__ . '/public/assets/' . $subPath,
+        __DIR__ . '/views/img/' . $subPath,
+        __DIR__ . '/public/' . $subPath
+    ];
+
+    $filePath = null;
+    foreach ($possiblePaths as $path) {
+        if (file_exists($path) && !is_dir($path)) {
+            $filePath = $path;
+            break;
+        }
+    }
+
+    if ($filePath) {
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'png'  => 'image/png',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'webp' => 'image/webp',
+            'gif'  => 'image/gif',
+            'svg'  => 'image/svg+xml',
+            'ico'  => 'image/x-icon',
+            'mp4'  => 'video/mp4',
+            'webm' => 'video/webm',
+            'ogg'  => 'video/ogg',
+            'css'  => 'text/css',
+            'js'   => 'application/javascript',
+        ];
+        if (isset($mimeTypes[$ext])) {
+            header('Content-Type: ' . $mimeTypes[$ext]);
+        }
+        header('Content-Length: ' . filesize($filePath));
+        readfile($filePath);
+        exit;
+    }
+}
+
+
 // 1. Check strict 301 legacy redirects
 if (array_key_exists($uri, $legacyAdminRedirects)) {
     $targetUrl = base_url($legacyAdminRedirects[$uri]);

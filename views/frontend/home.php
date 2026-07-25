@@ -5,5 +5,3 @@ include __DIR__ . '/home/collection.php';
 include __DIR__ . '/home/packaging.php';
 include __DIR__ . '/home/story.php';
 ?>
-
-

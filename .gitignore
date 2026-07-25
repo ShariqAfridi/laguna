@@ -1,3 +1,11 @@
 .env
 error_log
 *.log
+
+# Ignore large media files
+*.mp4
+*.webm
+*.avi
+*.mov
+!public/videos/.gitkeep
+!public/assets/videos/.gitkeep

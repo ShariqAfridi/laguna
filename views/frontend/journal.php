@@ -1,4 +1,3 @@
 <?php
-include __DIR__ . '/journal/journal.php';
+include __DIR__ . '/journal/home.php';
 ?>
-

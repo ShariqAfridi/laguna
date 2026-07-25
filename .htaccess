@@ -1,5 +1,10 @@
 RewriteEngine On
 
+# Transparently route legacy img/, assets/, and videos/ requests to public/
+RewriteRule ^img/(.*)$ public/assets/img/$1 [L,NC]
+RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]
+RewriteRule ^videos/(.*)$ public/videos/$1 [L,NC]
+
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
