@@ -1,1 +1,4 @@
-<?php require_once __DIR__ . '/../../views/box.view.php'; ?>
+<?php
+require_once __DIR__ . '/../../views/admin/sidebar.php';
+require_once __DIR__ . '/../../views/admin/box.php';
+?>

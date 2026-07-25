@@ -3,9 +3,11 @@
 <head>
 <?php
 if (!isset($base)) {
-    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
-    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+  $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+  if (substr($scriptDir, -6) === '/logic') {
+    $scriptDir = substr($scriptDir, 0, -6);
+  }
+  $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
 }
 ?>
   <base href="<?php echo rtrim($base, '/') . '/'; ?>">
@@ -192,14 +194,16 @@ if (!isset($base)) {
 
 <?php
 if (!isset($base)) {
-    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
-    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+  $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+  if (substr($scriptDir, -6) === '/logic') {
+    $scriptDir = substr($scriptDir, 0, -6);
+  }
+  $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
 }
 ?>
 <header class="header-desktop" id="mainHeader">
   <a href="<?php echo $base; ?>/" class="logo-link">
-    <img class="logo-img" src="/img/newlogo.jpg" alt="L V B luxury brand logo">
+    <img class="logo-img" src="<?php echo $base; ?>/img/newlogo.jpg" alt="L V B luxury brand logo">
   </a>
 
   <nav class="nav-links">

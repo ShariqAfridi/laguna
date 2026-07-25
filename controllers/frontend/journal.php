@@ -1,1 +1,1 @@
-<?php require_once __DIR__ . '/../../views/journal.view.php'; ?>
+<?php require_once __DIR__ . '/../../views/frontend/journal.php'; ?>
