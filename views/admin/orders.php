@@ -2,7 +2,7 @@
 include 'db.php';
 
 // ─── Handle status update ─────────────────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_id'], $_POST['update_status'])) {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['update_order_id'], $_POST['update_status'])) {
     $orderId   = (int) $_POST['update_order_id'];
     $newStatus = trim($_POST['update_status']);
     $allowed   = ['processing', 'shipped', 'delivered', 'cancelled', 'pending', 'refunded'];
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_id'], $_
     if (!empty($_POST['current_status'])) $redirect .= '&status=' . urlencode($_POST['current_status']);
     if (!empty($_POST['current_search'])) $redirect .= '&search=' . urlencode($_POST['current_search']);
    
-echo "<script>window.location.href='/orders';</script>";
+echo "<script>window.location.href='/admin/orders';</script>";
 exit();
 }
 

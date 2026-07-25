@@ -54,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
 
         // ✅ Redirect to admin dashboard
-        header("Location: " . $base . "/admin_dashboard");
+        header("Location: " . $base . "/admin/dashboard");
         exit();
 
     } else {

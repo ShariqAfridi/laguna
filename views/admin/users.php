@@ -48,7 +48,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['action'])) {
         }
     }
 
-    echo "<script>window.location.href='/users?msg=" . urlencode($updateMsg) . "';</script>";
+    echo "<script>window.location.href='/admin/users?msg=" . urlencode($updateMsg) . "';</script>";
     exit();
 }
 
