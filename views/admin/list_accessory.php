@@ -353,7 +353,7 @@ $accessories = $conn->query($query);
                                     // Option 1: Root img folder
                                     $path1 = $_SERVER['DOCUMENT_ROOT'] . '/img/' . $image_file;
                                     if (file_exists($path1)) {
-                                        $image_html = '<img src="/img/' . htmlspecialchars($image_file) . '" class="accessory-image" alt="' . htmlspecialchars($row['name']) . '">';
+                                        $image_html = '<img src="' . $base . '/img/' . htmlspecialchars($image_file) . '" class="accessory-image" alt="' . htmlspecialchars($row['name']) . '">';
                                         $found = true;
                                     }
                                     

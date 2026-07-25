@@ -127,7 +127,7 @@
 
     <section class="vibe-about-section">
         <div class="vibe-image-container">
-            <img src="/img/about.webp" alt="Candle on the beach" class="vibe-featured-img">
+            <img src="<?php echo $base; ?>/img/about.webp" alt="Candle on the beach" class="vibe-featured-img">
         </div>
 
         <div class="vibe-text-content">

@@ -205,7 +205,7 @@ if (!isset($base)) {
 <!-- MOBILE HEADER -->
 <header class="header-mobile" id="mobileHeader">
    <a href="<?php echo $base; ?>/" class="logo-link">
-    <img class="logo-img" src="/img/newlogo.jpg" alt="L V B luxury brand logo">
+    <img class="logo-img" src="<?php echo $base; ?>/img/newlogo.jpg" alt="L V B luxury brand logo">
 </a>
     <div class="mobile-actions">
         <!-- Cart icon — plain button, cart.js targets #mobileCartBtn -->
@@ -326,4 +326,4 @@ if (!isset($base)) {
 </script>
 
 <!-- Cart — loaded here so both desktop & mobile DOM are ready when it runs -->
-<script src="/views/home/cart.js"></script>
+<script src="<?php echo $base; ?>/views/frontend/home/cart.js"></script>

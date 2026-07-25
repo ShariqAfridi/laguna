@@ -443,7 +443,7 @@ $products = $conn->query($query);
                                     // Option 1: Root img folder
                                     $path1 = $_SERVER['DOCUMENT_ROOT'] . '/img/' . $image_file;
                                     if (file_exists($path1)) {
-                                        $image_html = '<img src="/img/' . htmlspecialchars($image_file) . '" class="product-image" alt="' . htmlspecialchars($row['product_name']) . '">';
+                                        $image_html = '<img src="' . $base . '/img/' . htmlspecialchars($image_file) . '" class="product-image" alt="' . htmlspecialchars($row['product_name']) . '">';
                                         $found = true;
                                     }
                                     

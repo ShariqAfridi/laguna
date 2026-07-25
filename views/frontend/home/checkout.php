@@ -1000,9 +1000,13 @@ textarea { resize: vertical; min-height: 80px; }
             <!-- Cart Items -->
             <div id="cartItemsContainer">
                 <?php if (!empty($cart)): ?>
-                    <?php foreach ($cart as $item): ?>
-                    <div class="cart-item" data-id="<?php echo htmlspecialchars($item['id'] ?? ''); ?>" data-price="<?php echo floatval($item['price'] ?? 0); ?>">
-                        <img class="item-img" src="<?php echo htmlspecialchars($item['image'] ?? '/img/placeholder.jpg'); ?>" alt="<?php echo htmlspecialchars($item['name'] ?? ''); ?>">
+                        <?php 
+                            $imgSrc = !empty($item['image']) ? $item['image'] : '/img/placeholder.jpg';
+                            if (strpos($imgSrc, 'http') !== 0 && strpos($imgSrc, $base) !== 0) {
+                                $imgSrc = $base . '/' . ltrim($imgSrc, '/');
+                            }
+                        ?>
+                        <img class="item-img" src="<?php echo htmlspecialchars($imgSrc); ?>" alt="<?php echo htmlspecialchars($item['name'] ?? ''); ?>">
                         <div class="item-details">
                             <div class="item-name"><?php echo htmlspecialchars($item['name'] ?? 'Product'); ?></div>
                             <div class="item-variant"><?php echo htmlspecialchars($item['scent'] ?? 'Standard'); ?></div>

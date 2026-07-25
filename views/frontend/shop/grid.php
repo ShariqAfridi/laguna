@@ -161,7 +161,7 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LVB Shop — Laguna Vibe Beach</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="/views/cart.js"></script>
+<script src="<?php echo $base; ?>/views/frontend/home/cart.js"></script>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -687,7 +687,7 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
 
     <div class="vessel-selection">
         <a href="?vessel=c" class="vessel-card">
-            <img src="/img/vessel2.webp" alt="Vessel C - Single Wick" onerror="this.src='https://placehold.co/600x600?text=Vessel+C'">
+            <img src="<?php echo $base; ?>/img/vessel2.webp" alt="Vessel C - Single Wick" onerror="this.src='https://placehold.co/600x600?text=Vessel+C'">
             <div class="vessel-card-content">
                 <h3>Vessel C</h3>
                 <div class="vessel-subtitle">3" DIAMETER × 3.5" HEIGHT</div>
@@ -703,7 +703,7 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
         </a>
 
         <a href="?vessel=d" class="vessel-card">
-            <img src="/img/vessel1.webp" alt="Vessel D - Double Wick" onerror="this.src='https://placehold.co/600x600?text=Vessel+D'">
+            <img src="<?php echo $base; ?>/img/vessel1.webp" alt="Vessel D - Double Wick" onerror="this.src='https://placehold.co/600x600?text=Vessel+D'">
             <div class="vessel-card-content">
                 <h3>Vessel D</h3>
                 <div class="vessel-subtitle">3.5" DIAMETER × 4" HEIGHT</div>
