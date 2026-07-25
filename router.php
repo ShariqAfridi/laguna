@@ -20,7 +20,6 @@ $routes = [
     '/terms' => 'controllers/terms.php',
     '/returns' => 'controllers/returns.php',
     '/maintainance' => 'controllers/maintainance.php',
-
     // ── Admin Routes (Strict /admin/ Prefix) ──
     '/admin' => 'controllers/admin.php',
     '/admin/dashboard' => 'controllers/dashboard.php',
@@ -43,20 +42,20 @@ $routes = [
 // ── Legacy Admin URL Redirect Map (Strict 301 Redirect to /admin/...) ──
 $legacyAdminRedirects = [
     '/admin_dashboard' => '/admin/dashboard',
-    '/users'           => '/admin/users',
-    '/orders'          => '/admin/orders',
-    '/add_product'     => '/admin/add_product',
-    '/edit_product'    => '/admin/edit_product',
-    '/list_product'    => '/admin/list_product',
-    '/fragrance'       => '/admin/fragrance',
-    '/boxes'           => '/admin/boxes',
-    '/colors'          => '/admin/colors',
-    '/sizes'           => '/admin/sizes',
-    '/accessories'     => '/admin/accessories',
-    '/add_accessory'   => '/admin/add_accessory',
-    '/edit_accessory'  => '/admin/edit_accessory',
-    '/list_accessory'  => '/admin/list_accessory',
-    '/logout'          => '/admin/logout',
+    '/users' => '/admin/users',
+    '/orders' => '/admin/orders',
+    '/add_product' => '/admin/add_product',
+    '/edit_product' => '/admin/edit_product',
+    '/list_product' => '/admin/list_product',
+    '/fragrance' => '/admin/fragrance',
+    '/boxes' => '/admin/boxes',
+    '/colors' => '/admin/colors',
+    '/sizes' => '/admin/sizes',
+    '/accessories' => '/admin/accessories',
+    '/add_accessory' => '/admin/add_accessory',
+    '/edit_accessory' => '/admin/edit_accessory',
+    '/list_accessory' => '/admin/list_accessory',
+    '/logout' => '/admin/logout',
 ];
 
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
@@ -75,8 +74,8 @@ if (isset($legacyAdminRedirects[$uri])) {
     $queryString = !empty($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '?') !== false
         ? '?' . explode('?', $_SERVER['REQUEST_URI'], 2)[1]
         : '';
-    header("HTTP/1.1 301 Moved Permanently");
-    header("Location: " . base_url($legacyAdminRedirects[$uri]) . $queryString);
+    header('HTTP/1.1 301 Moved Permanently');
+    header('Location: ' . base_url($legacyAdminRedirects[$uri]) . $queryString);
     exit;
 }
 
