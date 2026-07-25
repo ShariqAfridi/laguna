@@ -68,10 +68,14 @@ while ($row = mysqli_fetch_assoc($statusResult)) $statusCounts[$row['status']] =
 $totalAll = array_sum($statusCounts);
 
 function qs($page, $status, $search) {
-    $q = '?page=' . $page;
-    if (!empty($status)) $q .= '&status=' . urlencode($status);
-    if (!empty($search)) $q .= '&search=' . urlencode($search);
-    return $q;
+    global $base;
+    $params = [];
+    if ($page > 1) { $params['page'] = $page; }
+    if (!empty($status) && $status !== 'all') { $params['status'] = $status; }
+    if (!empty($search)) { $params['search'] = $search; }
+
+    $q = !empty($params) ? '?' . http_build_query($params) : '';
+    return ($base ?? '') . '/admin/orders' . $q;
 }
 
 function statusBadgeClass($sk) {
@@ -308,18 +312,18 @@ function statusBadgeClass($sk) {
                     <i class="fas fa-download"></i> Export
                 </button>
                 <?php if (!empty($searchTerm) || !empty($statusFilter)): ?>
-                    <a href="?" class="btn-reset"><i class="fas fa-times"></i> Reset</a>
+                    <a href="<?= ($base ?? '') ?>/admin/orders" class="btn-reset"><i class="fas fa-times"></i> Reset</a>
                 <?php endif; ?>
             </form>
         </div>
     </div>
 
     <div class="status-filters">
-        <a href="?" class="status-pill <?= empty($statusFilter) ? 'active' : '' ?>">
+        <a href="<?= qs(1, '', $searchTerm) ?>" class="status-pill <?= empty($statusFilter) ? 'active' : '' ?>">
             All <span class="count"><?= $totalAll ?></span>
         </a>
         <?php foreach ($statusCounts as $status => $count): ?>
-            <a href="?status=<?= urlencode($status) ?><?= !empty($searchTerm) ? '&search='.urlencode($searchTerm) : '' ?>"
+            <a href="<?= qs(1, $status, $searchTerm) ?>"
                class="status-pill <?= $statusFilter == $status ? 'active' : '' ?>">
                 <?= ucfirst(str_replace('_', ' ', $status)) ?>
                 <span class="count"><?= $count ?></span>
