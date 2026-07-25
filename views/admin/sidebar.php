@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../logic/admin_auth.php';
+check_admin_auth();
 
 $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
 if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }

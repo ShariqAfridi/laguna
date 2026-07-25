@@ -1,56 +1,7 @@
 <?php
-require_once __DIR__ . '/../../db.php';
+$conn = \get_db_connection();
+$updateMsg = $updateMsg ?? ($_GET['msg'] ?? '');
 
-// ─── Handle Actions: Status / Role / Delete ──────────────────────────────────
-$updateMsg = '';
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['action'])) {
-    $action = $_POST['action'];
-    $userId = (int)($_POST['user_id'] ?? 0);
-
-    if ($userId > 0) {
-        if ($action === 'update_status') {
-            $newStatus = trim($_POST['status'] ?? 'active');
-            $allowed   = ['active', 'inactive', 'banned'];
-            if (in_array($newStatus, $allowed)) {
-                $stmt = $conn->prepare("UPDATE users SET status = ? WHERE id = ?");
-                $stmt->bind_param("si", $newStatus, $userId);
-                $stmt->execute();
-                $stmt->close();
-                $updateMsg = 'status_updated';
-            }
-        } elseif ($action === 'update_role') {
-            $newRole = trim($_POST['role'] ?? 'customer');
-            $allowed = ['admin', 'customer'];
-            if (in_array($newRole, $allowed)) {
-                $stmt = $conn->prepare("UPDATE users SET role = ? WHERE id = ?");
-                $stmt->bind_param("si", $newRole, $userId);
-                $stmt->execute();
-                $stmt->close();
-                $updateMsg = 'role_updated';
-            }
-        } elseif ($action === 'delete_user') {
-            // Check self deletion
-            $stmt_check = $conn->prepare("SELECT username FROM users WHERE id = ?");
-            $stmt_check->bind_param("i", $userId);
-            $stmt_check->execute();
-            $u_res = $stmt_check->get_result()->fetch_assoc();
-            $stmt_check->close();
-
-            if ($u_res && isset($_SESSION['admin_name']) && $_SESSION['admin_name'] === $u_res['username']) {
-                $updateMsg = 'self_delete_error';
-            } else {
-                $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
-                $stmt->bind_param("i", $userId);
-                $stmt->execute();
-                $stmt->close();
-                $updateMsg = 'deleted';
-            }
-        }
-    }
-
-    echo "<script>window.location.href='/admin/users?msg=" . urlencode($updateMsg) . "';</script>";
-    exit();
-}
 
 // ─── Pagination & filters ─────────────────────────────────────────────────────
 $page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;

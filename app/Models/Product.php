@@ -29,8 +29,4 @@ class Product {
         return $stmt->execute();
     }
 }
-
-if (!class_exists('Product', false)) {
-    class_alias('App\Models\Product', 'Product');
-}
 ?>

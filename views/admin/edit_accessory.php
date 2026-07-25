@@ -59,9 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Delete old image if exists
             if (!empty($accessory['image'])) {
                 $old_image_paths = [
-                    $_SERVER['DOCUMENT_ROOT'] . '/img/' . $accessory['image'],
-                    dirname(__DIR__, 2) . '/img/' . $accessory['image'],
-                    __DIR__ . '/../img/' . $accessory['image']
+                    $_SERVER['DOCUMENT_ROOT'] . '/public/assets/img/' . $accessory['image'],
+                    dirname(__DIR__, 2) . '/public/assets/img/' . $accessory['image'],
+                    __DIR__ . '/../public/assets/img/' . $accessory['image']
                 ];
                 foreach ($old_image_paths as $old_path) {
                     if (file_exists($old_path)) {
@@ -74,7 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
             $image_name = uniqid('accessory_', true) . '.' . strtolower($ext);
 
-            $img_dir = dirname(__DIR__, 2) . '/img/';
+            $img_dir = dirname(__DIR__, 2) . '/public/assets/img/';
+
             $image_path = $img_dir . $image_name;
 
             if (!file_exists($img_dir)) {

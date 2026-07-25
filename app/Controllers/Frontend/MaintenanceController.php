@@ -3,7 +3,8 @@ namespace App\Controllers\Frontend;
 
 class MaintenanceController {
     public static function index() {
-        view('frontend/maintainance');
+        view('frontend/home/maintainance', [], false);
     }
 }
 ?>
+

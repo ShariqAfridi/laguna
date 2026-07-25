@@ -203,7 +203,8 @@ if (!isset($base)) {
 ?>
 <header class="header-desktop" id="mainHeader">
   <a href="<?php echo $base; ?>/" class="logo-link">
-    <img class="logo-img" src="<?php echo $base; ?>/img/newlogo.jpg" alt="L V B luxury brand logo">
+    <img class="logo-img" src="<?php echo $base; ?>/public/assets/img/newlogo.jpg" alt="L V B luxury brand logo">
+
   </a>
 
   <nav class="nav-links">

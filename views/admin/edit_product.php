@@ -57,10 +57,11 @@ function getImagePathForDisplay($image_filename) {
         return null;
     }
     $clean_name = ltrim(preg_replace('#^/?(img/)?#i', '', $image_filename), '/');
-    $img_path = dirname(__DIR__, 2) . "/img/" . $clean_name;
+    $img_path = dirname(__DIR__, 2) . "/public/assets/img/" . $clean_name;
     if (file_exists($img_path)) {
-        return base_url('/img/' . $clean_name);
+        return base_url('/public/assets/img/' . $clean_name);
     }
+
     if (preg_match('#^https?://#i', $image_filename)) {
         return $image_filename;
     }
@@ -99,7 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $image_name = uniqid('candle_', true) . '.' . strtolower($ext);
             
             // Use the SAME path as add.php
-            $img_dir = dirname(__DIR__, 2) . "/img/";
+            $img_dir = dirname(__DIR__, 2) . "/public/assets/img/";
+
             $image_path = $img_dir . $image_name;
             
             if (!file_exists($img_dir)) {

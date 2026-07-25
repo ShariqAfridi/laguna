@@ -1,11 +1,12 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-require '../vendor/autoload.php';
-include "../db.php";
+require_once __DIR__ . '/../config/app.php';
 
 header('Content-Type: application/json');
 
-\Stripe\Stripe::setApiKey('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');
+$stripeSecret = env('STRIPE_SECRET_KEY', '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');
+\Stripe\Stripe::setApiKey($stripeSecret);
+
 
 // Get cart data from POST
 $cartData = $_POST['cart_data'] ?? $_POST['cart'] ?? '';
@@ -53,41 +54,12 @@ if (empty($full_name) && !empty($first_name)) {
 }
 
 // Calculate totals
-$subtotal = 0;
-foreach ($cart as $item) {
-    $price = floatval($item['price'] ?? 0);
-    $qty = intval($item['qty'] ?? 1);
-    $subtotal += $price * $qty;
-}
-
-// Calculate shipping
-if ($delivery_type === 'express') {
-    $shipping = 18.00;
-} else {
-    $shipping = ($subtotal >= 50) ? 0 : 0.00;
-}
-
-// Calculate tax (8%)
-$tax = round($subtotal * 0.08, 2);
-$total = $subtotal + $shipping + $tax;
-
-// Apply promo code discount if any
-$discount = 0;
-if (!empty($promo_code)) {
-    $promos = [
-        'WELCOME10' => ['type' => 'fixed', 'value' => 10.00],
-        'SAVE20' => ['type' => 'percent', 'value' => 20],
-    ];
-    if (isset($promos[strtoupper($promo_code)])) {
-        $p = $promos[strtoupper($promo_code)];
-        if ($p['type'] === 'fixed') {
-            $discount = min($p['value'], $subtotal);
-        } elseif ($p['type'] === 'percent') {
-            $discount = round(($subtotal * $p['value']) / 100, 2);
-        }
-    }
-}
-$total = max(0, $total - $discount);
+$calc = \App\Models\Order::calculateTotals($cart, $promo_code, $delivery_type);
+$subtotal = $calc['subtotal'];
+$shipping = $calc['shipping'];
+$tax      = $calc['tax'];
+$discount = $calc['discount'];
+$total    = $calc['total'];
 
 try {
     // Prepare line items for Stripe

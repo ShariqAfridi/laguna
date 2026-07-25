@@ -62,7 +62,8 @@ if (!empty($_FILES['image']) && isset($_FILES['image']['tmp_name'])) {
             $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
             $image_name = uniqid('candle_', true) . '.' . strtolower($ext);
 
-            $img_dir = dirname(__DIR__, 2) . "/img/";
+            $img_dir = dirname(__DIR__, 2) . "/public/assets/img/";
+
             $image_path = $img_dir . $image_name;
 
             if (!file_exists($img_dir)) {

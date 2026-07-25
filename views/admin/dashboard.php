@@ -1,46 +1,20 @@
-<?php require_once __DIR__ . '/../../db.php';
+<?php
+// Extract stats passed from DashboardController
+$totalSales       = $stats['total_sales'] ?? 0;
+$totalRevenue     = $stats['total_revenue'] ?? 0;
+$totalOrders      = $stats['total_orders'] ?? 0;
+$uniqueCustomers  = $stats['total_customers'] ?? 0;
+$currentPeriod    = $stats['current_period'] ?? 0;
+$prevPeriod       = $stats['prev_period'] ?? 0;
+$percentageChange = $stats['percentage_change'] ?? 0;
+$arrow            = $stats['arrow'] ?? '';
+$changeClass      = $stats['change_class'] ?? 'change-neutral';
+$chartTotals      = $stats['chart_totals'] ?? [];
+while (count($chartTotals) < 6) { $chartTotals[] = 0; }
+$maxChart         = max($chartTotals) ?: 1;
 
-// ======================= DASHBOARD STATS (from orders table) =======================
-// Total sales (sum of total from orders where status != cancelled)
-$salesQuery = "SELECT COALESCE(SUM(total), 0) as total_sales FROM orders WHERE status != 'cancelled'";
-$salesRes = mysqli_query($conn, $salesQuery);
-$totalSales = mysqli_fetch_assoc($salesRes)['total_sales'] ?? 0;
+$conn = \get_db_connection();
 
-// Total revenue (same logic but using all non-cancelled)
-$revenueQuery = "SELECT COALESCE(SUM(total), 0) as revenue FROM orders WHERE status NOT IN ('cancelled')";
-$revRes = mysqli_query($conn, $revenueQuery);
-$totalRevenue = mysqli_fetch_assoc($revRes)['revenue'] ?? 0;
-
-// Total orders count
-$ordersCountQuery = "SELECT COUNT(*) as total_orders FROM orders";
-$ordersCountRes = mysqli_query($conn, $ordersCountQuery);
-$totalOrders = mysqli_fetch_assoc($ordersCountRes)['total_orders'] ?? 0;
-
-// Unique customers
-$customersQuery = "SELECT COUNT(DISTINCT email) as unique_customers FROM orders";
-$custRes = mysqli_query($conn, $customersQuery);
-$uniqueCustomers = mysqli_fetch_assoc($custRes)['unique_customers'] ?? 0;
-
-// trend (last 30 days vs previous 30 days)
-$trendQuery = "SELECT 
-    SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN total ELSE 0 END) as current_period,
-    SUM(CASE WHEN created_at BETWEEN DATE_SUB(NOW(), INTERVAL 60 DAY) AND DATE_SUB(NOW(), INTERVAL 30 DAY) THEN total ELSE 0 END) as previous_period
-    FROM orders WHERE status != 'cancelled'";
-$trendRes = mysqli_query($conn, $trendQuery);
-$trend = mysqli_fetch_assoc($trendRes);
-$currentPeriod = $trend['current_period'] ?? 0;
-$prevPeriod = $trend['previous_period'] ?? 0;
-$percentageChange = ($prevPeriod > 0) ? (($currentPeriod - $prevPeriod) / $prevPeriod) * 100 : 0;
-$arrow = $percentageChange > 0 ? 'fa-arrow-up' : ($percentageChange < 0 ? 'fa-arrow-down' : '');
-$changeClass = $percentageChange > 0 ? 'change-up' : ($percentageChange < 0 ? 'change-down' : 'change-neutral');
-
-// trend chart data from last 6 orders (for minimal chart)
-$chartTotals = [];
-$chartQuery = "SELECT total FROM orders ORDER BY id DESC LIMIT 6";
-$chartRes = mysqli_query($conn, $chartQuery);
-while($row = mysqli_fetch_assoc($chartRes)) { $chartTotals[] = $row['total']; }
-while(count($chartTotals) < 6) $chartTotals[] = 0;
-$maxChart = max($chartTotals) ?: 1;
 
 // ======================= ORDERS LISTING (with filters, joins order_items + products) =======================
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';

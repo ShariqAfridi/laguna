@@ -205,7 +205,8 @@ if (!isset($base)) {
 <!-- MOBILE HEADER -->
 <header class="header-mobile" id="mobileHeader">
    <a href="<?php echo $base; ?>/" class="logo-link">
-    <img class="logo-img" src="<?php echo $base; ?>/img/newlogo.jpg" alt="L V B luxury brand logo">
+    <img class="logo-img" src="<?php echo $base; ?>/public/assets/img/newlogo.jpg" alt="L V B luxury brand logo">
+
 </a>
     <div class="mobile-actions">
         <!-- Cart icon — plain button, cart.js targets #mobileCartBtn -->

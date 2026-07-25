@@ -42,7 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $image = uniqid('accessory_', true) . '.' . $ext;
 
-            $imgDir = dirname(__DIR__, 2) . "/img/";
+            $imgDir = dirname(__DIR__, 2) . "/public/assets/img/";
+
 
             if (!file_exists($imgDir)) {
                 mkdir($imgDir, 0755, true);

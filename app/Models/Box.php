@@ -29,8 +29,4 @@ class Box {
         return $stmt->execute();
     }
 }
-
-if (!class_exists('Box', false)) {
-    class_alias('App\Models\Box', 'Box');
-}
 ?>

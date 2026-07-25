@@ -27,9 +27,60 @@ class User {
         
         return $conn->query($sql);
     }
-}
 
-if (!class_exists('User', false)) {
-    class_alias('App\Models\User', 'User');
+    public static function updateStatus(int $userId, string $status): bool {
+        $allowed = ['active', 'inactive', 'banned'];
+        if ($userId <= 0 || !in_array($status, $allowed, true)) {
+            return false;
+        }
+        $conn = \get_db_connection();
+        $stmt = $conn->prepare("UPDATE users SET status = ? WHERE id = ?");
+        if ($stmt) {
+            $stmt->bind_param("si", $status, $userId);
+            return $stmt->execute();
+        }
+        return false;
+    }
+
+    public static function updateRole(int $userId, string $role): bool {
+        $allowed = ['admin', 'customer'];
+        if ($userId <= 0 || !in_array($role, $allowed, true)) {
+            return false;
+        }
+        $conn = \get_db_connection();
+        $stmt = $conn->prepare("UPDATE users SET role = ? WHERE id = ?");
+        if ($stmt) {
+            $stmt->bind_param("si", $role, $userId);
+            return $stmt->execute();
+        }
+        return false;
+    }
+
+    public static function deleteUser(int $userId, string $adminName = ''): string {
+        if ($userId <= 0) return 'error';
+        $conn = \get_db_connection();
+        
+        $stmtCheck = $conn->prepare("SELECT username FROM users WHERE id = ?");
+        if ($stmtCheck) {
+            $stmtCheck->bind_param("i", $userId);
+            $stmtCheck->execute();
+            $res = $stmtCheck->get_result()->fetch_assoc();
+            $stmtCheck->close();
+
+            if ($res && !empty($adminName) && $adminName === $res['username']) {
+                return 'self_delete_error';
+            }
+        }
+
+        $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+        if ($stmt) {
+            $stmt->bind_param("i", $userId);
+            if ($stmt->execute()) {
+                return 'deleted';
+            }
+        }
+        return 'error';
+    }
 }
 ?>
+

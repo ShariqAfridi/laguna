@@ -1,28 +1,7 @@
 <?php
-require_once __DIR__ . '/../../db.php';
+$conn = \get_db_connection();
+$updateMsg = $updateMsg ?? ($_GET['updated'] ?? null);
 
-// ─── Handle status update ─────────────────────────────────────────────────────
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['update_order_id'], $_POST['update_status'])) {
-    $orderId   = (int) $_POST['update_order_id'];
-    $newStatus = trim($_POST['update_status']);
-    $allowed   = ['processing', 'shipped', 'delivered', 'cancelled', 'pending', 'refunded'];
-
-    if ($orderId > 0 && in_array($newStatus, $allowed)) {
-        $s = mysqli_real_escape_string($conn, $newStatus);
-        mysqli_query($conn, "UPDATE orders SET status = '$s' WHERE id = $orderId");
-        $updateMsg = mysqli_affected_rows($conn) >= 0 ? 'success' : 'error';
-    } else {
-        $updateMsg = 'error';
-    }
-
-    $redirect = '?updated=' . $updateMsg;
-    if (!empty($_POST['current_page']))   $redirect .= '&page='   . (int)$_POST['current_page'];
-    if (!empty($_POST['current_status'])) $redirect .= '&status=' . urlencode($_POST['current_status']);
-    if (!empty($_POST['current_search'])) $redirect .= '&search=' . urlencode($_POST['current_search']);
-   
-echo "<script>window.location.href='/admin/orders';</script>";
-exit();
-}
 
 // ─── Pagination & filters ─────────────────────────────────────────────────────
 $page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;

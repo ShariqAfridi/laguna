@@ -29,8 +29,4 @@ class Color {
         return $stmt->execute();
     }
 }
-
-if (!class_exists('Color', false)) {
-    class_alias('App\Models\Color', 'Color');
-}
 ?>

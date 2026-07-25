@@ -4,8 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-require '../vendor/autoload.php';
-include "../db.php";
+require_once __DIR__ . '/../config/app.php';
 
 // PHPMailer for emails
 use PHPMailer\PHPMailer\PHPMailer;

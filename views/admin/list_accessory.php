@@ -16,10 +16,11 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
         if (!empty($image_name)) {
             // Try to delete image file from all possible locations
             $paths_to_check = [
-                $_SERVER['DOCUMENT_ROOT'] . '/img/' . $image_name,
-                dirname(__DIR__, 2) . '/img/' . $image_name,
-                __DIR__ . '/../img/' . $image_name
+                $_SERVER['DOCUMENT_ROOT'] . '/public/assets/img/' . $image_name,
+                dirname(__DIR__, 2) . '/public/assets/img/' . $image_name,
+                __DIR__ . '/../public/assets/img/' . $image_name
             ];
+
             foreach ($paths_to_check as $path) {
                 if (file_exists($path)) {
                     unlink($path);
@@ -347,10 +348,11 @@ $accessories = $conn->query($query);
                                 $image_file = $row['image'] ?? '';
                                 if (!empty($image_file)) {
                                     $clean_name = ltrim(preg_replace('#^/?(img/)?#i', '', $image_file), '/');
-                                    $disk_path = dirname(__DIR__, 2) . '/img/' . $clean_name;
+                                    $disk_path = dirname(__DIR__, 2) . '/public/assets/img/' . $clean_name;
                                     
                                     if (file_exists($disk_path)) {
-                                        $img_url = base_url('/img/' . $clean_name);
+                                        $img_url = base_url('/public/assets/img/' . $clean_name);
+
                                         echo '<img src="' . htmlspecialchars($img_url) . '" class="accessory-image" alt="' . htmlspecialchars($row['name'] ?? '') . '">';
                                     } else if (preg_match('#^https?://#i', $image_file)) {
                                         echo '<img src="' . htmlspecialchars($image_file) . '" class="accessory-image" alt="' . htmlspecialchars($row['name'] ?? '') . '">';

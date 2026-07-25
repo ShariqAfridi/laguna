@@ -25,8 +25,4 @@ class Accessory {
         return $stmt->execute();
     }
 }
-
-if (!class_exists('Accessory', false)) {
-    class_alias('App\Models\Accessory', 'Accessory');
-}
 ?>

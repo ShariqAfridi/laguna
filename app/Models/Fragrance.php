@@ -29,8 +29,4 @@ class Fragrance {
         return $stmt->execute();
     }
 }
-
-if (!class_exists('Fragrance', false)) {
-    class_alias('App\Models\Fragrance', 'Fragrance');
-}
 ?>

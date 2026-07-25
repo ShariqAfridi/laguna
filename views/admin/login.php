@@ -97,7 +97,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
             <div class="error">Invalid username or password</div>
         <?php endif; ?>
 
-        <form method="POST" action="<?php echo $base; ?>/logic/admin_login.php">
+        <form method="POST" action="<?php echo base_url('/admin'); ?>">
             <input type="text" name="name" placeholder="Username" class="input-field" required>
             <input type="password" name="password" placeholder="Password" class="input-field" required>
             <button type="submit" class="btn">Login</button>

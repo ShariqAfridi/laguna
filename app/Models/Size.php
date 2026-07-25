@@ -29,8 +29,4 @@ class Size {
         return $stmt->execute();
     }
 }
-
-if (!class_exists('Size', false)) {
-    class_alias('App\Models\Size', 'Size');
-}
 ?>
