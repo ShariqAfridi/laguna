@@ -1,3 +1,6 @@
+<?php
+require_once __DIR__ . '/../../logic/admin_auth.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -443,7 +446,7 @@
                     Orders
                 </a></li>
                 <!-- Logout option (end session & redirect to /admin) -->
-                <li class="logout-item"><a href="#" id="logoutBtn" class="nav-link">
+                <li class="logout-item"><a href="/logout" id="logoutBtn" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                         <polyline points="16 17 21 12 16 7"/>

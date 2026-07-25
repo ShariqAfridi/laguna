@@ -1,9 +1,12 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+$base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+
 // If already logged in, redirect
-if (isset($_SESSION['admin_logged_in'])) {
-    header("Location: /admin_dashboard");
+if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
+    header("Location: " . $base . "/admin_dashboard");
     exit();
 }
 ?>
@@ -94,7 +97,7 @@ if (isset($_SESSION['admin_logged_in'])) {
             <div class="error">Invalid username or password</div>
         <?php endif; ?>
 
-        <form method="POST" action="/logic/admin_login.php">
+        <form method="POST" action="<?php echo $base; ?>/logic/admin_login.php">
             <input type="text" name="name" placeholder="Username" class="input-field" required>
             <input type="password" name="password" placeholder="Password" class="input-field" required>
             <button type="submit" class="btn">Login</button>

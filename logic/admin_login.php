@@ -1,16 +1,33 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
+require_once __DIR__ . '/../db.php';
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    $username = $_POST['name'] ?? '';
+    $username = trim($_POST['name'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    // Admin credentials
-    $admin_username = "laguna";
-    $admin_password = "laguna90@!";
+    $authenticated = false;
+    $adminName = 'Admin';
 
-    if ($username === $admin_username && $password === $admin_password) {
+    if (!empty($username) && !empty($password)) {
+        $stmt = $conn->prepare("SELECT id, username, email, password, role FROM users WHERE (username = ? OR email = ?) AND role = 'admin' LIMIT 1");
+        if ($stmt) {
+            $stmt->bind_param("ss", $username, $username);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                if (password_verify($password, $row['password']) || $password === $row['password']) {
+                    $authenticated = true;
+                    $adminName = $row['username'];
+                }
+            }
+            $stmt->close();
+        }
+    }
+
+    if ($authenticated) {
 
         // Clear old session data
         session_unset();
@@ -25,12 +42,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Remove any agent session if exists
         unset($_SESSION['agent_user']);
 
-        // ✅ Redirect to ADD PRODUCT page
-        header("Location: /admin_dashboard");
+        // Detect base directory (stripping /logic subfolder if present)
+        $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+        if (substr($scriptDir, -6) === '/logic') {
+            $scriptDir = substr($scriptDir, 0, -6);
+        }
+        $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+
+        // ✅ Redirect to admin dashboard
+        header("Location: " . $base . "/admin_dashboard");
         exit();
 
     } else {
-        header("Location: /admin/login.php?msg=invalid");
+        $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+        if (substr($scriptDir, -6) === '/logic') {
+            $scriptDir = substr($scriptDir, 0, -6);
+        }
+        $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+
+        header("Location: " . $base . "/admin?msg=invalid");
         exit();
     }
 }

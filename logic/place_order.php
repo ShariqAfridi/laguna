@@ -108,10 +108,11 @@ if ($payment_method === 'stripe')  $status = 'pending_payment';
 if ($payment_method === 'paypal')  $status = 'pending_payment';
 
 // ====================== SAVE ORDER ======================
-// Updated INSERT to match new orders table schema including phone column
+$user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
+
 $stmt = $conn->prepare("
     INSERT INTO orders
-        (order_number, name, email, phone, address, city, state, zip, country,
+        (user_id, order_number, name, email, phone, address, city, state, zip, country,
          notes, promo_code, subtotal, shipping, discount, total,
          payment_method, stripe_payment_intent_id, status, created_at)
     VALUES
@@ -119,7 +120,8 @@ $stmt = $conn->prepare("
 ");
 
 $stmt->bind_param(
-    "ssssssssssdddddss",
+    "issssssssssdddddss",
+    $user_id,
     $order_number,
     $full_name,
     $email,
