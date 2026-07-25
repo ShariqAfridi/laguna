@@ -1,5 +1,9 @@
 <?php
 require_once __DIR__ . '/../../logic/admin_auth.php';
+
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
+$base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -367,14 +371,14 @@ require_once __DIR__ . '/../../logic/admin_auth.php';
         <nav class="sidebar-nav">
             <ul>
                 <!-- Dashboard - distinct: house / grid icon -->
-                <li><a href="/admin_dashboard" class="nav-link">
+                <li><a href="<?php echo $base; ?>/admin_dashboard" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-5v-8H9v8H5a2 2 0 0 1-2-2z"/>
                     </svg>
                     Dashboard
                 </a></li>
                 <!-- Add Products - plus in circle, distinct from plus line -->
-                <li><a href="/add_product" class="nav-link">
+                <li><a href="<?php echo $base; ?>/add_product" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="12" y1="8" x2="12" y2="16"/>
@@ -383,7 +387,7 @@ require_once __DIR__ . '/../../logic/admin_auth.php';
                     Add Products
                 </a></li>
                 <!-- Products - grid/list with rows -->
-                <li><a href="/list_product" class="nav-link">
+                <li><a href="<?php echo $base; ?>/list_product" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <rect x="3" y="3" width="7" height="7" rx="1"/>
                         <rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -392,7 +396,7 @@ require_once __DIR__ . '/../../logic/admin_auth.php';
                     </svg>
                     Products
                 </a></li>
-                   <li><a href="/list_accessory" class="nav-link">
+                   <li><a href="<?php echo $base; ?>/list_accessory" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <rect x="3" y="3" width="7" height="7" rx="1"/>
                         <rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -402,7 +406,7 @@ require_once __DIR__ . '/../../logic/admin_auth.php';
                     Accessories
                 </a></li>
                 <!-- Sizes - ruler / size icon -->
-                <li><a href="/sizes" class="nav-link">
+                <li><a href="<?php echo $base; ?>/sizes" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
                         <line x1="4" y1="8" x2="20" y2="8"/>
                         <line x1="4" y1="16" x2="20" y2="16"/>
@@ -412,7 +416,7 @@ require_once __DIR__ . '/../../logic/admin_auth.php';
                     Sizes
                 </a></li>
                 <!-- Fragrance - flower / aromatic symbol -->
-                <li><a href="/fragrance" class="nav-link">
+                <li><a href="<?php echo $base; ?>/fragrance" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
                         <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                         <circle cx="12" cy="12" r="3"/>
@@ -420,7 +424,7 @@ require_once __DIR__ . '/../../logic/admin_auth.php';
                     Fragrance
                 </a></li>
                 <!-- Colors - palette / droplet distinct -->
-                <li><a href="/colors" class="nav-link">
+                <li><a href="<?php echo $base; ?>/colors" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
                         <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
                         <circle cx="7.5" cy="16.5" r="1.5" fill="currentColor" stroke="none"/>
@@ -430,7 +434,7 @@ require_once __DIR__ . '/../../logic/admin_auth.php';
                     Colors
                 </a></li>
                 <!-- Box - gift/package distinct -->
-                <li><a href="/boxes" class="nav-link">
+                <li><a href="<?php echo $base; ?>/boxes" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
                         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                         <polyline points="3.29 7 12 12 20.71 7"/>
@@ -439,14 +443,14 @@ require_once __DIR__ . '/../../logic/admin_auth.php';
                     Box
                 </a></li>
                 <!-- Orders - receipt/truck icon distinct -->
-                <li><a href="/orders" class="nav-link">
+                <li><a href="<?php echo $base; ?>/orders" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
                         <path d="M22 12h-4l-3 9-4-18-3 9H2"/>
                     </svg>
                     Orders
                 </a></li>
                 <!-- Users - customer and admin management -->
-                <li><a href="/users" class="nav-link">
+                <li><a href="<?php echo $base; ?>/users" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
@@ -456,7 +460,7 @@ require_once __DIR__ . '/../../logic/admin_auth.php';
                     Users
                 </a></li>
                 <!-- Logout option (end session & redirect to /admin) -->
-                <li class="logout-item"><a href="/logout" id="logoutBtn" class="nav-link">
+                <li class="logout-item"><a href="<?php echo $base; ?>/logout" id="logoutBtn" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                         <polyline points="16 17 21 12 16 7"/>
