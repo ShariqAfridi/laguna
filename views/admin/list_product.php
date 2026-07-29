@@ -1,14 +1,16 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../../db.php';
 
 // Handle product deletion
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
-    $product_id = (int)$_GET['delete'];
-    
+    $product_id = (int) $_GET['delete'];
+
     // Get image filename before deleting
-    $img_query = $conn->prepare("SELECT image FROM products WHERE product_id = ?");
-    $img_query->bind_param("i", $product_id);
+    $img_query = $conn->prepare('SELECT image FROM products WHERE product_id = ?');
+    $img_query->bind_param('i', $product_id);
     $img_query->execute();
     $img_result = $img_query->get_result();
     if ($img_row = $img_result->fetch_assoc()) {
@@ -30,10 +32,10 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
         }
     }
     $img_query->close();
-    
+
     // Delete product from database
-    $delete_stmt = $conn->prepare("DELETE FROM products WHERE product_id = ?");
-    $delete_stmt->bind_param("i", $product_id);
+    $delete_stmt = $conn->prepare('DELETE FROM products WHERE product_id = ?');
+    $delete_stmt->bind_param('i', $product_id);
     $delete_stmt->execute();
     $delete_stmt->close();
     echo "<script>window.location.href='<?php echo base_url('/admin/list_product'); ?>';</script>";
@@ -46,7 +48,27 @@ if (isset($_GET['deleted'])) {
     $success_message = 'Product deleted successfully!';
 }
 
-// Fetch all products with joins to get related data
+$page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
+$limit = 10;
+$offset = ($page - 1) * $limit;
+
+$stockFilter = isset($_GET['stock']) ? $_GET['stock'] : 'all';
+
+$allProductsCount = (int) ($conn->query('SELECT COUNT(*) as total FROM products')->fetch_assoc()['total'] ?? 0);
+$inStockCount = (int) ($conn->query("SELECT COUNT(*) as total FROM products WHERE qty > 0 OR size_qtys LIKE '%\"[1-9]%' OR size_qtys LIKE '%:[1-9]%'")->fetch_assoc()['total'] ?? 0);
+$outOfStockCount = max(0, $allProductsCount - $inStockCount);
+
+$whereSql = '';
+if ($stockFilter === 'instock') {
+    $whereSql = "WHERE (p.qty > 0 OR p.size_qtys REGEXP ':[1-9]')";
+} elseif ($stockFilter === 'outofstock') {
+    $whereSql = "WHERE (p.qty <= 0 OR p.qty IS NULL) AND (p.size_qtys NOT REGEXP ':[1-9]')";
+}
+
+$totalRows = ($stockFilter === 'instock') ? $inStockCount : (($stockFilter === 'outofstock') ? $outOfStockCount : $allProductsCount);
+$totalPages = max(1, ceil($totalRows / $limit));
+
+// Fetch products with joins to get related data
 $query = "
     SELECT 
         p.*,
@@ -57,8 +79,10 @@ $query = "
     LEFT JOIN fragrances f ON FIND_IN_SET(f.fragrance_id, REPLACE(REPLACE(p.fragrance_id, '[', ''), ']', ''))
     LEFT JOIN colors c ON FIND_IN_SET(c.color_id, REPLACE(REPLACE(p.color_id, '[', ''), ']', ''))
     LEFT JOIN boxes b ON FIND_IN_SET(b.box_id, REPLACE(REPLACE(p.box_id, '[', ''), ']', ''))
+    $whereSql
     GROUP BY p.product_id
     ORDER BY p.created_at DESC
+    LIMIT $offset, $limit
 ";
 
 $products = $conn->query($query);
@@ -389,21 +413,37 @@ $products = $conn->query($query);
 </head>
 <body>
 
-<div class="page-main-content">
-    <div class="page-header">
-        <h2>🕯️ Product Management</h2>
+<div class="admin-wrapper">
+    <div class="admin-header">
+        <div>
+            <h2 class="admin-title">Candle Products Catalog</h2>
+            <p class="admin-subtitle">Manage candle products, size variants, fragrances, colors, and inventory.</p>
+        </div>
         <div class="header-actions">
-            <a href="<?php echo $base; ?>/admin/add_product" class="btn-primary">+ Add New Product</a>
+            <a href="<?php echo $base; ?>/admin/add_product" class="admin-btn-primary">+ Add New Candle Product</a>
         </div>
     </div>
 
+    <!-- Stock Filter Pills -->
+    <div class="status-filters">
+        <a href="<?= base_url('/admin/list_product'); ?>" class="status-pill <?= $stockFilter === 'all' ? 'active' : ''; ?>">
+            All Products <span class="count"><?= $allProductsCount; ?></span>
+        </a>
+        <a href="<?= base_url('/admin/list_product?stock=instock'); ?>" class="status-pill <?= $stockFilter === 'instock' ? 'active' : ''; ?>">
+            In Stock <span class="count"><?= $inStockCount; ?></span>
+        </a>
+        <a href="<?= base_url('/admin/list_product?stock=outofstock'); ?>" class="status-pill <?= $stockFilter === 'outofstock' ? 'active' : ''; ?>">
+            Out of Stock <span class="count"><?= $outOfStockCount; ?></span>
+        </a>
+    </div>
+
     <?php if ($success_message): ?>
-        <div class="alert-success">✅ <?= htmlspecialchars($success_message) ?></div>
+        <div style="background:#dcfce7; color:#15803d; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-weight:600;">✅ <?= htmlspecialchars($success_message) ?></div>
     <?php endif; ?>
 
-    <div class="products-table">
+    <div class="admin-table-container">
         <?php if ($products && $products->num_rows > 0): ?>
-            <table>
+            <table class="admin-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -433,25 +473,32 @@ $products = $conn->query($query);
                             
                             <!-- Image Column with proper path handling -->
                             <td>
-                                <?php 
-                                $image_file = $row['image'] ?? '';
-                                if (!empty($image_file)) {
-                                    $clean_name = ltrim(preg_replace('#^/?(img/)?#i', '', $image_file), '/');
-                                    $disk_path = dirname(__DIR__, 2) . '/public/assets/img/' . $clean_name;
-                                    
-                                    if (file_exists($disk_path)) {
-                                        $img_url = base_url('/public/assets/img/' . $clean_name);
+                                <?php
+                                 $image_file = $row['image'] ?? '';
+                                 if (!empty($image_file)) {
+                                     $clean_rel = ltrim(str_replace(['public/', 'assets/img/'], ['', 'uploads/products/'], $image_file), '/');
+                                     if (strpos($clean_rel, 'uploads/products/') === false && !preg_match('#^https?://#i', $clean_rel)) {
+                                         $clean_rel = 'uploads/products/' . $clean_rel;
+                                     }
 
-                                        echo '<img src="' . htmlspecialchars($img_url) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
-                                    } else if (preg_match('#^https?://#i', $image_file)) {
-                                        echo '<img src="' . htmlspecialchars($image_file) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
-                                    } else {
-                                        echo '<div class="no-image">No image</div>';
-                                    }
-                                } else {
-                                    echo '<div class="no-image">No image</div>';
-                                }
-                                ?>
+                                     $disk_path1 = dirname(__DIR__, 2) . '/public/' . $clean_rel;
+                                     $disk_path2 = dirname(__DIR__, 2) . '/public/assets/img/' . basename($clean_rel);
+
+                                     if (file_exists($disk_path1)) {
+                                         $img_url = base_url('/public/' . $clean_rel);
+                                         echo '<img src="' . htmlspecialchars($img_url) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
+                                     } else if (file_exists($disk_path2)) {
+                                         $img_url = base_url('/public/assets/img/' . basename($clean_rel));
+                                         echo '<img src="' . htmlspecialchars($img_url) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
+                                     } else if (preg_match('#^https?://#i', $image_file)) {
+                                         echo '<img src="' . htmlspecialchars($image_file) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
+                                     } else {
+                                         echo '<div class="admin-no-thumb">No<br>Image</div>';
+                                     }
+                                 } else {
+                                     echo '<div class="admin-no-thumb">No<br>Image</div>';
+                                 }
+                                 ?>
                             </td>
                             
                             <td>
@@ -470,13 +517,13 @@ $products = $conn->query($query);
                             
                             <td>
                                 <div class="size-info">
-                                    <?php 
+                                    <?php
                                     if (!empty($size_prices) && is_array($size_prices)) {
                                         foreach ($size_prices as $size_id => $price) {
                                             // Get size name from database
                                             $size_name = '';
-                                            $size_query = $conn->prepare("SELECT size_name, size_details FROM sizes WHERE size_id = ?");
-                                            $size_query->bind_param("i", $size_id);
+                                            $size_query = $conn->prepare('SELECT size_name, size_details FROM sizes WHERE size_id = ?');
+                                            $size_query->bind_param('i', $size_id);
                                             $size_query->execute();
                                             $size_result = $size_query->get_result();
                                             if ($size_row = $size_result->fetch_assoc()) {
@@ -484,11 +531,11 @@ $products = $conn->query($query);
                                                 $size_details = $size_row['size_details'];
                                             }
                                             $size_query->close();
-                                            
+
                                             if ($size_name) {
                                                 // Get quantity for this size from size_qtys JSON
-                                                $qty_for_size = isset($size_qtys[$size_id]) ? (int)$size_qtys[$size_id] : 0;
-                                                
+                                                $qty_for_size = isset($size_qtys[$size_id]) ? (int) $size_qtys[$size_id] : 0;
+
                                                 // Display with tooltip showing detailed info
                                                 echo '<div class="tooltip">';
                                                 echo '<span class="size-price-badge">';
@@ -514,27 +561,27 @@ $products = $conn->query($query);
                             <td>
                                 <?php
                                 // Determine wick display
-                              // Determine wick display
-$wick_icon = '🕯️';
-$wick_class = 'wick-single';
-$wick_label = 'Single';
+                                // Determine wick display
+                                $wick_icon = '🕯️';
+                                $wick_class = 'wick-single';
+                                $wick_label = 'Single';
 
-if ($wick_type === 'double') {
-    $wick_icon = '🕯️🕯️';
-    $wick_class = 'wick-double';
-    $wick_label = 'Double';
-} elseif ($wick_type === 'none') {
-    $wick_icon = '🚫';
-    $wick_class = 'wick-none';
-    $wick_label = 'No Wick';
-} elseif ($wick_type === 'single' || empty($wick_type)) {
-    $wick_icon = '🕯️';
-    $wick_class = 'wick-single';
-    $wick_label = 'Single';
-} else {
-    $wick_class = 'wick-unknown';
-    $wick_label = 'Unknown';
-}
+                                if ($wick_type === 'double') {
+                                    $wick_icon = '🕯️🕯️';
+                                    $wick_class = 'wick-double';
+                                    $wick_label = 'Double';
+                                } elseif ($wick_type === 'none') {
+                                    $wick_icon = '🚫';
+                                    $wick_class = 'wick-none';
+                                    $wick_label = 'No Wick';
+                                } elseif ($wick_type === 'single' || empty($wick_type)) {
+                                    $wick_icon = '🕯️';
+                                    $wick_class = 'wick-single';
+                                    $wick_label = 'Single';
+                                } else {
+                                    $wick_class = 'wick-unknown';
+                                    $wick_label = 'Unknown';
+                                }
 
                                 echo '<span class="wick-badge ' . $wick_class . '">';
                                 echo $wick_icon . ' ' . $wick_label;
@@ -543,14 +590,14 @@ if ($wick_type === 'double') {
                             </td>
                             
                             <td>
-                                <?php 
+                                <?php
                                 $color_ids = json_decode($row['color_id'], true);
                                 if (!empty($color_ids) && is_array($color_ids)) {
                                     foreach ($color_ids as $color_id) {
                                         $color_name = '';
                                         $color_hex = '';
-                                        $color_query = $conn->prepare("SELECT color_name, color_hex FROM colors WHERE color_id = ?");
-                                        $color_query->bind_param("i", $color_id);
+                                        $color_query = $conn->prepare('SELECT color_name, color_hex FROM colors WHERE color_id = ?');
+                                        $color_query->bind_param('i', $color_id);
                                         $color_query->execute();
                                         $color_result = $color_query->get_result();
                                         if ($color_row = $color_result->fetch_assoc()) {
@@ -558,12 +605,14 @@ if ($wick_type === 'double') {
                                             $color_hex = $color_row['color_hex'];
                                         }
                                         $color_query->close();
-                                        
+
                                         if ($color_name) {
                                             echo '<span class="badge" style="';
-                                            if ($color_hex) echo 'background: ' . $color_hex . '20; border-left: 3px solid ' . $color_hex . ';';
+                                            if ($color_hex)
+                                                echo 'background: ' . $color_hex . '20; border-left: 3px solid ' . $color_hex . ';';
                                             echo '">';
-                                            if ($color_hex) echo '<span style="display: inline-block; width: 10px; height: 10px; background: ' . $color_hex . '; border-radius: 2px; margin-right: 4px;"></span>';
+                                            if ($color_hex)
+                                                echo '<span style="display: inline-block; width: 10px; height: 10px; background: ' . $color_hex . '; border-radius: 2px; margin-right: 4px;"></span>';
                                             echo htmlspecialchars($color_name) . '</span>';
                                         }
                                     }
@@ -574,20 +623,20 @@ if ($wick_type === 'double') {
                             </td>
                             
                             <td>
-                                <?php 
+                                <?php
                                 $box_ids = json_decode($row['box_id'], true);
                                 if (!empty($box_ids) && is_array($box_ids)) {
                                     foreach ($box_ids as $box_id) {
                                         $box_name = '';
-                                        $box_query = $conn->prepare("SELECT box_name FROM boxes WHERE box_id = ?");
-                                        $box_query->bind_param("i", $box_id);
+                                        $box_query = $conn->prepare('SELECT box_name FROM boxes WHERE box_id = ?');
+                                        $box_query->bind_param('i', $box_id);
                                         $box_query->execute();
                                         $box_result = $box_query->get_result();
                                         if ($box_row = $box_result->fetch_assoc()) {
                                             $box_name = $box_row['box_name'];
                                         }
                                         $box_query->close();
-                                        
+
                                         if ($box_name) {
                                             echo '<span class="badge">📦 ' . htmlspecialchars($box_name) . '</span>';
                                         }
@@ -605,7 +654,7 @@ if ($wick_type === 'double') {
                                 if (!empty($size_qtys) && is_array($size_qtys)) {
                                     $total_qty_display = array_sum($size_qtys);
                                 } else {
-                                    $total_qty_display = (int)$row['qty'];
+                                    $total_qty_display = (int) $row['qty'];
                                 }
                                 ?>
                                 <span class="badge" style="background: #dbeafe; color: #1e40af;">
@@ -632,6 +681,19 @@ if ($wick_type === 'double') {
                     <?php endwhile; ?>
                 </tbody>
             </table>
+
+            <?php if ($totalPages > 1): ?>
+                <div class="admin-pagination">
+                    <div>Showing <?= min($offset + 1, $totalRows); ?> to <?= min($offset + $limit, $totalRows); ?> of <?= $totalRows; ?> products</div>
+                    <div class="admin-pagination-pages">
+                        <a href="<?= base_url('/admin/list_product?page=' . max(1, $page - 1)); ?>" class="admin-page-link <?= $page <= 1 ? 'disabled' : ''; ?>">&laquo; Prev</a>
+                        <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                            <a href="<?= base_url('/admin/list_product?page=' . $p); ?>" class="admin-page-link <?= $p == $page ? 'active' : ''; ?>"><?= $p; ?></a>
+                        <?php endfor; ?>
+                        <a href="<?= base_url('/admin/list_product?page=' . min($totalPages, $page + 1)); ?>" class="admin-page-link <?= $page >= $totalPages ? 'disabled' : ''; ?>">Next &raquo;</a>
+                    </div>
+                </div>
+            <?php endif; ?>
         <?php else: ?>
             <div class="empty-state">
                 <p>No products found in the database.</p>

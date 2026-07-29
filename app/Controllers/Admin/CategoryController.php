@@ -3,23 +3,27 @@ namespace App\Controllers\Admin;
 
 use App\Middleware\AdminAuthMiddleware;
 
-class BoxController {
-    public static function index() {
+class CategoryController
+{
+    public static function index()
+    {
         AdminAuthMiddleware::handle();
         view('admin/sidebar');
-        view('admin/box');
+        view('admin/categories');
     }
 
-    public static function add() {
+    public static function add()
+    {
         AdminAuthMiddleware::handle();
         view('admin/sidebar');
-        view('admin/add_box');
+        view('admin/add_category');
     }
 
-    public static function edit() {
+    public static function edit()
+    {
         AdminAuthMiddleware::handle();
         view('admin/sidebar');
-        view('admin/edit_box');
+        view('admin/edit_category');
     }
 }
 ?>

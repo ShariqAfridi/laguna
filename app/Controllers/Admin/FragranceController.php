@@ -9,5 +9,17 @@ class FragranceController {
         view('admin/sidebar');
         view('admin/fragrance');
     }
+
+    public static function add() {
+        AdminAuthMiddleware::handle();
+        view('admin/sidebar');
+        view('admin/add_fragrance');
+    }
+
+    public static function edit() {
+        AdminAuthMiddleware::handle();
+        view('admin/sidebar');
+        view('admin/edit_fragrance');
+    }
 }
 ?>

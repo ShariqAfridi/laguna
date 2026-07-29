@@ -9,5 +9,17 @@ class ColorsController {
         view('admin/sidebar');
         view('admin/colors');
     }
+
+    public static function add() {
+        AdminAuthMiddleware::handle();
+        view('admin/sidebar');
+        view('admin/add_color');
+    }
+
+    public static function edit() {
+        AdminAuthMiddleware::handle();
+        view('admin/sidebar');
+        view('admin/edit_color');
+    }
 }
 ?>

@@ -2,10 +2,11 @@
 // config/database.php — Database Connection Factory
 require_once __DIR__ . '/app.php';
 
-function get_db_connection() {
+function get_db_connection()
+{
     static $conn = null;
     if ($conn === null) {
-        $host     = env('DB_HOST', 'localhost');
+        $host = env('DB_HOST', 'localhost');
         $username = env('DB_USER', 'root');
         $password = env('DB_PASS', '');
         $database = env('DB_NAME', 'laguna');

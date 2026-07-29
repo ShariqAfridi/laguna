@@ -232,59 +232,52 @@ function userQs($page, $role, $status, $search) {
         <?php endif; ?>
 
         <!-- Header -->
-        <div class="users-header">
-            <h2>Users Management (<?php echo $totalUsers; ?>)</h2>
-            <div class="users-controls">
-                <form method="GET" action="" style="display:flex; gap:10px;">
+        <div class="admin-header">
+            <div>
+                <h2 class="admin-title">Customer & User Accounts (<?php echo $totalUsers; ?>)</h2>
+                <p class="admin-subtitle">Manage customer accounts, roles, and order spending history.</p>
+            </div>
+            <div>
+                <form method="GET" action="" style="display:flex; gap:10px; flex-wrap:wrap;">
                     <?php if (!empty($roleFilter)): ?><input type="hidden" name="role" value="<?php echo htmlspecialchars($roleFilter); ?>"><?php endif; ?>
                     <?php if (!empty($statusFilter)): ?><input type="hidden" name="status" value="<?php echo htmlspecialchars($statusFilter); ?>"><?php endif; ?>
                     <div class="search-box">
-                        <input type="text" name="search" placeholder="Search user, email, city..." value="<?php echo htmlspecialchars($searchTerm); ?>">
-                        <button type="submit"><i class="fas fa-search"></i></button>
+                        <input type="text" name="search" class="admin-input" placeholder="Search user, email, city..." value="<?php echo htmlspecialchars($searchTerm); ?>" style="width:230px;">
                     </div>
+                    <button type="submit" class="admin-btn-primary" style="padding:9px 16px;">Search</button>
+                    <button type="button" class="admin-btn-secondary" onclick="exportToCSV()" style="padding:9px 16px;">Export CSV</button>
                     <?php if (!empty($searchTerm) || !empty($roleFilter) || !empty($statusFilter)): ?>
-                        <a href="<?php echo $base; ?>/admin/users" class="btn-reset"><i class="fas fa-times"></i> Reset</a>
+                        <a href="<?php echo $base; ?>/admin/users" class="admin-btn-secondary" style="padding:9px 16px; text-decoration:none;">Reset</a>
                     <?php endif; ?>
                 </form>
-                <button class="export-btn" onclick="exportToCSV()"><i class="fas fa-file-export"></i> Export CSV</button>
             </div>
         </div>
 
-        <!-- Role & Status Pills -->
+        <!-- Status Pills -->
         <div class="status-filters">
-            <a href="<?php echo userQs(1, '', $statusFilter, $searchTerm); ?>" class="status-pill <?php echo (empty($roleFilter) || $roleFilter === 'all') ? 'active' : ''; ?>">
-                All Roles <span class="count"><?php echo $roleCounts['all']; ?></span>
+            <a href="<?php echo userQs(1, '', '', $searchTerm); ?>" class="status-pill <?php echo (empty($statusFilter) || $statusFilter === 'all') ? 'active' : ''; ?>">
+                All Customers <span class="count"><?php echo $statusCounts['all']; ?></span>
             </a>
-            <a href="<?php echo userQs(1, 'customer', $statusFilter, $searchTerm); ?>" class="status-pill <?php echo $roleFilter === 'customer' ? 'active' : ''; ?>">
-                Customers <span class="count"><?php echo $roleCounts['customer']; ?></span>
-            </a>
-            <a href="<?php echo userQs(1, 'admin', $statusFilter, $searchTerm); ?>" class="status-pill <?php echo $roleFilter === 'admin' ? 'active' : ''; ?>">
-                Admins <span class="count"><?php echo $roleCounts['admin']; ?></span>
-            </a>
-            <span style="border-right:1px solid #e0e0e0; margin:0 4px;"></span>
-            <a href="<?php echo userQs(1, $roleFilter, '', $searchTerm); ?>" class="status-pill <?php echo (empty($statusFilter) || $statusFilter === 'all') ? 'active' : ''; ?>">
-                All Statuses <span class="count"><?php echo $statusCounts['all']; ?></span>
-            </a>
-            <a href="<?php echo userQs(1, $roleFilter, 'active', $searchTerm); ?>" class="status-pill <?php echo $statusFilter === 'active' ? 'active' : ''; ?>">
+            <a href="<?php echo userQs(1, '', 'active', $searchTerm); ?>" class="status-pill <?php echo $statusFilter === 'active' ? 'active' : ''; ?>">
                 Active <span class="count"><?php echo $statusCounts['active']; ?></span>
             </a>
-            <a href="<?php echo userQs(1, $roleFilter, 'inactive', $searchTerm); ?>" class="status-pill <?php echo $statusFilter === 'inactive' ? 'active' : ''; ?>">
+            <a href="<?php echo userQs(1, '', 'inactive', $searchTerm); ?>" class="status-pill <?php echo $statusFilter === 'inactive' ? 'active' : ''; ?>">
                 Inactive <span class="count"><?php echo $statusCounts['inactive']; ?></span>
             </a>
-            <a href="<?php echo userQs(1, $roleFilter, 'banned', $searchTerm); ?>" class="status-pill <?php echo $statusFilter === 'banned' ? 'active' : ''; ?>">
+            <a href="<?php echo userQs(1, '', 'banned', $searchTerm); ?>" class="status-pill <?php echo $statusFilter === 'banned' ? 'active' : ''; ?>">
                 Banned <span class="count"><?php echo $statusCounts['banned']; ?></span>
             </a>
         </div>
 
-        <!-- Users Table Card -->
-        <div class="users-card">
+        <!-- Users Table Container -->
+        <div class="admin-table-container">
             <?php if (count($users) === 0): ?>
                 <div class="empty-state">
                     <i class="fas fa-user-slash"></i>
                     <p>No users found matching your search or filter options.</p>
                 </div>
             <?php else: ?>
-                <table class="users-table">
+                <table class="admin-table">
                     <thead>
                         <tr>
                             <th>S.No</th>
@@ -425,26 +418,29 @@ function userQs($page, $role, $status, $search) {
 
         <!-- Pagination -->
         <?php if ($totalPages > 1): ?>
-            <div class="pagination">
-                <?php if ($page > 1): ?>
-                    <a href="<?php echo userQs($page - 1, $roleFilter, $statusFilter, $searchTerm); ?>">&laquo; Prev</a>
-                <?php else: ?>
-                    <span class="disabled">&laquo; Prev</span>
-                <?php endif; ?>
-
-                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                    <?php if ($i === $page): ?>
-                        <span class="active"><?php echo $i; ?></span>
+            <div class="admin-pagination">
+                <div>Showing page <?= $page; ?> of <?= $totalPages; ?> (Total <?= $totalUsers; ?> users)</div>
+                <div class="admin-pagination-pages">
+                    <?php if ($page > 1): ?>
+                        <a href="<?php echo userQs($page - 1, $roleFilter, $statusFilter, $searchTerm); ?>" class="admin-page-link">&laquo; Prev</a>
                     <?php else: ?>
-                        <a href="<?php echo userQs($i, $roleFilter, $statusFilter, $searchTerm); ?>"><?php echo $i; ?></a>
+                        <span class="admin-page-link disabled">&laquo; Prev</span>
                     <?php endif; ?>
-                <?php endfor; ?>
 
-                <?php if ($page < $totalPages): ?>
-                    <a href="<?php echo userQs($page + 1, $roleFilter, $statusFilter, $searchTerm); ?>">Next &raquo;</a>
-                <?php else: ?>
-                    <span class="disabled">Next &raquo;</span>
-                <?php endif; ?>
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <?php if ($i === $page): ?>
+                            <span class="admin-page-link active"><?php echo $i; ?></span>
+                        <?php else: ?>
+                            <a href="<?php echo userQs($i, $roleFilter, $statusFilter, $searchTerm); ?>" class="admin-page-link"><?php echo $i; ?></a>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+
+                    <?php if ($page < $totalPages): ?>
+                        <a href="<?php echo userQs($page + 1, $roleFilter, $statusFilter, $searchTerm); ?>" class="admin-page-link">Next &raquo;</a>
+                    <?php else: ?>
+                        <span class="admin-page-link disabled">Next &raquo;</span>
+                    <?php endif; ?>
+                </div>
             </div>
         <?php endif; ?>
 

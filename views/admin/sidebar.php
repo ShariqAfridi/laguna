@@ -2,7 +2,9 @@
 check_admin_auth();
 
 $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
+if (substr($scriptDir, -6) === '/logic') {
+    $scriptDir = substr($scriptDir, 0, -6);
+}
 $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
 ?>
 <!DOCTYPE html>
@@ -31,6 +33,275 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
             font-family: 'Inter', sans-serif;
             background: #f5f7fa;
             transition: background 0.2s;
+        }
+
+        /* ===== UNIFIED ADMIN DESIGN SYSTEM GLOBAL CLASSES ===== */
+        .admin-wrapper {
+            width: 100%;
+            max-width: 100%;
+            padding: 24px 40px;
+            margin: 0;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .admin-title {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2c35;
+            margin: 0;
+        }
+        .admin-subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .admin-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+        .admin-table-container {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            overflow-x: auto;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+        .admin-table th {
+            padding: 14px 16px;
+            border-bottom: 2px solid #e5e7eb;
+            background: #f9fafb;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b7280;
+        }
+        .admin-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+            vertical-align: middle;
+        }
+        .admin-label {
+            display: block;
+            font-weight: 600;
+            font-size: 13px;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+        .admin-input, .admin-select, .admin-textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            outline: none;
+            background: #ffffff;
+        }
+        .admin-input:focus, .admin-select:focus, .admin-textarea:focus {
+            border-color: #1f2c35;
+            box-shadow: 0 0 0 3px rgba(31,44,53,0.1);
+        }
+        .admin-btn-primary {
+            background: #1f2c35;
+            color: #ffffff;
+            padding: 11px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .admin-btn-primary:hover {
+            background: #111827;
+            color: #ffffff;
+        }
+        .admin-btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 11px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .admin-btn-edit {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .admin-btn-delete {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-block;
+        }
+        .admin-badge-active {
+            background: #dcfce7;
+            color: #15803d;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .admin-badge-inactive {
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .admin-thumb {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .admin-no-thumb {
+            width: 48px;
+            height: 48px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 10px;
+            font-style: italic;
+            font-weight: 500;
+            line-height: 1.2;
+            text-align: center;
+            user-select: none;
+        }
+        .admin-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 13px;
+            color: #6b7280;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .admin-pagination-pages {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .admin-page-link {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            color: #374151;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .admin-page-link:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        .admin-page-link.active {
+            background: #1f2c35;
+            color: #ffffff;
+            border-color: #1f2c35;
+        }
+        .admin-page-link.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            background: #f9fafb;
+        }
+        .status-filters {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 16px;
+            border-radius: 20px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .status-pill:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        .status-pill.active {
+            background: #1f2c35;
+            color: #ffffff;
+            border-color: #1f2c35;
+        }
+        .status-pill .count {
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .status-pill.active .count {
+            background: rgba(255,255,255,0.2);
+            color: #ffffff;
         }
 
         /* ----- LVB HEADER STYLES (exactly matching provided header, but integrated) ----- */
@@ -378,15 +649,6 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
                     </svg>
                     Dashboard
                 </a></li>
-                <!-- Add Products - plus in circle, distinct from plus line -->
-                <li><a href="<?php echo $base; ?>/admin/add_product" class="nav-link">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="16"/>
-                        <line x1="8" y1="12" x2="16" y2="12"/>
-                    </svg>
-                    Add Products
-                </a></li>
                 <!-- Products - grid/list with rows -->
                 <li><a href="<?php echo $base; ?>/admin/list_product" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -397,24 +659,12 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
                     </svg>
                     Products
                 </a></li>
-                   <li><a href="<?php echo $base; ?>/admin/list_accessory" class="nav-link">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <rect x="3" y="3" width="7" height="7" rx="1"/>
-                        <rect x="14" y="3" width="7" height="7" rx="1"/>
-                        <rect x="3" y="14" width="7" height="7" rx="1"/>
-                        <rect x="14" y="14" width="7" height="7" rx="1"/>
-                    </svg>
-                    Accessories
-                </a></li>
-                <!-- Sizes - ruler / size icon -->
-                <li><a href="<?php echo $base; ?>/admin/sizes" class="nav-link">
+                <!-- Categories - grid/vessel category icon -->
+                <li><a href="<?php echo $base; ?>/admin/categories" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                        <line x1="4" y1="8" x2="20" y2="8"/>
-                        <line x1="4" y1="16" x2="20" y2="16"/>
-                        <path d="M8 4 L8 20 M16 4 L16 20"/>
-                        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+                        <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/>
                     </svg>
-                    Sizes
+                    Categories
                 </a></li>
                 <!-- Fragrance - flower / aromatic symbol -->
                 <li><a href="<?php echo $base; ?>/admin/fragrance" class="nav-link">
@@ -442,6 +692,13 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
                         <line x1="12" y1="22" x2="12" y2="12"/>
                     </svg>
                     Box
+                </a></li>
+                <!-- Accessories - Candle Care / Sparkle Gem Icon -->
+                <li><a href="<?php echo $base; ?>/admin/accessories" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                        <path d="M12 2l2.4 4.8 5.3.8-3.8 3.7.9 5.3-4.8-2.5-4.8 2.5.9-5.3-3.8-3.7 5.3-.8z"/>
+                    </svg>
+                    Accessories
                 </a></li>
                 <!-- Orders - receipt/truck icon distinct -->
                 <li><a href="<?php echo $base; ?>/admin/orders" class="nav-link">
@@ -508,35 +765,44 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
                 }
             });
 
-            // ----- ACTIVE LINK HIGHLIGHT (based on current path, like original) -----
-            const currentPath = window.location.pathname;
+            // ----- ACTIVE LINK HIGHLIGHT (smart module & sub-route matching) -----
+            const currentPath = window.location.pathname.toLowerCase();
+            let matched = false;
+
             navLinks.forEach(link => {
-                const href = link.getAttribute('href');
-                // ignore logout href because it's '#', but careful
-                if (href && href !== '#' && href !== '/admin_dashboard' && href !== '/add_product' && href !== '/list_product' && href !== '/sizes' && href !== '/fragrance' && href !== '/colors' && href !== '/boxes' && href !== '/orders') {
-                    // relative compare
-                    if (currentPath === href) {
-                        link.classList.add('active');
-                    }
-                }
-                // default dashboard active if root matches or exactly /admin_dashboard
-                if ((currentPath === '/' || currentPath === '/admin_dashboard') && href === '/admin_dashboard') {
+                const href = (link.getAttribute('href') || '').toLowerCase();
+                if (!href || href === '#' || href.includes('logout')) return;
+
+                // Extract module route identifier (e.g. "fragrance", "categories", "boxes", "colors", "product", "accessories", "orders", "users", "dashboard")
+                const extractModule = (path) => {
+                    if (path.includes('fragrance')) return 'fragrance';
+                    if (path.includes('categor')) return 'categories';
+                    if (path.includes('color')) return 'colors';
+                    if (path.includes('box')) return 'boxes';
+                    if (path.includes('product')) return 'products';
+                    if (path.includes('accessor')) return 'accessories';
+                    if (path.includes('order')) return 'orders';
+                    if (path.includes('user')) return 'users';
+                    if (path.includes('dashboard')) return 'dashboard';
+                    return '';
+                };
+
+                const currentMod = extractModule(currentPath);
+                const linkMod = extractModule(href);
+
+                if (currentMod && linkMod && currentMod === linkMod) {
                     link.classList.add('active');
+                    matched = true;
+                } else if (currentPath === href) {
+                    link.classList.add('active');
+                    matched = true;
                 }
-                if (currentPath === '/add_product' && href === '/add_product') link.classList.add('active');
-                if (currentPath === '/list_product' && href === '/list_product') link.classList.add('active');
-                if (currentPath === '/sizes' && href === '/sizes') link.classList.add('active');
-                if (currentPath === '/fragrance' && href === '/fragrance') link.classList.add('active');
-                if (currentPath === '/colors' && href === '/colors') link.classList.add('active');
-                if (currentPath === '/boxes' && href === '/boxes') link.classList.add('active');
-                if (currentPath === '/orders' && href === '/orders') link.classList.add('active');
-                if (currentPath === '/users' && href === '/users') link.classList.add('active');
             });
 
-            // Additional: if no match, set dashboard active by default if path is /admin_dashboard or similar
-            if (currentPath === '/admin_dashboard' || currentPath === '/' || currentPath === '') {
-                const dashLink = Array.from(navLinks).find(link => link.getAttribute('href') === '/admin_dashboard');
-                if (dashLink && !dashLink.classList.contains('active')) dashLink.classList.add('active');
+            // Fallback: Default to dashboard if root or unmapped admin URL
+            if (!matched && (currentPath.endsWith('/admin') || currentPath.endsWith('/admin/'))) {
+                const dashLink = Array.from(navLinks).find(link => (link.getAttribute('href') || '').includes('dashboard'));
+                if (dashLink) dashLink.classList.add('active');
             }
 
             // ----- LOGOUT FUNCTIONALITY: ends session and redirects to /admin -----

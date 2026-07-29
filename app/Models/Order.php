@@ -43,11 +43,28 @@ class Order {
             }
         }
 
+        // Candle Industry Business Metrics
+        $productsRes = $conn->query("SELECT COUNT(*) as total_products FROM products");
+        $totalProducts = $productsRes ? (int)($productsRes->fetch_assoc()['total_products'] ?? 0) : 0;
+
+        $fragrancesRes = $conn->query("SELECT COUNT(*) as total_fragrances FROM fragrances");
+        $totalFragrances = $fragrancesRes ? (int)($fragrancesRes->fetch_assoc()['total_fragrances'] ?? 0) : 0;
+
+        $categoriesRes = $conn->query("SELECT COUNT(*) as total_categories FROM categories");
+        $totalCategories = $categoriesRes ? (int)($categoriesRes->fetch_assoc()['total_categories'] ?? 0) : 0;
+
+        $boxesRes = $conn->query("SELECT COUNT(*) as total_boxes FROM boxes");
+        $totalBoxes = $boxesRes ? (int)($boxesRes->fetch_assoc()['total_boxes'] ?? 0) : 0;
+
         return [
             'total_sales'      => $totalSales,
             'total_revenue'    => $totalRevenue,
             'total_orders'     => $totalOrders,
             'total_customers'  => $totalCustomers,
+            'total_products'   => $totalProducts,
+            'total_fragrances' => $totalFragrances,
+            'total_categories' => $totalCategories,
+            'total_boxes'      => $totalBoxes,
             'current_period'   => $currentPeriod,
             'prev_period'      => $prevPeriod,
             'percentage_change'=> $percentageChange,

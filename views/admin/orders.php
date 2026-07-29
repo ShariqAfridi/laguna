@@ -289,30 +289,29 @@ function statusBadgeClass($sk) {
     </style>
 </head>
 <body>
-<div class="main-content">
-<div class="orders-section">
+<div class="admin-wrapper">
 
     <?php if (isset($_GET['updated'])): ?>
-        <div class="toast <?= $_GET['updated'] === 'success' ? 'success' : 'error' ?> show">
-            <i class="fas <?= $_GET['updated'] === 'success' ? 'fa-check-circle' : 'fa-times-circle' ?>"></i>
+        <div style="background:#dcfce7; color:#15803d; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-weight:600;">
             <?= $_GET['updated'] === 'success' ? 'Order status updated successfully!' : 'Failed to update status. Please try again.' ?>
         </div>
     <?php endif; ?>
 
-    <div class="orders-header">
-        <h2><i class="fas fa-shopping-bag"></i> Orders History</h2>
-        <div class="orders-controls">
+    <div class="admin-header">
+        <div>
+            <h2 class="admin-title">Order Management & History</h2>
+            <p class="admin-subtitle">Track customer candle orders, payment statuses, and order fulfillments.</p>
+        </div>
+        <div>
             <form method="GET" action="" style="display:flex;gap:10px;flex-wrap:wrap;">
                 <div class="search-box">
-                    <input type="text" name="search" placeholder="Search by name, order #, address..."
-                           value="<?= htmlspecialchars($searchTerm) ?>">
-                    <button type="submit"><i class="fas fa-search"></i></button>
+                    <input type="text" name="search" class="admin-input" placeholder="Search by name, order #, address..."
+                           value="<?= htmlspecialchars($searchTerm) ?>" style="width:250px;">
                 </div>
-                <button type="button" class="export-btn" onclick="exportToCSV()">
-                    <i class="fas fa-download"></i> Export
-                </button>
+                <button type="submit" class="admin-btn-primary" style="padding:9px 16px;">Search</button>
+                <button type="button" class="admin-btn-secondary" onclick="exportToCSV()" style="padding:9px 16px;">Export CSV</button>
                 <?php if (!empty($searchTerm) || !empty($statusFilter)): ?>
-                    <a href="<?= ($base ?? '') ?>/admin/orders" class="btn-reset"><i class="fas fa-times"></i> Reset</a>
+                    <a href="<?= ($base ?? '') ?>/admin/orders" class="admin-btn-secondary" style="padding:9px 16px; text-decoration:none;">Reset</a>
                 <?php endif; ?>
             </form>
         </div>
@@ -331,8 +330,8 @@ function statusBadgeClass($sk) {
         <?php endforeach; ?>
     </div>
 
-    <div class="orders-card">
-        <table class="orders-table">
+    <div class="admin-table-container">
+        <table class="admin-table">
             <thead>
                 <tr>
                     <th>S.No</th><th>Full Name</th><th>Address</th>
@@ -428,26 +427,29 @@ function statusBadgeClass($sk) {
     </div>
 
     <?php if ($totalPages > 1): ?>
-    <div class="pagination">
-        <?php if ($page > 1): ?>
-            <a href="<?= qs($page-1,$statusFilter,$searchTerm) ?>">&laquo; Previous</a>
-        <?php else: ?>
-            <span class="disabled">&laquo; Previous</span>
-        <?php endif; ?>
-
-        <?php for ($i=max(1,$page-2); $i<=min($totalPages,$page+2); $i++): ?>
-            <?php if ($i==$page): ?>
-                <span class="active"><?= $i ?></span>
+    <div class="admin-pagination">
+        <div>Showing page <?= $page; ?> of <?= $totalPages; ?> (Total <?= $totalOrders; ?> orders)</div>
+        <div class="admin-pagination-pages">
+            <?php if ($page > 1): ?>
+                <a href="<?= qs($page-1,$statusFilter,$searchTerm) ?>" class="admin-page-link">&laquo; Prev</a>
             <?php else: ?>
-                <a href="<?= qs($i,$statusFilter,$searchTerm) ?>"><?= $i ?></a>
+                <span class="admin-page-link disabled">&laquo; Prev</span>
             <?php endif; ?>
-        <?php endfor; ?>
 
-        <?php if ($page < $totalPages): ?>
-            <a href="<?= qs($page+1,$statusFilter,$searchTerm) ?>">Next &raquo;</a>
-        <?php else: ?>
-            <span class="disabled">Next &raquo;</span>
-        <?php endif; ?>
+            <?php for ($i=max(1,$page-2); $i<=min($totalPages,$page+2); $i++): ?>
+                <?php if ($i==$page): ?>
+                    <span class="admin-page-link active"><?= $i ?></span>
+                <?php else: ?>
+                    <a href="<?= qs($i,$statusFilter,$searchTerm) ?>" class="admin-page-link"><?= $i ?></a>
+                <?php endif; ?>
+            <?php endfor; ?>
+
+            <?php if ($page < $totalPages): ?>
+                <a href="<?= qs($page+1,$statusFilter,$searchTerm) ?>" class="admin-page-link">Next &raquo;</a>
+            <?php else: ?>
+                <span class="admin-page-link disabled">Next &raquo;</span>
+            <?php endif; ?>
+        </div>
     </div>
     <?php endif; ?>
 

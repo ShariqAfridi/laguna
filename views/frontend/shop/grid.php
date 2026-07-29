@@ -25,10 +25,12 @@ if (!$showVesselSelection) {
 
     if ($result) {
         // Get lookup data
-        $frag_result = $conn->query("SELECT fragrance_id, fragrance_name FROM fragrances");
+        $frag_result = $conn->query("SELECT fragrance_id, fragrance_name, fragrance_image FROM fragrances");
+        $fragrance_details = [];
         if ($frag_result) {
             while ($row = $frag_result->fetch_assoc()) {
                 $fragrances[$row['fragrance_id']] = $row['fragrance_name'];
+                $fragrance_details[$row['fragrance_id']] = $row['fragrance_image'] ?? '';
             }
         }
 
@@ -79,38 +81,24 @@ if (!$showVesselSelection) {
             $image_name = $row['image'];
             $image_path = '';
             if (!empty($image_name)) {
-                $image_path = (strpos($image_name, 'http') === 0) ? $image_name : $base . '/img/' . ltrim($image_name, '/');
+                if (strpos($image_name, 'http') === 0) {
+                    $image_path = $image_name;
+                } elseif (strpos($image_name, 'uploads/') !== false) {
+                    $image_path = base_url('/public/' . ltrim($image_name, '/'));
+                } else {
+                    $image_path = $base . '/img/' . ltrim($image_name, '/');
+                }
             }
             $row['image_url'] = $image_path ?: 'https://placehold.co/600x600?text=No+Image';
 
             $fragrance_id = is_numeric($row['fragrance_id']) ? $row['fragrance_id'] : 0;
             $row['fragrance_name'] = $fragrances[$fragrance_id] ?? 'Luxury Candle';
             
-            // Get fragrance image
+            // Get fragrance image dynamically from DB
             $fragrance_image_name = '';
-            if ($fragrance_id > 0) {
-                // Map fragrance IDs to their image filenames
-                $fragranceImageMap = [
-                    1 => '01 FRAGRABCE FREE',
-                    2 => '02 AMBER MUSK FRAGRANT',
-                    3 => '03',
-                    4 => '04 PINE & SALT AIR FRAGRANT',
-                    5 => '05 CHAMPAGNE LUXE FRAGRANT',
-                    6 => '06 CITRUS AGAVE ZEST FRAGRANT',
-                    7 => '07',
-                    8 => '08 EVENING TIDE FRAGRANT',
-                    9 => '09 LAVENDER FIELD FRAGRENT',
-                    10 => '10 WILD LEMONGRASS FRAGRANT',
-                    11 => '11 MAHOGANY WOODS FREGRENT',
-                    12 => '12',
-                    13 => '13 L_ATTRACTION FRAGRANT',
-                    14 => '14 VANILLA FIELDS FRAGRANT'
-                ];
-                
-                $fragranceFileName = $fragranceImageMap[$fragrance_id] ?? '';
-                if ($fragranceFileName) {
-                    $fragrance_image_name = $base . '/img/' . $fragranceFileName . '.webp';
-                }
+            if ($fragrance_id > 0 && !empty($fragrance_details[$fragrance_id])) {
+                $fImg = $fragrance_details[$fragrance_id];
+                $fragrance_image_name = (strpos($fImg, 'http') === 0) ? $fImg : $base . '/' . ltrim($fImg, '/');
             }
             $row['fragrance_image'] = $fragrance_image_name;
             $products[] = $row;

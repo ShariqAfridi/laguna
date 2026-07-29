@@ -99,20 +99,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
             $image_name = uniqid('candle_', true) . '.' . strtolower($ext);
             
-            // Use the SAME path as add.php
-            $img_dir = dirname(__DIR__, 2) . "/public/assets/img/";
+            $img_dir = dirname(__DIR__, 2) . "/public/uploads/products/";
 
             $image_path = $img_dir . $image_name;
             
             if (!file_exists($img_dir)) {
-                mkdir($img_dir, 0755, true);
+                mkdir($img_dir, 0777, true);
             }
             
             if (move_uploaded_file($_FILES['image']['tmp_name'], $image_path)) {
-                $image = $image_name;
+                $image = 'uploads/products/' . $image_name;
                 // If updating with new image, delete old image
                 if ($edit_mode && $edit_data && !empty($edit_data['image'])) {
-                    $old_image_path = $img_dir . $edit_data['image'];
+                    $old_file = basename($edit_data['image']);
+                    $old_image_path = $img_dir . $old_file;
                     if (file_exists($old_image_path)) {
                         unlink($old_image_path);
                     }

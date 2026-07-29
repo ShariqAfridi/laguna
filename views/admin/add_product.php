@@ -62,16 +62,16 @@ if (!empty($_FILES['image']) && isset($_FILES['image']['tmp_name'])) {
             $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
             $image_name = uniqid('candle_', true) . '.' . strtolower($ext);
 
-            $img_dir = dirname(__DIR__, 2) . "/public/assets/img/";
+            $img_dir = dirname(__DIR__, 2) . "/public/uploads/products/";
 
             $image_path = $img_dir . $image_name;
 
             if (!file_exists($img_dir)) {
-                mkdir($img_dir, 0755, true);
+                mkdir($img_dir, 0777, true);
             }
 
             if (move_uploaded_file($_FILES['image']['tmp_name'], $image_path)) {
-                $image = $image_name;
+                $image = 'uploads/products/' . $image_name;
             } else {
                 $error_message = "Failed to move uploaded image.";
             }

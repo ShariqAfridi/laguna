@@ -2,308 +2,153 @@
 require_once __DIR__ . '/../../db.php';
 
 /* ======================
-    INSERT / UPDATE
-====================== */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $color_name = trim($_POST['color_name']);
-    $color_hex  = $_POST['color_hex'];
-    $id         = $_POST['id'];
-
-    if (!empty($id)) {
-        $stmt = $conn->prepare("UPDATE colors SET color_name=?, color_hex=? WHERE color_id=?");
-        $stmt->bind_param("ssi", $color_name, $color_hex, $id);
-    } else {
-        $stmt = $conn->prepare("INSERT INTO colors (color_name, color_hex) VALUES (?, ?)");
-        $stmt->bind_param("ss", $color_name, $color_hex);
-    }
-
-    $stmt->execute();
-    echo "<script>window.location.href='<?php echo base_url('/admin/colors'); ?>';</script>";
-    exit;
-}
-
-/* ======================
-    DELETE
+    DELETE HANDLER
 ====================== */
 if (isset($_GET['action']) && $_GET['action'] === 'delete') {
-    $id = $_GET['id'];
+    $id = (int)$_GET['id'];
     $stmt = $conn->prepare("DELETE FROM colors WHERE color_id=?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
-    echo "<script>window.location.href='<?php echo base_url('/admin/colors'); ?>';</script>";
+    echo "<script>window.location.href='" . base_url('/admin/colors') . "';</script>";
     exit;
 }
 
 /* ======================
-    FETCH
+    FETCH COLORS
 ====================== */
-$result = $conn->query("SELECT color_id, color_name, color_hex FROM colors ORDER BY color_id DESC");
+$page   = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$limit  = 10;
+$offset = ($page - 1) * $limit;
+
+$statusFilter = isset($_GET['status']) && $_GET['status'] !== '' ? (int)$_GET['status'] : -1;
+
+$allCount = (int)($conn->query("SELECT COUNT(*) as total FROM colors")->fetch_assoc()['total'] ?? 0);
+$activeCount = (int)($conn->query("SELECT COUNT(*) as total FROM colors WHERE status = 1")->fetch_assoc()['total'] ?? 0);
+$inactiveCount = (int)($conn->query("SELECT COUNT(*) as total FROM colors WHERE status = 0")->fetch_assoc()['total'] ?? 0);
+
+$whereSql = "";
+if ($statusFilter === 1) { $whereSql = "WHERE status = 1"; }
+elseif ($statusFilter === 0) { $whereSql = "WHERE status = 0"; }
+
+$totalRows = ($statusFilter === 1) ? $activeCount : (($statusFilter === 0) ? $inactiveCount : $allCount);
+$totalPages = max(1, ceil($totalRows / $limit));
+
+$result = $conn->query("SELECT * FROM colors $whereSql ORDER BY sort_order ASC, color_id DESC LIMIT $offset, $limit");
 ?>
 
-<div class="page-content-wrapper">
-    <div class="color-container">
-        
-        <div class="header-flex">
-            <h2>Color Chart</h2>
-            <p class="subtitle">Define the visual palette for your product collection.</p>
+<div class="admin-wrapper">
+    
+    <div class="admin-header">
+        <div>
+            <h2 class="admin-title">Candle Color Variants</h2>
+            <p class="admin-subtitle">Manage candle color swatches, hex codes, and variant pictures.</p>
         </div>
-
-        <!-- FORM -->
-        <form method="post" id="colorForm" class="input-group">
-            <input type="hidden" name="id" id="edit_id">
-
-            <div class="field">
-                <label>Color Name</label>
-                <input type="text" name="color_name" id="color_name"
-                    placeholder="e.g. Ocean Blue" required>
-            </div>
-
-            <div class="field hex-field">
-                <label>Hex Code</label>
-                <div class="hex-input-wrapper">
-                    <input type="text" name="color_hex" id="color_hex"
-                        placeholder="#687382" maxlength="7" required>
-                    
-                    <div class="palette-trigger" id="openPalette" title="Open Color Picker">
-                        <div class="color-preview" id="livePreview"></div>
-                    </div>
-                </div>
-                <input type="color" id="colorPicker" value="#687382" style="display:none;">
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" id="submitBtn">Add Color</button>
-                <button type="button" id="cancelBtn" style="display:none;" 
-                    onclick="resetForm()" class="btn-cancel">Cancel</button>
-            </div>
-        </form>
-
-        <!-- TABLE -->
-        <div class="table-responsive">
-            <table class="color-table">
-                <thead>
-                    <tr>
-                        <th>S.No</th>
-                        <th>Preview</th>
-                        <th>Color Name</th>
-                        <th>HEX Code</th>
-                        <th style="text-align: right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php $i=1; while($row = $result->fetch_assoc()) { ?>
-                    <tr>
-                        <td><?= $i++; ?></td>
-                        <td>
-                            <div class="table-swatch" style="background: <?= htmlspecialchars($row['color_hex']); ?>;"></div>
-                        </td>
-                        <td><strong><?= htmlspecialchars($row['color_name']); ?></strong></td>
-                        <td><code><?= htmlspecialchars($row['color_hex']); ?></code></td>
-                        <td style="text-align: right;">
-                            <button class="action-btn edit" 
-                                onclick="editRow(
-                                    <?= $row['color_id']; ?>,
-                                    '<?= htmlspecialchars($row['color_name'], ENT_QUOTES); ?>',
-                                    '<?= $row['color_hex']; ?>'
-                                )">✏️</button>
-
-                            <a href="javascript:void(0);" class="action-btn delete" 
-                               onclick="confirmDelete(<?= $row['color_id']; ?>)">🗑️</a>
-                        </td>
-                    </tr>
-                <?php } ?>
-                </tbody>
-            </table>
+        <div>
+            <a href="<?= base_url('/admin/colors/add'); ?>" class="admin-btn-primary">
+                <span>+</span> Add New Color Variant
+            </a>
         </div>
-
     </div>
+
+    <!-- Status Filter Pills -->
+    <div class="status-filters">
+        <a href="<?= base_url('/admin/colors'); ?>" class="status-pill <?= $statusFilter === -1 ? 'active' : ''; ?>">
+            All Color Swatches <span class="count"><?= $allCount; ?></span>
+        </a>
+        <a href="<?= base_url('/admin/colors?status=1'); ?>" class="status-pill <?= $statusFilter === 1 ? 'active' : ''; ?>">
+            Active <span class="count"><?= $activeCount; ?></span>
+        </a>
+        <a href="<?= base_url('/admin/colors?status=0'); ?>" class="status-pill <?= $statusFilter === 0 ? 'active' : ''; ?>">
+            Inactive <span class="count"><?= $inactiveCount; ?></span>
+        </a>
+    </div>
+
+    <!-- TABLE LIST -->
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Swatch</th>
+                    <th>Candle Image</th>
+                    <th>Color Name</th>
+                    <th>HEX Code</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php if ($result && $result->num_rows > 0): ?>
+                <?php while($row = $result->fetch_assoc()): 
+                    $rawHex = trim($row['color_hex'] ?? '#000000');
+                    $cleanHex = preg_replace('/[^0-9A-Fa-f]/', '', $rawHex);
+                    if (strlen($cleanHex) === 3) {
+                        $formattedHex = '#' . $cleanHex[0].$cleanHex[0].$cleanHex[1].$cleanHex[1].$cleanHex[2].$cleanHex[2];
+                    } elseif (strlen($cleanHex) >= 6) {
+                        $formattedHex = '#' . substr($cleanHex, 0, 6);
+                    } else {
+                        $formattedHex = '#' . str_pad($cleanHex, 6, '0');
+                    }
+                    $formattedHex = strtoupper($formattedHex);
+                ?>
+                    <tr>
+                        <td>
+                            <div style="width:40px; height:24px; border-radius:6px; background:<?= htmlspecialchars($formattedHex); ?>; border:1px solid rgba(0,0,0,0.15);" title="<?= htmlspecialchars($formattedHex); ?>"></div>
+                        </td>
+                        <td>
+                            <?php if (!empty($row['color_image'])): ?>
+                                <img src="<?= htmlspecialchars(base_url('/' . ltrim($row['color_image'], '/'))); ?>" alt="Candle Variant" class="admin-thumb">
+                            <?php else: ?>
+                                <div class="admin-no-thumb">No<br>Image</div>
+                            <?php endif; ?>
+                        </td>
+                        <td><strong style="color:#111827; font-size:15px;"><?= htmlspecialchars($row['color_name']); ?></strong></td>
+                        <td><code style="background:#f1f3f5; padding:3px 8px; border-radius:4px; font-family:monospace;"><?= htmlspecialchars($formattedHex); ?></code></td>
+                        <td>
+                            <?php if (($row['status'] ?? 1) == 1): ?>
+                                <span class="admin-badge-active">Active</span>
+                            <?php else: ?>
+                                <span class="admin-badge-inactive">Inactive</span>
+                            <?php endif; ?>
+                        </td>
+                        <td style="text-align:right;">
+                            <a href="<?= base_url('/admin/colors/edit?id=' . $row['color_id']); ?>" class="admin-btn-edit">
+                               ✏️ Edit
+                            </a>
+
+                            <a href="javascript:void(0);" class="admin-btn-delete" onclick="confirmDelete(<?= $row['color_id']; ?>)">
+                               🗑️ Delete
+                            </a>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:40px; color:#9ca3af;">No candle color variants created yet. Click "Add New Color Variant" above.</td>
+                </tr>
+            <?php endif; ?>
+            </tbody>
+        </table>
+
+        <?php if ($totalPages > 1): ?>
+            <div class="admin-pagination">
+                <div>Showing <?= min($offset + 1, $totalRows); ?> to <?= min($offset + $limit, $totalRows); ?> of <?= $totalRows; ?> colors</div>
+                <div class="admin-pagination-pages">
+                    <a href="<?= base_url('/admin/colors?page=' . max(1, $page - 1)); ?>" class="admin-page-link <?= $page <= 1 ? 'disabled' : ''; ?>">&laquo; Prev</a>
+                    <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                        <a href="<?= base_url('/admin/colors?page=' . $p); ?>" class="admin-page-link <?= $p == $page ? 'active' : ''; ?>"><?= $p; ?></a>
+                    <?php endfor; ?>
+                    <a href="<?= base_url('/admin/colors?page=' . min($totalPages, $page + 1)); ?>" class="admin-page-link <?= $page >= $totalPages ? 'disabled' : ''; ?>">Next &raquo;</a>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
+
 </div>
 
 <script>
-const picker = document.getElementById("colorPicker");
-const hexInput = document.getElementById("color_hex");
-const preview = document.getElementById("livePreview");
-const openPalette = document.getElementById("openPalette");
-
-// Trigger hidden native picker
-openPalette.addEventListener("click", () => picker.click());
-
-// Sync picker -> hex input
-picker.addEventListener("input", () => {
-    hexInput.value = picker.value.toUpperCase();
-    preview.style.background = picker.value;
-});
-
-// Sync hex input -> picker
-hexInput.addEventListener("input", () => {
-    let val = hexInput.value;
-    if (!val.startsWith('#')) val = '#' + val;
-    if (/^#([0-9A-F]{3}){1,2}$/i.test(val)) {
-        picker.value = val;
-        preview.style.background = val;
-    }
-});
-
 function confirmDelete(id) {
-    if(confirm('Delete this color from the chart?')) {
-        window.location.href = '/colors?action=delete&id=' + id;
+    if(confirm('Are you sure you want to delete this color option?')) {
+        window.location.href = '<?= base_url('/admin/colors'); ?>?action=delete&id=' + id;
     }
-}
-
-function editRow(id, name, hex) {
-    document.getElementById("edit_id").value = id;
-    document.getElementById("color_name").value = name;
-    document.getElementById("color_hex").value = hex;
-
-    picker.value = hex;
-    preview.style.background = hex;
-
-    const submitBtn = document.getElementById("submitBtn");
-    submitBtn.innerText = "Save Changes";
-    submitBtn.style.background = "#28a745";
-    document.getElementById("cancelBtn").style.display = "inline-block";
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function resetForm() {
-    document.getElementById("edit_id").value = "";
-    document.getElementById("colorForm").reset();
-
-    const submitBtn = document.getElementById("submitBtn");
-    submitBtn.innerText = "Add Color";
-    submitBtn.style.background = "#007bff";
-    document.getElementById("cancelBtn").style.display = "none";
-
-    preview.style.background = "#687382";
 }
 </script>
-
-<style>
-/* Remove margin-left: main layout handles it */
-.page-content-wrapper {
-    padding: 30px;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.header-flex { margin-bottom: 25px; }
-.subtitle { color: #666; font-size: 14px; margin-top: 5px; }
-
-.color-container {
-    background: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-/* FORM DESIGN */
-.input-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 35px;
-    align-items: flex-end;
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 10px;
-}
-
-.field {
-    flex: 2;
-    min-width: 200px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.hex-field { flex: 1; }
-
-.field label { font-size: 13px; font-weight: 600; color: #444; }
-
-.hex-input-wrapper {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-input[type="text"] {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
-}
-
-.palette-trigger {
-    width: 45px;
-    height: 43px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    background: #fff;
-    flex-shrink: 0;
-}
-
-.color-preview {
-    width: 25px;
-    height: 25px;
-    border-radius: 4px;
-    background: #687382;
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-button {
-    padding: 12px 20px;
-    background: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.btn-cancel { background: #6c757d; }
-
-/* TABLE DESIGN */
-.table-responsive { overflow-x: auto; }
-.color-table { width: 100%; border-collapse: collapse; }
-.color-table th { 
-    text-align: left; padding: 15px; background: #f1f3f5; 
-    font-size: 13px; text-transform: uppercase; color: #495057;
-}
-.color-table td { padding: 15px; border-bottom: 1px solid #eee; }
-
-.table-swatch {
-    width: 40px;
-    height: 20px;
-    border-radius: 4px;
-    border: 1px solid rgba(0,0,0,0.05);
-}
-
-code {
-    background: #f1f3f5;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 14px;
-}
-
-.action-btn {
-    background: none; border: none; padding: 5px; 
-    cursor: pointer; font-size: 16px; text-decoration: none;
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-    .page-content-wrapper { padding: 15px;  }
-    .input-group { flex-direction: column; align-items: stretch; }
-    .field { min-width: 100%; }
-    .form-actions { display: flex; gap: 10px; }
-    .form-actions button { flex: 1; }
-}
-</style>
