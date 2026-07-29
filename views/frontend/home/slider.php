@@ -22,6 +22,7 @@
             overflow: hidden;
             isolation: isolate;
             contain: layout style paint;
+            align-content: center;
         }
         
         .laguna-vibe-marquee-hero *,
@@ -181,10 +182,11 @@
         
         /* ---------- INFINITE SCROLLING MARQUEE (right to left, seamless loop) ---------- */
         .lvh-marquee-section {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            /* position: absolute; */
+            /* bottom: 0; */
+            /* left: 0; */
+            /* right: 0; */
+            padding-top:50px;
             z-index: 15;
             pointer-events: none;
             padding-bottom: 1.5rem;
@@ -328,8 +330,8 @@
     <section class="laguna-vibe-marquee-hero" aria-label="Laguna Vibe Hero with Scrolling Candles">
         
         <div class="lvh-video-layer">
-            <video autoplay muted loop playsinline preload="auto">
-                <source src="public/assets/videos/home-video.mp4" type="video/mp4">
+            <video id="lvhHeroVideo" autoplay muted loop playsinline preload="auto">
+                <source src="<?php echo base_url('/public/assets/videos/home-video.mp4'); ?>" type="video/mp4">
             </video>
         </div>
         <div class="lvh-gradient-overlay"></div>
@@ -349,7 +351,9 @@
         
         <!-- Bottom Gradient (soft transition to marquee) -->
         <div class="lvh-bottom-gradient"></div>
-        
+     
+    </section>
+       
         <!-- INFINITE SCROLLING MARQUEE (right-to-left, no gaps, seamless loop) -->
         <div class="lvh-marquee-section">
             <div class="lvh-marquee-container">
@@ -421,8 +425,7 @@
                 </div>
             </div>
         </div>
-    </section>
-    
+        
     <script>
         (function() {
             // Ensure infinite marquee works flawlessly: if content width is less than container, duplicate again
@@ -467,9 +470,45 @@
             
           
             
-            // Video pointer events disabled
-            const videoElem = document.querySelector('.laguna-vibe-marquee-hero video');
-            if (videoElem) videoElem.style.pointerEvents = 'none';
+            // Video pointer events disabled & playback resilience
+            const videoElem = document.getElementById('lvhHeroVideo');
+            if (videoElem) {
+                videoElem.style.pointerEvents = 'none';
+                videoElem.muted = true;
+                videoElem.defaultMuted = true;
+                videoElem.playsInline = true;
+
+                function playVideoSafe() {
+                    const promise = videoElem.play();
+                    if (promise !== undefined) {
+                        promise.catch(() => {
+                            const handleGesture = () => {
+                                videoElem.play();
+                                document.removeEventListener('click', handleGesture);
+                                document.removeEventListener('touchstart', handleGesture);
+                                document.removeEventListener('scroll', handleGesture);
+                            };
+                            document.addEventListener('click', handleGesture, { passive: true, once: true });
+                            document.addEventListener('touchstart', handleGesture, { passive: true, once: true });
+                            document.addEventListener('scroll', handleGesture, { passive: true, once: true });
+                        });
+                    }
+                }
+
+                playVideoSafe();
+
+                videoElem.addEventListener('pause', () => {
+                    if (!videoElem.ended && document.visibilityState === 'visible') {
+                        playVideoSafe();
+                    }
+                });
+
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        playVideoSafe();
+                    }
+                });
+            }
           
         })();
     </script>
