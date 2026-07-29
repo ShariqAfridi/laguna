@@ -474,31 +474,31 @@ $products = $conn->query($query);
                             <!-- Image Column with proper path handling -->
                             <td>
                                 <?php
-                                 $image_file = $row['image'] ?? '';
-                                 if (!empty($image_file)) {
-                                     $clean_rel = ltrim(str_replace(['public/', 'assets/img/'], ['', 'uploads/products/'], $image_file), '/');
-                                     if (strpos($clean_rel, 'uploads/products/') === false && !preg_match('#^https?://#i', $clean_rel)) {
-                                         $clean_rel = 'uploads/products/' . $clean_rel;
-                                     }
+                                $image_file = $row['image'] ?? '';
+                                if (!empty($image_file)) {
+                                    $clean_rel = ltrim(str_replace(['public/', 'assets/img/'], ['', 'uploads/products/'], $image_file), '/');
+                                    if (strpos($clean_rel, 'uploads/products/') === false && !preg_match('#^https?://#i', $clean_rel)) {
+                                        $clean_rel = 'uploads/products/' . $clean_rel;
+                                    }
 
-                                     $disk_path1 = dirname(__DIR__, 2) . '/public/' . $clean_rel;
-                                     $disk_path2 = dirname(__DIR__, 2) . '/public/assets/img/' . basename($clean_rel);
+                                    $disk_path1 = dirname(__DIR__, 2) . '/public/' . $clean_rel;
+                                    $disk_path2 = dirname(__DIR__, 2) . '/public/assets/img/' . basename($clean_rel);
 
-                                     if (file_exists($disk_path1)) {
-                                         $img_url = base_url('/public/' . $clean_rel);
-                                         echo '<img src="' . htmlspecialchars($img_url) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
-                                     } else if (file_exists($disk_path2)) {
-                                         $img_url = base_url('/public/assets/img/' . basename($clean_rel));
-                                         echo '<img src="' . htmlspecialchars($img_url) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
-                                     } else if (preg_match('#^https?://#i', $image_file)) {
-                                         echo '<img src="' . htmlspecialchars($image_file) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
-                                     } else {
-                                         echo '<div class="admin-no-thumb">No<br>Image</div>';
-                                     }
-                                 } else {
-                                     echo '<div class="admin-no-thumb">No<br>Image</div>';
-                                 }
-                                 ?>
+                                    if (file_exists($disk_path1)) {
+                                        $img_url = base_url('/public/' . $clean_rel);
+                                        echo '<img src="' . htmlspecialchars($img_url) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
+                                    } else if (file_exists($disk_path2)) {
+                                        $img_url = base_url('/public/assets/img/' . basename($clean_rel));
+                                        echo '<img src="' . htmlspecialchars($img_url) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
+                                    } else if (preg_match('#^https?://#i', $image_file)) {
+                                        echo '<img src="' . htmlspecialchars($image_file) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
+                                    } else {
+                                        echo '<div class="admin-no-thumb">No<br>Image</div>';
+                                    }
+                                } else {
+                                    echo '<div class="admin-no-thumb">No<br>Image</div>';
+                                }
+                                ?>
                             </td>
                             
                             <td>

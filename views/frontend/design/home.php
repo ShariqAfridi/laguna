@@ -48,10 +48,24 @@ if ($boxesResult && $boxesResult->num_rows > 0) {
     $dbBoxes[] = [
       'id' => $row['box_id'],
       'name' => $row['box_name'],
-      'price' => (float)$row['box_price'],
+      'price' => (float) $row['box_price'],
       'image' => !empty($row['box_image']) ? base_url('/' . ltrim($row['box_image'], '/')) : '',
       'description' => $row['box_description'] ?? '',
       'code' => 'B' . sprintf('%02d', $row['box_id'])
+    ];
+  }
+}
+
+$fragrancesResult = $dbConn->query('SELECT * FROM fragrances WHERE status = 1 ORDER BY sort_order ASC, fragrance_id ASC');
+$dbFragrances = [];
+if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
+  while ($row = $fragrancesResult->fetch_assoc()) {
+    $dbFragrances[] = [
+      'id' => $row['fragrance_id'],
+      'name' => $row['fragrance_name'],
+      'image' => !empty($row['fragrance_image']) ? base_url('/' . ltrim($row['fragrance_image'], '/')) : '',
+      'description' => $row['fragrance_description'] ?? '',
+      'code' => sprintf('%02d', $row['fragrance_id'])
     ];
   }
 }
@@ -559,23 +573,31 @@ if ($boxesResult && $boxesResult->num_rows > 0) {
 
     .frag-img {
       width: 100%;
-      aspect-ratio: 130 / 90;
+      height: 220px;
       overflow: hidden;
-      background: #fff;
+      background: #F9FAFB;
       flex-shrink: 0;
-      padding: 0;
+      padding: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-sizing: border-box;
     }
 
     .frag-img img {
       display: block;
-      width: 100%;
-      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
       object-fit: contain;
       object-position: center;
+      transition: transform 0.3s ease;
     }
+
+    /* .fragrance-card:hover .frag-img img {
+      transform: scale(1.05);
+    } */
 
     .frag-info-bar {
       display: flex;
@@ -1138,107 +1160,8 @@ if ($boxesResult && $boxesResult->num_rows > 0) {
       <p class="step-label">STEP 03</p>
       <h1 class="step-title">Choose your fragrance.</h1>
       <p class="step-desc">Tap any scent to read its full description and notes.</p>
-      <div class="fragrance-grid">
-
-        <div class="fragrance-card" data-frag="Amber Musk" onclick="selectFrag(event, this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-          <div class="frag-img"><img src="img/02 AMBER MUSK FRAGRANT.webp" alt="Amber Musk"></div>
-          <div class="frag-info-bar">
-            <span class="frag-label">Amber Musk</span>
-            <button class="frag-view-btn" onclick="openFragModal(event,'Amber Musk','img/02 AMBER MUSK FRAGRANT.webp')">View Larger</button>
-          </div>
-        </div>
-
-        <div class="fragrance-card" data-frag="Champagne Luxe" onclick="selectFrag(event, this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-          <div class="frag-img"><img src="img/05 CHAMPAGNE LUXE FRAGRANT.webp" alt="Champagne Luxe"></div>
-          <div class="frag-info-bar">
-            <span class="frag-label">Champagne Luxe</span>
-            <button class="frag-view-btn" onclick="openFragModal(event,'Champagne Luxe','img/05 CHAMPAGNE LUXE FRAGRANT.webp')">View Larger</button>
-          </div>
-        </div>
-
-        <div class="fragrance-card" data-frag="Citrus Agave Zest" onclick="selectFrag(event, this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-          <div class="frag-img"><img src="img/06 CITRUS AGAVE ZEST FRAGRANT.webp" alt="Citrus Agave Zest"></div>
-          <div class="frag-info-bar">
-            <span class="frag-label">Citrus Agave Zest</span>
-            <button class="frag-view-btn" onclick="openFragModal(event,'Citrus Agave Zest','img/06 CITRUS AGAVE ZEST FRAGRANT.webp')">View Larger</button>
-          </div>
-        </div>
-
-        <div class="fragrance-card" data-frag="Evening Tide" onclick="selectFrag(event, this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-          <div class="frag-img"><img src="img/08 EVENING TIDE FRAGRANT.webp" alt="Evening Tide"></div>
-          <div class="frag-info-bar">
-            <span class="frag-label">Evening Tide</span>
-            <button class="frag-view-btn" onclick="openFragModal(event,'Evening Tide','img/08 EVENING TIDE FRAGRANT.webp')">View Larger</button>
-          </div>
-        </div>
-
-        <div class="fragrance-card" data-frag="Fragrance Free" onclick="selectFrag(event, this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-          <div class="frag-img"><img src="img/01 FRAGRABCE FREE.webp" alt="Fragrance Free"></div>
-          <div class="frag-info-bar">
-            <span class="frag-label">Fragrance Free</span>
-            <button class="frag-view-btn" onclick="openFragModal(event,'Fragrance Free','img/01 FRAGRABCE FREE.webp')">View Larger</button>
-          </div>
-        </div>
-
-        <div class="fragrance-card" data-frag="L'Attraction" onclick="selectFrag(event, this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-          <div class="frag-img"><img src="img/13 L_ATTRACTION FRAGRANT.webp" alt="L'Attraction"></div>
-          <div class="frag-info-bar">
-            <span class="frag-label">L'Attraction</span>
-            <button class="frag-view-btn" onclick="openFragModal(event,'L\'Attraction','img/13 L_ATTRACTION FRAGRANT.webp')">View Larger</button>
-          </div>
-        </div>
-
-        <div class="fragrance-card" data-frag="Lavender Fields" onclick="selectFrag(event, this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-          <div class="frag-img"><img src="img/09 LAVENDER FIELD FRAGRENT.webp" alt="Lavender Fields"></div>
-          <div class="frag-info-bar">
-            <span class="frag-label">Lavender Fields</span>
-            <button class="frag-view-btn" onclick="openFragModal(event,'Lavender Fields','img/09 LAVENDER FIELD FRAGRENT.webp')">View Larger</button>
-          </div>
-        </div>
-
-        <div class="fragrance-card" data-frag="Mahogany Woods" onclick="selectFrag(event, this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-          <div class="frag-img"><img src="img/11 MAHOGANY WOODS FREGRENT.webp" alt="Mahogany Woods"></div>
-          <div class="frag-info-bar">
-            <span class="frag-label">Mahogany Woods</span>
-            <button class="frag-view-btn" onclick="openFragModal(event,'Mahogany Woods','img/11 MAHOGANY WOODS FREGRENT.webp')">View Larger</button>
-          </div>
-        </div>
-
-        <div class="fragrance-card" data-frag="Pine & Salt Air" onclick="selectFrag(event, this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-          <div class="frag-img"><img src="img/04 PINE & SALT AIR FRAGRANT.webp" alt="Pine & Salt Air"></div>
-          <div class="frag-info-bar">
-            <span class="frag-label">Pine &amp; Salt Air</span>
-            <button class="frag-view-btn" onclick="openFragModal(event,'Pine & Salt Air','img/04 PINE & SALT AIR FRAGRANT.webp')">View Larger</button>
-          </div>
-        </div>
-
-        <div class="fragrance-card" data-frag="Vanilla Essence" onclick="selectFrag(event, this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-          <div class="frag-img"><img src="img/vanila_essence.webp" alt="Vanilla Essence"></div>
-          <div class="frag-info-bar">
-            <span class="frag-label">Vanilla Essence</span>
-            <button class="frag-view-btn" onclick="openFragModal(event,'Vanilla Essence','img/vanila_essence.webp')">View Larger</button>
-          </div>
-        </div>
-
-        <div class="fragrance-card" data-frag="Wild Lemongrass" onclick="selectFrag(event, this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-          <div class="frag-img"><img src="img/10 WILD LEMONGRASS FRAGRANT.webp" alt="Wild Lemongrass"></div>
-          <div class="frag-info-bar">
-            <span class="frag-label">Wild Lemongrass</span>
-            <button class="frag-view-btn" onclick="openFragModal(event,'Wild Lemongrass','img/10 WILD LEMONGRASS FRAGRANT.webp')">View Larger</button>
-          </div>
-        </div>
-
+      <div class="fragrance-grid" id="fragranceGrid">
+        <!-- Dynamic Fragrance Cards Rendered via JS -->
       </div>
       <div class="step-nav">
         <button class="btn-back" onclick="goBack(2)">
@@ -1509,6 +1432,45 @@ const fragCodeMap = {
 const stepNames = ['Vessel', 'Color', 'Fragrance', 'Box'];
 
 // ─── STATE PERSISTENCE (LOCALSTORAGE) ───────────────────────────────────────
+function resetBuilder() {
+  state.vessel = null;
+  state.vesselPrice = 0;
+  state.color = null;
+  state.colorCode = null;
+  state.colorHex = null;
+  state.frag = null;
+  state.fragCode = null;
+  state.box = null;
+  state.boxCode = null;
+  state.boxPrice = 0;
+  state.qty = 1;
+
+  // Reset preview specs UI
+  setSpec('specVessel', '—');
+  setSpec('specWick', '—');
+  setSpec('specColor', '—');
+  setSpec('specFrag', '—');
+  setSpec('specBox', '—');
+
+  // Deselect all cards
+  document.querySelectorAll('.vessel-card, .color-card, .fragrance-card, .box-card').forEach(c => c.classList.remove('selected'));
+
+  // Reset preview image & fragrance badge
+  const previewImgWrap = document.getElementById('previewImgWrap');
+  const previewCard = document.getElementById('previewCard');
+  if (previewImgWrap) previewImgWrap.style.display = 'none';
+  if (previewCard) previewCard.style.display = 'flex';
+
+  const previewFragBadge = document.getElementById('previewFragBadge');
+  if (previewFragBadge) previewFragBadge.style.display = 'none';
+
+  // Reset flame container
+  const flameContainer = document.getElementById('previewFlameContainer');
+  if (flameContainer) flameContainer.innerHTML = '';
+
+  clearBuilderState();
+}
+
 function saveBuilderState() {
   try {
     const currentStep = getCurrentStep();
@@ -1780,12 +1742,29 @@ function showStep(n, skipSync) {
   const stepLabelEl = document.getElementById('stepNameLabel');
   if (stepLabelEl && stepNames[n - 1]) stepLabelEl.textContent = stepNames[n - 1];
 
-  // If showing step 2 (Colors), ensure colors grid is populated
-  if (n === 2) {
-    const grid = document.getElementById('colorGrid');
-    if (grid && (grid.children.length === 0 || grid.querySelector('p'))) {
-      renderColorCards(state.vessel || 'C');
+  // If showing step 1, sync vessel card highlight and preview panel specs without wiping state/URL
+  if (n === 1) {
+    if (state.vessel) {
+      const vCards = Array.from(document.querySelectorAll('.vessel-card'));
+      const cleanV = state.vessel.trim().toUpperCase();
+      const vCard = vCards.find(c => (c.dataset.vessel || '').trim().toUpperCase() === cleanV);
+      if (vCard) {
+        document.querySelectorAll('.vessel-card').forEach(c => c.classList.remove('selected'));
+        vCard.classList.add('selected');
+        const vName = 'Vessel ' + state.vessel;
+        const vDims = state.vessel === 'C' ? '3" × 3.5"' : (state.vessel === 'D' ? '3.5" × 4"' : '4" × 4.5"');
+        setSpec('specVessel', vName + (vDims ? (' · ' + vDims) : ''));
+        setSpec('specWick', vesselWickMap[state.vessel] || '—');
+        setSpec('specColor', state.color || '—');
+        setSpec('specFrag', state.frag || '—');
+        setSpec('specBox', state.box ? `${state.box} (+$${state.boxPrice})` : '—');
+      }
     }
+  }
+
+  // If showing step 3 (Fragrance), ensure fragrance grid is populated
+  if (n === 3) {
+    renderFragranceCards();
   }
 
   // If showing step 4 (Box), ensure box grid is populated
@@ -1936,11 +1915,6 @@ function renderBoxCards(vessel) {
   const grid = document.getElementById('boxGrid');
   if (!grid) return;
 
-  if (vessel === 'E') {
-    grid.innerHTML = '';
-    return;
-  }
-
   grid.innerHTML = '';
 
   const boxesToRender = (dbBoxesData && dbBoxesData.length > 0) ? dbBoxesData : [
@@ -1948,7 +1922,7 @@ function renderBoxCards(vessel) {
     { name: 'Black Cubic Box', code: 'B01B', price: 6, image: 'img/box2.webp', description: 'Black cubic keepsake box.' }
   ];
 
-  const wickText = vessel === 'D' ? 'Double wick' : 'Single wick';
+  const wickText = vessel === 'E' ? 'Triple wick' : (vessel === 'D' ? 'Double wick' : 'Single wick');
 
   boxesToRender.forEach(box => {
     const card = document.createElement('div');
@@ -1986,34 +1960,81 @@ function renderBoxCards(vessel) {
   }
 }
 
+const dbFragrancesData = <?= json_encode($dbFragrances ?? []); ?>;
+
+// ─── RENDER FRAGRANCE CARDS ───────────────────────────────────────────────────
+function renderFragranceCards() {
+  const grid = document.getElementById('fragranceGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  const fragsToRender = (dbFragrancesData && dbFragrancesData.length > 0) ? dbFragrancesData : [
+    { name: 'Amber Musk', code: '12', image: 'img/02 AMBER MUSK FRAGRANT.webp', description: 'A rich and comforting blend of warm amber and sensual musk.' },
+    { name: 'Champagne Luxe', code: '13', image: 'img/05 CHAMPAGNE LUXE FRAGRANT.webp', description: 'A sparkling, sophisticated fragrance with bright citrus.' },
+    { name: 'Citrus Agave Zest', code: '06', image: 'img/06 CITRUS AGAVE ZEST FRAGRANT.webp', description: 'Zesty citrus and sweet agave nectar.' },
+    { name: 'Evening Tide', code: '08', image: 'img/08 EVENING TIDE FRAGRANT.webp', description: 'Cool coastal evening breeze.' },
+    { name: 'Fragrance Free', code: '01', image: 'img/01 FRAGRABCE FREE.webp', description: 'Pure unscented candle.' },
+    { name: "L'Attraction", code: '13', image: 'img/13 L_ATTRACTION FRAGRANT.webp', description: 'Alluring, mysterious floral note.' },
+    { name: 'Lavender Fields', code: '09', image: 'img/09 LAVENDER FIELD FRAGRENT.webp', description: 'Calming French lavender fields.' },
+    { name: 'Mahogany Woods', code: '11', image: 'img/11 MAHOGANY WOODS FREGRENT.webp', description: 'Deep mahogany and cedarwood.' },
+    { name: 'Pine & Salt Air', code: '04', image: 'img/04 PINE & SALT AIR FRAGRANT.webp', description: 'Fresh pine with crisp ocean salt.' },
+    { name: 'Vanilla Essence', code: '14', image: 'img/vanila_essence.webp', description: 'Warm Madagascar vanilla bean.' },
+    { name: 'Wild Lemongrass', code: '10', image: 'img/10 WILD LEMONGRASS FRAGRANT.webp', description: 'Bright invigorating lemongrass.' }
+  ];
+
+  if (!fragsToRender || fragsToRender.length === 0) {
+    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#999;">No fragrances available right now.</p>';
+    return;
+  }
+
+  fragsToRender.forEach(frag => {
+    const card = document.createElement('div');
+    card.className = 'fragrance-card';
+    card.dataset.frag = frag.name;
+    const code = frag.code || fragCodeMap[frag.name] || '01';
+    card.dataset.fragCode = code;
+
+    fragCodeMap[frag.name] = code;
+
+    const fallbackImg = 'img/02 AMBER MUSK FRAGRANT.webp';
+    const imgSrc = frag.image || fallbackImg;
+
+    card.innerHTML = `
+      <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="frag-img">
+        <img src="${imgSrc}" alt="${frag.name}" onerror="this.onerror=null; this.src='${fallbackImg}';">
+      </div>
+      <div class="frag-info-bar">
+        <span class="frag-label">${frag.name}</span>
+        <button class="frag-view-btn" type="button" onclick="openFragModal(event, '${frag.name.replace(/'/g, "\\'")}', '${imgSrc}')">View Notes</button>
+      </div>
+    `;
+
+    card.onclick = function(e) { selectFrag(e, this); };
+    grid.appendChild(card);
+  });
+
+  if (state.frag) {
+    const allCards = Array.from(grid.querySelectorAll('.fragrance-card'));
+    const cleanFrag = state.frag.trim().toLowerCase();
+    const matchingCard = allCards.find(c => (c.dataset.frag || '').trim().toLowerCase() === cleanFrag);
+    if (matchingCard) matchingCard.classList.add('selected');
+  }
+}
+
 // ─── BOX VISIBILITY ──────────────────────────────────────────────────────────
 function updateBoxVisibility(vessel) {
   const step4 = document.getElementById('step4');
   if (!step4) return;
-
-  if (vessel === 'E') {
-    step4.classList.add('step-box-hidden');
-    document.querySelectorAll('.box-card').forEach(c => c.classList.remove('selected'));
-    state.box = null;
-    state.boxCode = null;
-    state.boxPrice = 0;
-    setSpec('specBox', '—');
-    document.querySelectorAll('.step-dot').forEach((dot, idx) => {
-      if (idx === 3) dot.style.display = 'none';
-    });
-  } else {
-    step4.classList.remove('step-box-hidden');
-    document.querySelectorAll('.step-dot').forEach(dot => dot.style.display = '');
-    renderBoxCards(vessel);
-  }
+  step4.classList.remove('step-box-hidden');
+  document.querySelectorAll('.step-dot').forEach(dot => dot.style.display = '');
+  renderBoxCards(vessel || state.vessel || 'C');
 }
 
 // ─── UPDATE FRAGRANCE BUTTON ────────────────────────────────────────────────
 function updateFragranceButton() {
   const btn = document.getElementById('fragNextBtn');
-  if (state.vessel === 'E') {
-    btn.textContent = 'REVIEW ORDER';
-  } else {
+  if (btn) {
     btn.textContent = 'CONTINUE';
   }
 }
@@ -2024,12 +2045,7 @@ function handleFragranceNext() {
     alert('Please select a fragrance first.');
     return;
   }
-  if (state.vessel === 'E') {
-    // Skip box step, go directly to review
-    openReview();
-  } else {
-    goNext(4);
-  }
+  goNext(4);
 }
 
 // ─── FLAME DISPLAY ───────────────────────────────────────────────────────────
@@ -2119,10 +2135,6 @@ function selectFrag(event, el, skipSync) {
 // ─── STEP 4: BOX ──────────────────────────────────────────────────────────────
 function selectBox(el, skipSync) {
   if (!el) return;
-  if (state.vessel === 'E') {
-    alert('Keepsake boxes are not available for Vessel E.');
-    return;
-  }
   document.querySelectorAll('.box-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   state.box = el.dataset.box;
@@ -2284,20 +2296,16 @@ document.addEventListener('DOMContentLoaded', function() {
     restored = restoreBuilderState();
   }
   
-  // 3. Fallback to default Vessel C setup if nothing was restored
+  // 3. Fallback: if nothing restored, cleanly reset both grid and preview panel so they remain in 100% sync
   if (!restored) {
-    const defaultVessel = document.querySelector('.vessel-card[data-vessel="C"]');
-    if (defaultVessel) {
-      selectVessel(defaultVessel);
-    } else {
-      renderColorCards('C');
-    }
+    resetBuilder();
   } else {
-    // Ensure colors are rendered if colorGrid is still empty
+    // Ensure colors and fragrances are rendered
     const grid = document.getElementById('colorGrid');
     if (grid && grid.children.length === 0) {
       renderColorCards(state.vessel || 'C');
     }
+    renderFragranceCards();
   }
 });
 
@@ -2437,13 +2445,17 @@ styleSheet.textContent = `
 `;
 document.head.appendChild(styleSheet);
 
-// ─── INIT: push initial history state ─────────────────────────────────────────
+// ─── INIT: preserve URL search parameters & handle step hash ─────────────────
 if (!window.location.hash || !window.location.hash.startsWith('#step')) {
-  history.replaceState({ step: 1 }, '', builderStepUrl + '1');
+  const currentSearch = window.location.search || '';
+  const currentStep = getCurrentStep();
+  const newUrl = window.location.pathname + currentSearch + `#step${currentStep}`;
+  history.replaceState({ step: currentStep }, '', newUrl);
 } else {
-  const stepNum = parseInt(window.location.hash.replace('#step', ''));
+  const stepPart = window.location.hash.split('?')[0];
+  const stepNum = parseInt(stepPart.replace('#step', ''));
   if (stepNum >= 1 && stepNum <= 4) {
-    showStep(stepNum);
+    showStep(stepNum, true);
   }
 }
 </script>
