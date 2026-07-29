@@ -18,6 +18,14 @@
 (function () {
   'use strict';
 
+  // Prevent duplicate script execution
+  if (window.LVBCart && document.getElementById('lvbDrawer')) {
+    if (typeof window.LVBCart.open === 'function') {
+      window.LVBCart.getItems();
+    }
+    return;
+  }
+
   /* ── 1. STYLES ── */
   var css = document.createElement('style');
   css.textContent = [
@@ -124,60 +132,66 @@
   document.head.appendChild(css);
 
   /* ── 2. HTML ── */
-  var overlay = document.createElement('div');
-  overlay.id = 'lvbOverlay';
-  overlay.className = 'lvb-overlay';
+  var overlay = document.getElementById('lvbOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'lvbOverlay';
+    overlay.className = 'lvb-overlay';
+    document.body.appendChild(overlay);
+  }
 
-  var drawer = document.createElement('div');
-  drawer.id = 'lvbDrawer';
-  drawer.className = 'lvb-drawer';
-  drawer.setAttribute('aria-label', 'Shopping Cart');
-  drawer.innerHTML =
-    '<div class="lvb-ch">' +
-      '<h2 class="lvb-ct">Your Cart</h2>' +
-      '<button class="lvb-cx" id="lvbClose" aria-label="Close">' +
-        '<svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round"/></svg>' +
-      '</button>' +
-    '</div>' +
-    '<div class="lvb-cb" id="lvbBody"></div>' +
-    '<div class="lvb-footer" id="lvbFooter" style="display:none">' +
-      '<div class="lvb-sub">' +
-        '<span class="lvb-sub-lbl">Subtotal</span>' +
-        '<span class="lvb-sub-amt" id="lvbSubtotal">$0</span>' +
+  var drawer = document.getElementById('lvbDrawer');
+  if (!drawer) {
+    drawer = document.createElement('div');
+    drawer.id = 'lvbDrawer';
+    drawer.className = 'lvb-drawer';
+    drawer.setAttribute('aria-label', 'Shopping Cart');
+    drawer.innerHTML =
+      '<div class="lvb-ch">' +
+        '<h2 class="lvb-ct">Your Cart</h2>' +
+        '<button class="lvb-cx" id="lvbClose" aria-label="Close">' +
+          '<svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round"/></svg>' +
+        '</button>' +
       '</div>' +
-      '<button class="lvb-checkout">Checkout</button>' +
-    '</div>';
-
-  document.body.appendChild(overlay);
-  document.body.appendChild(drawer);
+      '<div class="lvb-cb" id="lvbBody"></div>' +
+      '<div class="lvb-footer" id="lvbFooter" style="display:none">' +
+        '<div class="lvb-sub">' +
+          '<span class="lvb-sub-lbl">Subtotal</span>' +
+          '<span class="lvb-sub-amt" id="lvbSubtotal">$0</span>' +
+        '</div>' +
+        '<button class="lvb-checkout">Checkout</button>' +
+      '</div>';
+    document.body.appendChild(drawer);
+  }
 
   /* ── 3. STATE & STORAGE ── */
   var STORAGE_KEY = 'lvb_cart';
   var items  = [];
   var isOpen = false;
 
-  // Load cart from sessionStorage
+  // Load cart from localStorage and sessionStorage
   function loadCartFromStorage() {
     try {
-      var saved = sessionStorage.getItem(STORAGE_KEY);
+      var saved = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
       if (saved) {
         var parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           items = parsed;
         }
       }
     } catch (e) {
-      console.warn('Failed to load cart from sessionStorage:', e);
+      console.warn('Failed to load cart from storage:', e);
       items = [];
     }
   }
 
-  // Save cart to sessionStorage
+  // Save cart to both localStorage & sessionStorage
   function saveCartToStorage() {
     try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch (e) {
-      console.warn('Failed to save cart to sessionStorage:', e);
+      console.warn('Failed to save cart to storage:', e);
     }
   }
 
@@ -275,7 +289,7 @@
   /* ── 6. ITEM ACTIONS ── */
   function addItem(item) {
     // Validate required fields
-    if (!item || !item.id || !item.name || !item.price) {
+    if (!item || !item.id || !item.name || item.price === undefined || item.price === null || isNaN(item.price)) {
       console.warn('Invalid cart item:', item);
       return;
     }

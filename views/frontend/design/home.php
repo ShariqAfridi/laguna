@@ -1575,8 +1575,9 @@ function restoreBuilderState() {
 
     // Restore Fragrance selection
     if (state.frag) {
+      state.fragCode = fragCodeMap[state.frag] || '01';
       document.querySelectorAll('.fragrance-card').forEach(c => {
-        if (c.dataset.frag === state.frag) {
+        if ((c.dataset.frag || '').trim().toLowerCase() === state.frag.trim().toLowerCase()) {
           c.classList.add('selected');
           const fragImgEl = c.querySelector('.frag-img img');
           const fragImgSrc = fragImgEl ? fragImgEl.src : '';
@@ -1665,10 +1666,10 @@ function parseUrlState() {
   if (!queryString && !hash) return false;
 
   const params = new URLSearchParams(queryString);
-  const vesselParam = params.get('vessel');
-  const colorParam = params.get('color') || params.get('colorCode');
-  const fragParam = params.get('frag');
-  const boxParam = params.get('box') || params.get('boxCode');
+  const vesselParam = params.get('vessel') ? decodeURIComponent(params.get('vessel')) : null;
+  const colorParam = (params.get('color') || params.get('colorCode')) ? decodeURIComponent(params.get('color') || params.get('colorCode')) : null;
+  const fragParam = params.get('frag') ? decodeURIComponent(params.get('frag')) : null;
+  const boxParam = (params.get('box') || params.get('boxCode')) ? decodeURIComponent(params.get('box') || params.get('boxCode')) : null;
 
   let restoredSomething = false;
 
@@ -1684,7 +1685,8 @@ function parseUrlState() {
   // 2. Color
   if (colorParam) {
     const cCards = Array.from(document.querySelectorAll('.color-card'));
-    const matchingColor = cCards.find(c => c.dataset.color === colorParam || c.dataset.code === colorParam);
+    const cleanColorParam = colorParam.trim().toLowerCase();
+    const matchingColor = cCards.find(c => (c.dataset.color || '').trim().toLowerCase() === cleanColorParam || (c.dataset.code || '').trim().toLowerCase() === cleanColorParam);
     if (matchingColor) {
       selectColor(matchingColor, true);
       restoredSomething = true;
@@ -1694,9 +1696,17 @@ function parseUrlState() {
   // 3. Fragrance
   if (fragParam) {
     const fCards = Array.from(document.querySelectorAll('.fragrance-card'));
-    const matchingFrag = fCards.find(c => c.dataset.frag.toLowerCase() === fragParam.toLowerCase() || c.dataset.frag === fragParam);
+    const cleanFragParam = fragParam.trim().toLowerCase();
+    const matchingFrag = fCards.find(c => (c.dataset.frag || '').trim().toLowerCase() === cleanFragParam);
     if (matchingFrag) {
       selectFrag(null, matchingFrag, true);
+      restoredSomething = true;
+    } else {
+      state.frag = fragParam;
+      state.fragCode = fragCodeMap[fragParam] || '01';
+      setSpec('specFrag', fragParam);
+      const previewNameEl = document.getElementById('previewName');
+      if (previewNameEl) previewNameEl.textContent = fragParam;
       restoredSomething = true;
     }
   }
@@ -1704,9 +1714,13 @@ function parseUrlState() {
   // 4. Box
   if (boxParam) {
     const bCards = Array.from(document.querySelectorAll('.box-card'));
-    const matchingBox = bCards.find(c => c.dataset.box === boxParam || c.dataset.boxCode === boxParam);
+    const cleanBoxParam = boxParam.trim().toLowerCase();
+    const matchingBox = bCards.find(c => (c.dataset.box || '').trim().toLowerCase() === cleanBoxParam || (c.dataset.boxCode || '').trim().toLowerCase() === cleanBoxParam);
     if (matchingBox) {
       selectBox(matchingBox, true);
+      restoredSomething = true;
+    } else if (cleanBoxParam.includes('no packaging') || cleanBoxParam === 'none') {
+      checkoutWithoutPackaging();
       restoredSomething = true;
     }
   }
@@ -2138,7 +2152,10 @@ function generateSKU() {
   const container = state.vessel || 'C';
   const colorCode = state.colorCode || '01';
   const fragCode = state.fragCode || '01';
-  const boxCode = state.boxCode || 'B01W';
+  let boxCode = 'NONE';
+  if (state.box && state.box !== 'No Packaging' && state.box !== '—') {
+    boxCode = state.boxCode || 'B01W';
+  }
   return `${container}${colorCode}${fragCode}${boxCode}`;
 }
 
@@ -2296,86 +2313,93 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!state.vessel) { alert('Please select a vessel first'); closeReview(); showStep(1); return; }
       if (!state.color) { alert('Please select a color first'); closeReview(); showStep(2); return; }
       if (!state.frag) { alert('Please select a fragrance first'); closeReview(); showStep(3); return; }
-      
-      // Generate proper SKU using the same format as the shop page
-      const vesselMap = { C: 'C', D: 'D', E: 'E' };
-      const container = vesselMap[state.vessel] || 'C';
-      
-      // Map vessel to size ID (matching shop page logic)
-      const vesselSizeId = state.vessel === 'C' ? 4 : (state.vessel === 'D' ? 2 : 3);
-      
-      // Get box ID from box code
-      const boxIdMap = {
-        'B01W': 1,
-        'B02W': 3,
-        'B01B': 2,
-        'B02B': 4
-      };
-      const boxId = state.boxCode ? boxIdMap[state.boxCode] || null : null;
-      
-      // Get size ID for SKU generation (matching shop page)
-      const sizeId = state.vessel === 'C' ? 4 : (state.vessel === 'D' ? 2 : 3);
-      
-      // Generate SKU using the same logic as shop page
-      function generateSKU(sizeId, colorCode, fragCode, boxId) {
-        const containerMap = { 2: 'D', 4: 'C', 3: 'E' };
-        const container = containerMap[sizeId] || 'C';
-        
-        const boxMap = { 1: 'B01W', 2: 'B01B', 3: 'B02W', 4: 'B02B' };
-        const boxCode = (boxId && boxMap[boxId]) ? boxMap[boxId] : 'B01W';
-        
-        return container + colorCode + fragCode + boxCode;
-      }
-      
-      const sku = generateSKU(sizeId, state.colorCode, state.fragCode, boxId);
-      
-      const itemPrice = state.vesselPrice + state.boxPrice;
+
+      const vessel = state.vessel || 'C';
+      const vesselName = 'Vessel ' + vessel;
+      const wickType = vessel === 'C' ? 'Single Wick' : (vessel === 'D' ? 'Double Wick' : 'Triple Wick');
+      const sizeId = vessel === 'C' ? 4 : (vessel === 'D' ? 2 : 3);
+      const sizeName = `${vesselName} (${wickType})`;
+
+      const colorName = state.color || 'Default Color';
+      const colorCode = state.colorCode || '01';
+      const fragName = state.frag || 'Default Scent';
+      const fragCode = state.fragCode || '01';
+
+      let boxName = (state.box && state.box !== 'No Packaging' && state.box !== '—') ? state.box : null;
+      let boxPrice = state.boxPrice || 0;
+
+      const sku = generateSKU();
+      const itemPrice = (state.vesselPrice || 30) + boxPrice;
+
       const previewImgEl = document.getElementById('previewImg');
-      const imageUrl = previewImgEl ? previewImgEl.src : '';
-      
-      const vesselName = 'Vessel ' + state.vessel;
-      const wickType = state.vessel === 'C' ? 'Single Wick' : (state.vessel === 'D' ? 'Double Wick' : 'Triple Wick');
-      
-      // Get box name
-      let boxName = state.box ? state.box : null;
-      
-      // Build product name
-      let productDisplayName = `${vesselName} · ${state.frag}`;
+      const imageUrl = (previewImgEl && previewImgEl.src && !previewImgEl.src.endsWith('/')) ? previewImgEl.src : '';
+
+      let productDisplayName = `${vesselName} · ${fragName}`;
       if (boxName) {
         productDisplayName += ` + ${boxName}`;
       }
-      
-      // Get color name
-      const colorInfo = colorData.find(c => c.name === state.color);
-      const colorName = colorInfo ? colorInfo.name : state.color;
-      
-      // Build size name for display
-      const sizeName = `${vesselName} (${wickType})`;
-      
+
       LVBCart.addItem({
-        id: sku, // Use SKU as ID for consistency
+        id: sku,
         sku: sku,
         name: productDisplayName,
         scent: sizeName,
         price: itemPrice,
         image: imageUrl,
-        qty: state.qty,
-        product_id: null, // Not applicable for custom builds
+        qty: state.qty || 1,
+        product_id: null,
         size_id: sizeId,
         size_name: sizeName,
-        box_id: boxId,
+        box_id: state.boxCode || null,
         box_name: boxName,
-        fragrance_id: state.fragCode,
-        fragrance_name: state.frag,
+        fragrance_id: fragCode,
+        fragrance_name: fragName,
         color_name: colorName,
-        color_code: state.colorCode,
-        vessel: state.vessel,
+        color_code: colorCode,
+        vessel: vessel,
         wick_type: wickType
       });
-      
+
       closeReview();
       clearBuilderState();
-      // Show success message like shop page
+
+      // Reset internal builder state
+      state.vessel = null;
+      state.vesselPrice = 0;
+      state.color = null;
+      state.colorCode = null;
+      state.colorHex = null;
+      state.frag = null;
+      state.fragCode = null;
+      state.box = null;
+      state.boxCode = null;
+      state.boxPrice = 0;
+      state.qty = 1;
+
+      // Reset specs UI
+      setSpec('specVessel', '—');
+      setSpec('specWick', '—');
+      setSpec('specColor', '—');
+      setSpec('specFrag', '—');
+      setSpec('specBox', '—');
+
+      // Deselect all cards
+      document.querySelectorAll('.vessel-card, .color-card, .fragrance-card, .box-card').forEach(c => c.classList.remove('selected'));
+
+      // Reset preview image & fragrance badge
+      const previewImgWrap = document.getElementById('previewImgWrap');
+      const previewCard = document.getElementById('previewCard');
+      if (previewImgWrap) previewImgWrap.style.display = 'none';
+      if (previewCard) previewCard.style.display = 'flex';
+
+      const previewFragBadge = document.getElementById('previewFragBadge');
+      if (previewFragBadge) previewFragBadge.style.display = 'none';
+
+      // Reset URL to #step1 & switch to step 1
+      const basePath = window.location.pathname.replace(/\/$/, '');
+      window.history.replaceState({ step: 1 }, '', basePath + '#step1');
+      showStep(1, true);
+
       showSuccessMessage('Added to cart (SKU: ' + sku + ')');
       LVBCart.open();
     });
