@@ -4,12 +4,12 @@ require_once __DIR__ . '/../../db.php';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $box_name        = trim($_POST['box_name'] ?? '');
-    $box_dimensions  = trim($_POST['box_dimensions'] ?? '');
-    $box_price       = floatval($_POST['box_price'] ?? 0);
+    $box_name = trim($_POST['box_name'] ?? '');
+    $box_dimensions = '';
+    $box_price = floatval($_POST['box_price'] ?? 0);
     $box_description = trim($_POST['box_description'] ?? '');
-    $status          = isset($_POST['status']) ? (int)$_POST['status'] : 1;
-    $sort_order      = (int)($_POST['sort_order'] ?? 0);
+    $status = isset($_POST['status']) ? (int) $_POST['status'] : 1;
+    $sort_order = (int) ($_POST['sort_order'] ?? 0);
 
     $box_image = '';
     if (!empty($_FILES['box_image']['tmp_name'])) {
@@ -38,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($error_message) && !empty($box_name)) {
-        $stmt = $conn->prepare("INSERT INTO boxes (box_name, box_image, box_dimensions, box_price, box_description, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssdsii", $box_name, $box_image, $box_dimensions, $box_price, $box_description, $status, $sort_order);
+        $stmt = $conn->prepare('INSERT INTO boxes (box_name, box_image, box_dimensions, box_price, box_description, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        $stmt->bind_param('sssdsii', $box_name, $box_image, $box_dimensions, $box_price, $box_description, $status, $sort_order);
 
         if ($stmt->execute()) {
             echo "<script>window.location.href='" . base_url('/admin/boxes') . "';</script>";
@@ -69,24 +69,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post" enctype="multipart/form-data">
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:20px;">
                 
-                <div style="grid-column: 1 / -1;">
-                    <label class="admin-label">Box Design Name *</label>
-                    <input type="text" name="box_name" class="admin-input" placeholder="e.g. Matte Black Gift Box" required>
+                <div>
+                    <label class="admin-label">Box Name *</label>
+                    <input type="text" name="box_name" class="admin-input" placeholder="e.g. Black Cubic Box" required>
+                </div>
+
+                <div>
+                    <label class="admin-label">Price ($)</label>
+                    <input type="number" step="0.01" name="box_price" class="admin-input" value="6.00" placeholder="0.00">
                 </div>
 
                 <div>
                     <label class="admin-label">Box Image * (Mandatory)</label>
                     <input type="file" name="box_image" accept="image/*" class="admin-input" required style="padding:8px;">
-                </div>
-
-                <div>
-                    <label class="admin-label">Dimensions / Capacity</label>
-                    <input type="text" name="box_dimensions" class="admin-input" placeholder='e.g. 4" x 4" x 5"'>
-                </div>
-
-                <div>
-                    <label class="admin-label">Extra Packaging Cost ($)</label>
-                    <input type="number" step="0.01" name="box_price" class="admin-input" value="0.00">
                 </div>
 
                 <div>
@@ -97,16 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </select>
                 </div>
 
-                <!--
-                <div>
-                    <label class="admin-label">Sort Order</label>
-                    <input type="number" name="sort_order" class="admin-input" value="0">
-                </div>
-                -->
-
                 <div style="grid-column: 1 / -1;">
-                    <label class="admin-label">Box Description / Notes</label>
-                    <textarea name="box_description" class="admin-textarea" rows="3" placeholder="e.g. Premium rigid box with ribbon tie and embossed gold emblem."></textarea>
+                    <label class="admin-label">Description</label>
+                    <textarea name="box_description" class="admin-input" rows="3" placeholder="e.g. Double wick · Black cubic keepsake box."></textarea>
                 </div>
 
             </div>

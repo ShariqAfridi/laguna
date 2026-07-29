@@ -25,9 +25,12 @@ if (!empty($base) && strpos($uri, $base) === 0) {
     $uri = substr($uri, strlen($base));
 }
 
-// Ensure leading slash
+// Ensure leading slash & normalize trailing slashes
 if (empty($uri)) {
     $uri = '/';
+}
+if (strlen($uri) > 1 && substr($uri, -1) === '/') {
+    $uri = rtrim($uri, '/');
 }
 
 // Static asset fallback handler for /img/, /assets/, /videos/, /uploads/, and /public/

@@ -21,7 +21,7 @@ $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $box_name        = trim($_POST['box_name'] ?? '');
-    $box_dimensions  = trim($_POST['box_dimensions'] ?? '');
+    $box_dimensions  = $box['box_dimensions'] ?? '';
     $box_price       = floatval($_POST['box_price'] ?? 0);
     $box_description = trim($_POST['box_description'] ?? '');
     $status          = isset($_POST['status']) ? (int)$_POST['status'] : 1;
@@ -83,9 +83,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post" enctype="multipart/form-data">
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:20px;">
                 
-                <div style="grid-column: 1 / -1;">
-                    <label class="admin-label">Box Design Name *</label>
+                <div>
+                    <label class="admin-label">Box Name *</label>
                     <input type="text" name="box_name" class="admin-input" value="<?= htmlspecialchars($box['box_name']); ?>" required>
+                </div>
+
+                <div>
+                    <label class="admin-label">Price ($)</label>
+                    <input type="number" step="0.01" name="box_price" class="admin-input" value="<?= number_format((float)($box['box_price'] ?? 0), 2, '.', ''); ?>">
                 </div>
 
                 <div>
@@ -103,16 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div>
-                    <label class="admin-label">Dimensions / Capacity</label>
-                    <input type="text" name="box_dimensions" class="admin-input" value="<?= htmlspecialchars($box['box_dimensions'] ?? ''); ?>">
-                </div>
-
-                <div>
-                    <label class="admin-label">Extra Packaging Cost ($)</label>
-                    <input type="number" step="0.01" name="box_price" class="admin-input" value="<?= number_format((float)($box['box_price'] ?? 0), 2, '.', ''); ?>">
-                </div>
-
-                <div>
                     <label class="admin-label">Status</label>
                     <select name="status" class="admin-select">
                         <option value="1" <?= ($box['status'] ?? 1) == 1 ? 'selected' : ''; ?>>Active</option>
@@ -120,16 +115,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </select>
                 </div>
 
-                <!--
-                <div>
-                    <label class="admin-label">Sort Order</label>
-                    <input type="number" name="sort_order" class="admin-input" value="<?= (int)($box['sort_order'] ?? 0); ?>">
-                </div>
-                -->
-
                 <div style="grid-column: 1 / -1;">
-                    <label class="admin-label">Box Description / Notes</label>
-                    <textarea name="box_description" class="admin-textarea" rows="3"><?= htmlspecialchars($box['box_description'] ?? ''); ?></textarea>
+                    <label class="admin-label">Description</label>
+                    <textarea name="box_description" class="admin-input" rows="3" placeholder="e.g. Double wick · Black cubic keepsake box."><?= htmlspecialchars($box['box_description'] ?? ''); ?></textarea>
                 </div>
 
             </div>

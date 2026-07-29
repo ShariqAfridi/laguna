@@ -1,8 +1,59 @@
 <?php
 if (!isset($base)) {
-    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
-    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+  $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+  if (substr($scriptDir, -6) === '/logic') {
+    $scriptDir = substr($scriptDir, 0, -6);
+  }
+  $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+}
+
+require_once __DIR__ . '/../../../db.php';
+$dbConn = get_db_connection();
+
+$categoriesResult = $dbConn->query('SELECT * FROM categories WHERE status = 1 ORDER BY id ASC');
+$categoriesList = [];
+if ($categoriesResult && $categoriesResult->num_rows > 0) {
+  while ($row = $categoriesResult->fetch_assoc()) {
+    $categoriesList[] = $row;
+  }
+}
+
+$colorsResult = $dbConn->query('SELECT * FROM colors WHERE status = 1 ORDER BY sort_order ASC, color_id ASC');
+$dbColors = [];
+if ($colorsResult && $colorsResult->num_rows > 0) {
+  while ($row = $colorsResult->fetch_assoc()) {
+    $rawHex = trim($row['color_hex'] ?? '#000000');
+    $cleanHex = preg_replace('/[^0-9A-Fa-f]/', '', $rawHex);
+    if (strlen($cleanHex) === 3) {
+      $fmtHex = '#' . $cleanHex[0] . $cleanHex[0] . $cleanHex[1] . $cleanHex[1] . $cleanHex[2] . $cleanHex[2];
+    } elseif (strlen($cleanHex) >= 6) {
+      $fmtHex = '#' . substr($cleanHex, 0, 6);
+    } else {
+      $fmtHex = '#' . str_pad($cleanHex, 6, '0');
+    }
+    $dbColors[] = [
+      'id' => $row['color_id'],
+      'name' => $row['color_name'],
+      'hex' => strtoupper($fmtHex),
+      'image' => !empty($row['color_image']) ? base_url('/' . ltrim($row['color_image'], '/')) : '',
+      'code' => sprintf('%02d', $row['color_id'])
+    ];
+  }
+}
+
+$boxesResult = $dbConn->query('SELECT * FROM boxes WHERE status = 1 ORDER BY sort_order ASC, box_id ASC');
+$dbBoxes = [];
+if ($boxesResult && $boxesResult->num_rows > 0) {
+  while ($row = $boxesResult->fetch_assoc()) {
+    $dbBoxes[] = [
+      'id' => $row['box_id'],
+      'name' => $row['box_name'],
+      'price' => (float)$row['box_price'],
+      'image' => !empty($row['box_image']) ? base_url('/' . ltrim($row['box_image'], '/')) : '',
+      'description' => $row['box_description'] ?? '',
+      'code' => 'B' . sprintf('%02d', $row['box_id'])
+    ];
+  }
 }
 ?>
 <!DOCTYPE html>
@@ -110,17 +161,19 @@ if (!isset($base)) {
 
     .preview-panel {
       background: #E2F1F7;
-      position: relative;
-      top: auto;
+      position: sticky;
+      top: 85px;
+      align-self: start;
       height: fit-content;
-      max-height: calc(200vh - 100px);
+      max-height: calc(100vh - 105px);
       display: flex;
       flex-direction: column;
       padding: 36px 32px;
       border-radius: 16px;
       box-shadow: 0 20px 50px rgba(0,0,0,0.08);
-      overflow: hidden;
+      overflow-y: auto;
       margin-top: 20px;
+      z-index: 10;
     }
 
     .preview-label {
@@ -197,6 +250,79 @@ if (!isset($base)) {
     }
     .candle-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
 
+    .preview-frag-badge {
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 20px);
+      max-width: 210px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1.5px solid var(--teal);
+      border-radius: 12px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 20px rgba(45, 90, 92, 0.18);
+      z-index: 10;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: fragBadgePop 0.3s ease-out;
+    }
+
+    @keyframes fragBadgePop {
+      0% { opacity: 0; transform: translate(-50%, 8px) scale(0.96); }
+      100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    }
+
+    .preview-frag-img {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preview-frag-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .preview-frag-info {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .preview-frag-label {
+      font-family: var(--sans);
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--teal);
+      text-transform: uppercase;
+    }
+
+    .preview-frag-name {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      color: #111827;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .preview-specs {
       border-top: 1px solid rgba(0,0,0,0.1);
       padding-top: 20px;
@@ -231,26 +357,27 @@ if (!isset($base)) {
     }
 
     .vessel-card {
-      background: linear-gradient(to bottom, #EFF7FA 70%, #FFFFFF 60%);
+      background: #FFFFFF;
       border: 1px solid #D1E5ED;
       border-radius: 12px;
-      padding: 0;
-      cursor: pointer;
       transition: all 0.2s ease-in-out;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       position: relative;
+      height: 100%;
     }
 
     .vessel-img {
       width: 100%;
-      aspect-ratio: 1 / 1;
+      height: 280px;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: transparent;
+      background: #f9fafb;
       box-sizing: border-box;
+      flex-shrink: 0;
     }
 
     .vessel-img img {
@@ -259,12 +386,15 @@ if (!isset($base)) {
       height: 100%;
       object-fit: contain;
       object-position: center;
+      padding: 12px;
     }
 
     .vessel-info {
       padding: 20px 24px;
       background: #FFFFFF;
       flex-grow: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     .vessel-card:hover { border-color: #aaa; }
@@ -328,22 +458,24 @@ if (!isset($base)) {
 
     .color-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
       margin-bottom: 48px;
     }
 
     .color-card {
       background: #FFFFFF;
-      border: 1px solid #D1E5ED;
-      border-radius: 12px;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 14px;
       padding: 0;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: all 0.2s ease;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
       cursor: pointer;
       position: relative;
+      height: 100%;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     }
 
     .color-card.hidden {
@@ -351,41 +483,60 @@ if (!isset($base)) {
     }
 
     .color-swatch {
-      width: 100%;
-      aspect-ratio: 1 / 1;
+      width: 200px;
+      height: 230px;
+      overflow: hidden;
+      background: #F9FAFB;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 25px 15px;
-      background: transparent !important;
+      position: relative;
+      flex-shrink: 0;
     }
 
     .color-swatch img {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      /* max-width: 260px; */
+      /* height: 100%; */
+      /* object-fit: contain;
+      object-position: center; */
+      /* padding: 12px; */
+      transition: transform 0.35s ease;
+    }
+
+    .color-card:hover .color-swatch img {
+      transform: scale(1.04);
+    }
+
+
+    .color-card.selected {
+      border: 2px solid var(--teal);
+      box-shadow: 0 8px 24px rgba(45,90,92,0.2);
     }
 
     .color-card-info {
-      padding: 10px 20px;
+      padding: 14px 8px;
       background: #FFFFFF;
       text-align: center;
       font-family: var(--sans);
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-top: 1px solid #F3F4F6;
     }
 
-    .color-card:hover { border-color: #aaa; }
-    .color-card.selected {
-      border-color: var(--teal);
-      box-shadow: 0 0 0 1px var(--teal);
+    .color-card .vessel-check {
+      top: 12px;
+      right: 12px;
+      width: 28px;
+      height: 28px;
+      background: var(--teal);
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+      z-index: 5;
     }
-
-    .color-card-name { font-size: 13px; font-weight: 400; margin-bottom: 3px; }
-    .color-card-type { font-size: 10px; letter-spacing: 0.12em; color: var(--text-muted); }
-
-    .color-card .vessel-check { top: 10px; right: 10px; width: 22px; height: 22px; }
-    .color-card .vessel-check svg { width: 11px; height: 11px; }
+    .color-card .vessel-check svg { width: 13px; height: 13px; }
 
     .fragrance-grid {
       display: grid;
@@ -641,6 +792,28 @@ if (!isset($base)) {
     .btn-next:hover { background: var(--teal-light); }
     .btn-next:disabled { background: #ccc; cursor: not-allowed; }
 
+    .btn-skip-box {
+      background: #ffffff;
+      color: #374151;
+      border: 1.5px solid #d1d5db;
+      padding: 15px 24px;
+      font-family: var(--sans);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 30px;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .btn-skip-box:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+      color: #111827;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -843,6 +1016,10 @@ if (!isset($base)) {
       }
       .preview-panel {
         display: block !important;
+        position: relative !important;
+        top: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
         margin: 20px 12px 30px 12px;
         order: 2;
       }
@@ -890,49 +1067,52 @@ if (!isset($base)) {
       <h1 class="step-title">Choose your vessel.</h1>
       <p class="step-desc">The silhouette and size of your candle. All vessels include a black bamboo lid.</p>
       <div class="vessel-grid" id="vesselGrid">
-
-        <div class="vessel-card" data-vessel="C" data-price="30" onclick="selectVessel(this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="vessel-img"><img src="img/vessel2.webp" alt="Vessel C"></div>
-          <div class="vessel-info">
-            <div class="vessel-title-row">
-              <span class="vessel-name">Vessel C</span>
-              <span class="vessel-hours">45 hours</span>
+        <?php if (!empty($categoriesList)): ?>
+          <?php
+          foreach ($categoriesList as $cat):
+            $catName = $cat['category_name'];
+            $vesselKey = trim(str_ireplace('Vessel', '', $catName));
+            if (empty($vesselKey)) {
+              $vesselKey = $catName;
+            }
+            $imgSrc = !empty($cat['image']) ? base_url('/' . ltrim($cat['image'], '/')) : base_url('/views/img/vessel2.webp');
+            $dims = !empty($cat['dimensions_subtitle']) ? $cat['dimensions_subtitle'] : '';
+            $burnTime = !empty($cat['burn_time_badge']) ? $cat['burn_time_badge'] : '';
+            $wickType = !empty($cat['wick_type']) ? $cat['wick_type'] : '';
+            $desc = !empty($cat['description']) ? $cat['description'] : '';
+            $price = 30;
+            if (strcasecmp($vesselKey, 'D') === 0) {
+              $price = 40;
+            }
+            if (strcasecmp($vesselKey, 'E') === 0) {
+              $price = 55;
+            }
+            ?>
+            <div class="vessel-card" data-vessel="<?= htmlspecialchars($vesselKey); ?>" data-price="<?= $price; ?>" onclick="selectVessel(this)">
+              <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="vessel-img"><img src="<?= htmlspecialchars($imgSrc); ?>" alt="<?= htmlspecialchars($catName); ?>"></div>
+              <div class="vessel-info">
+                <div class="vessel-title-row">
+                  <span class="vessel-name"><?= htmlspecialchars($catName); ?></span>
+                  <?php if ($burnTime): ?>
+                    <span class="vessel-hours"><?= htmlspecialchars($burnTime); ?></span>
+                  <?php endif; ?>
+                </div>
+                <?php if ($dims): ?>
+                  <div class="vessel-dims"><?= htmlspecialchars($dims); ?></div>
+                <?php endif; ?>
+                <?php if ($desc): ?>
+                  <div class="vessel-desc"><?= htmlspecialchars($desc); ?></div>
+                <?php endif; ?>
+                <?php if ($wickType): ?>
+                  <div><span class="wick-badge"><?= htmlspecialchars($wickType); ?></span></div>
+                <?php endif; ?>
+              </div>
             </div>
-            <div class="vessel-dims">3" DIAMETER × 3.5" HEIGHT</div>
-            <div class="vessel-desc">A refined single-wick clear glass tumbler with a lower profile for everyday burning.</div>
-            <div><span class="wick-badge">Single Wick</span></div>
-          </div>
-        </div>
-
-        <div class="vessel-card" data-vessel="D" data-price="40" onclick="selectVessel(this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="vessel-img"><img src="img/vessel1.webp" alt="Vessel D"></div>
-          <div class="vessel-info">
-            <div class="vessel-title-row">
-              <span class="vessel-name">Vessel D</span>
-              <span class="vessel-hours">60 hours</span>
-            </div>
-            <div class="vessel-dims">3.5" DIAMETER × 4" HEIGHT</div>
-            <div class="vessel-desc">A sculptural double-wick clear glass silhouette with a longer, more even burn.</div>
-            <div><span class="wick-badge">Double Wick</span></div>
-          </div>
-        </div>
-
-        <div class="vessel-card" data-vessel="E" data-price="55" onclick="selectVessel(this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="vessel-img"><img src="img/vessel3.webp" alt="Vessel E"></div>
-          <div class="vessel-info">
-            <div class="vessel-title-row">
-              <span class="vessel-name">Vessel E</span>
-              <span class="vessel-hours">80 hours</span>
-            </div>
-            <div class="vessel-dims">4" DIAMETER × 4.5" HEIGHT</div>
-            <div class="vessel-desc">A statement triple-wick vessel with maximum fragrance throw and an extended burn.</div>
-            <div><span class="wick-badge">Triple Wick</span></div>
-          </div>
-        </div>
-
+          <?php endforeach; ?>
+        <?php else: ?>
+          <p style="color:#6b7280; font-size:14px; grid-column:1/-1;">No active vessel categories available right now.</p>
+        <?php endif; ?>
       </div>
       <div class="step-nav"><span></span><button class="btn-next" onclick="goNext(2)">CONTINUE</button></div>
     </div>
@@ -1074,61 +1254,16 @@ if (!isset($base)) {
       <h1 class="step-title">Add a keepsake box.</h1>
       <p class="step-desc">Optional — choose a cubic box in white or black. The box matches the wick count of your vessel. You can also skip this step.</p>
       <div class="box-grid" id="boxGrid">
-
-        <div class="box-card" data-box="Single Wick White Cubic Box" data-box-code="B01W" data-price="6" data-wick="single" onclick="selectBox(this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="box-img"><img src="img/box4.webp" alt="Single Wick White Cubic Box"></div>
-          <div class="box-info">
-            <div class="box-title-row">
-              <span class="box-name">White Cubic Box</span>
-              <span class="box-price">+$6</span>
-            </div>
-            <div class="box-desc">Single wick · White cubic keepsake box.</div>
-          </div>
-        </div>
-
-        <div class="box-card" data-box="Single Wick Black Cubic Box" data-box-code="B01B" data-price="6" data-wick="single" onclick="selectBox(this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="box-img"><img src="img/box2.webp" alt="Single Wick Black Cubic Box"></div>
-          <div class="box-info">
-            <div class="box-title-row">
-              <span class="box-name">Black Cubic Box</span>
-              <span class="box-price">+$6</span>
-            </div>
-            <div class="box-desc">Single wick · Black cubic keepsake box.</div>
-          </div>
-        </div>
-
-        <div class="box-card" data-box="Double Wick White Cubic Box" data-box-code="B02W" data-price="6" data-wick="double" onclick="selectBox(this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="box-img"><img src="img/doublebox.webp" alt="Double Wick White Cubic Box"></div>
-          <div class="box-info">
-            <div class="box-title-row">
-              <span class="box-name">White Cubic Box</span>
-              <span class="box-price">+$6</span>
-            </div>
-            <div class="box-desc">Double wick · White cubic keepsake box.</div>
-          </div>
-        </div>
-
-        <div class="box-card" data-box="Double Wick Black Cubic Box" data-box-code="B02B" data-price="6" data-wick="double" onclick="selectBox(this)">
-          <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="box-img"><img src="img/doubleboxb.webp" alt="Double Wick Black Cubic Box"></div>
-          <div class="box-info">
-            <div class="box-title-row">
-              <span class="box-name">Black Cubic Box</span>
-              <span class="box-price">+$6</span>
-            </div>
-            <div class="box-desc">Double wick · Black cubic keepsake box.</div>
-          </div>
-        </div>
-
+        <!-- Box cards are dynamically rendered by JavaScript -->
       </div>
       <div class="step-nav">
         <button class="btn-back" onclick="goBack(3)">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5"/></svg> BACK
         </button>
-        <button class="btn-next" onclick="openReview()">REVIEW ORDER</button>
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <button class="btn-skip-box" onclick="checkoutWithoutPackaging()">CHECKOUT WITHOUT PACKAGING</button>
+          <button class="btn-next" onclick="openReview()">REVIEW ORDER</button>
+        </div>
       </div>
     </div>
 
@@ -1154,6 +1289,16 @@ if (!isset($base)) {
             <div class="candle-brand">L V B</div>
             <div class="candle-name" id="previewName">laguna vibe</div>
             <div class="candle-loc">CALIFORNIA</div>
+          </div>
+        </div>
+        <!-- FRAGRANCE PREVIEW BADGE -->
+        <div class="preview-frag-badge" id="previewFragBadge" style="display:none;">
+          <div class="preview-frag-img">
+            <img id="previewFragImg" src="" alt="Fragrance Preview">
+          </div>
+          <div class="preview-frag-info">
+            <span class="preview-frag-label">SELECTED SCENT</span>
+            <span class="preview-frag-name" id="previewFragTitle"></span>
           </div>
         </div>
       </div>
@@ -1363,6 +1508,220 @@ const fragCodeMap = {
 
 const stepNames = ['Vessel', 'Color', 'Fragrance', 'Box'];
 
+// ─── STATE PERSISTENCE (LOCALSTORAGE) ───────────────────────────────────────
+function saveBuilderState() {
+  try {
+    const currentStep = getCurrentStep();
+    const previewImgEl = document.getElementById('previewImg');
+    const dataToSave = {
+      state: state,
+      step: currentStep,
+      previewImgSrc: previewImgEl ? previewImgEl.src : ''
+    };
+    localStorage.setItem('lvb_builder_state', JSON.stringify(dataToSave));
+  } catch (e) {}
+}
+
+function clearBuilderState() {
+  try {
+    localStorage.removeItem('lvb_builder_state');
+  } catch (e) {}
+}
+
+function restoreBuilderState() {
+  try {
+    const saved = localStorage.getItem('lvb_builder_state');
+    if (!saved) return false;
+    const parsed = JSON.parse(saved);
+    if (!parsed || !parsed.state) return false;
+
+    // Restore state object
+    Object.assign(state, parsed.state);
+
+    // Restore Vessel selection
+    if (state.vessel) {
+      document.querySelectorAll('.vessel-card').forEach(c => {
+        if (c.dataset.vessel === state.vessel) c.classList.add('selected');
+        else c.classList.remove('selected');
+      });
+      const vName = 'Vessel ' + state.vessel;
+      const vDims = state.vessel === 'C' ? '3" × 3.5"' : (state.vessel === 'D' ? '3.5" × 4"' : '4" × 4.5"');
+      setSpec('specVessel', vName + ' · ' + vDims);
+      setSpec('specWick', vesselWickMap[state.vessel] || '—');
+      updateWickDisplay(state.vessel);
+      updateBoxVisibility(state.vessel);
+      updateFragranceButton();
+      renderColorCards(state.vessel);
+    }
+
+    // Restore Color selection
+    if (state.color) {
+      document.querySelectorAll('.color-card').forEach(c => {
+        if (c.dataset.color === state.color) c.classList.add('selected');
+        else c.classList.remove('selected');
+      });
+      setSpec('specColor', state.color);
+    }
+
+    // Restore Preview Image
+    if (parsed.previewImgSrc && parsed.previewImgSrc.trim() !== '' && !parsed.previewImgSrc.endsWith('/')) {
+      const previewImgEl = document.getElementById('previewImg');
+      if (previewImgEl) {
+        previewImgEl.src = parsed.previewImgSrc;
+        document.getElementById('previewImgWrap').style.display = 'block';
+        document.getElementById('previewCard').style.display = 'none';
+      }
+    }
+
+    // Restore Fragrance selection
+    if (state.frag) {
+      document.querySelectorAll('.fragrance-card').forEach(c => {
+        if (c.dataset.frag === state.frag) {
+          c.classList.add('selected');
+          const fragImgEl = c.querySelector('.frag-img img');
+          const fragImgSrc = fragImgEl ? fragImgEl.src : '';
+          const badgeEl = document.getElementById('previewFragBadge');
+          const badgeImgEl = document.getElementById('previewFragImg');
+          const badgeTitleEl = document.getElementById('previewFragTitle');
+          if (badgeEl && badgeTitleEl) {
+            badgeTitleEl.textContent = state.frag;
+            if (fragImgSrc && badgeImgEl) {
+              badgeImgEl.src = fragImgSrc;
+              badgeImgEl.style.display = 'block';
+            }
+            badgeEl.style.display = 'flex';
+          }
+        } else {
+          c.classList.remove('selected');
+        }
+      });
+      setSpec('specFrag', state.frag);
+      const previewNameEl = document.getElementById('previewName');
+      if (previewNameEl) previewNameEl.textContent = state.frag;
+    }
+
+    // Restore Box selection
+    if (state.box) {
+      document.querySelectorAll('.box-card').forEach(c => {
+        if (c.dataset.box === state.box) c.classList.add('selected');
+        else c.classList.remove('selected');
+      });
+      setSpec('specBox', `${state.box} (+$${state.boxPrice})`);
+    }
+
+    // Restore Quantity
+    if (state.qty && state.qty > 1) {
+      const qtyVal = document.getElementById('qtyVal');
+      if (qtyVal) qtyVal.textContent = state.qty;
+    }
+
+    recalcPrice();
+
+    // Restore step from URL hash or saved step
+    const hash = window.location.hash;
+    let targetStep = parsed.step || 1;
+    if (hash && hash.startsWith('#step')) {
+      const stepNum = parseInt(hash.replace('#step', ''));
+      if (stepNum >= 1 && stepNum <= 4) targetStep = stepNum;
+    }
+    showStep(targetStep);
+    return true;
+  } catch (e) {
+    console.error('Failed to restore builder state', e);
+    return false;
+  }
+}
+
+// ─── URL STATE SYNC ──────────────────────────────────────────────────────────
+function syncUrlState() {
+  const currentStep = getCurrentStep();
+  const params = new URLSearchParams();
+
+  if (state.vessel) params.set('vessel', state.vessel);
+  if (state.color) params.set('color', state.color);
+  if (state.frag) params.set('frag', state.frag);
+  if (state.box) params.set('box', state.box);
+
+  const queryString = params.toString();
+  const basePath = window.location.pathname.replace(/\/$/, '');
+  const newHash = `#step${currentStep}`;
+  const newUrl = basePath + (queryString ? `?${queryString}` : '') + newHash;
+
+  window.history.replaceState({ step: currentStep }, '', newUrl);
+  saveBuilderState();
+}
+
+function parseUrlState() {
+  const hash = window.location.hash || '';
+  const search = window.location.search || '';
+
+  let queryString = '';
+  if (hash.includes('?')) {
+    queryString = hash.split('?')[1];
+  } else if (search) {
+    queryString = search.replace('?', '');
+  }
+
+  if (!queryString && !hash) return false;
+
+  const params = new URLSearchParams(queryString);
+  const vesselParam = params.get('vessel');
+  const colorParam = params.get('color') || params.get('colorCode');
+  const fragParam = params.get('frag');
+  const boxParam = params.get('box') || params.get('boxCode');
+
+  let restoredSomething = false;
+
+  // 1. Vessel
+  if (vesselParam) {
+    const vCard = document.querySelector(`.vessel-card[data-vessel="${vesselParam}"]`);
+    if (vCard) {
+      selectVessel(vCard, true);
+      restoredSomething = true;
+    }
+  }
+
+  // 2. Color
+  if (colorParam) {
+    const cCards = Array.from(document.querySelectorAll('.color-card'));
+    const matchingColor = cCards.find(c => c.dataset.color === colorParam || c.dataset.code === colorParam);
+    if (matchingColor) {
+      selectColor(matchingColor, true);
+      restoredSomething = true;
+    }
+  }
+
+  // 3. Fragrance
+  if (fragParam) {
+    const fCards = Array.from(document.querySelectorAll('.fragrance-card'));
+    const matchingFrag = fCards.find(c => c.dataset.frag.toLowerCase() === fragParam.toLowerCase() || c.dataset.frag === fragParam);
+    if (matchingFrag) {
+      selectFrag(null, matchingFrag, true);
+      restoredSomething = true;
+    }
+  }
+
+  // 4. Box
+  if (boxParam) {
+    const bCards = Array.from(document.querySelectorAll('.box-card'));
+    const matchingBox = bCards.find(c => c.dataset.box === boxParam || c.dataset.boxCode === boxParam);
+    if (matchingBox) {
+      selectBox(matchingBox, true);
+      restoredSomething = true;
+    }
+  }
+
+  // Determine Step
+  let stepNum = 1;
+  if (hash && hash.startsWith('#step')) {
+    const stepPart = hash.split('?')[0];
+    stepNum = parseInt(stepPart.replace('#step', '')) || 1;
+  }
+  showStep(stepNum, true);
+
+  return restoredSomething;
+}
+
 // ─── NAVIGATION ──────────────────────────────────────────────────────────────
 window.addEventListener('popstate', function(e) {
   const currentStep = getCurrentStep();
@@ -1378,112 +1737,172 @@ function getCurrentStep() {
   return 1;
 }
 
+const builderStepUrl = '<?= base_url('/builder/#step'); ?>';
+
 function goNext(step) {
-  history.pushState({ step }, '', '#step' + step);
   showStep(step);
 }
 
 function goBack(step) {
-  history.pushState({ step }, '', '#step' + step);
   showStep(step);
 }
 
-function showStep(n) {
+function showStep(n, skipSync) {
   document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-  document.getElementById('step' + n).classList.add('active');
+  const targetStepEl = document.getElementById('step' + n);
+  if (targetStepEl) targetStepEl.classList.add('active');
+
   for (let i = 1; i <= 4; i++) {
     const dot = document.getElementById('dot' + i);
-    dot.className = 'step-dot';
-    if (i < n) dot.classList.add('done');
-    if (i === n) dot.classList.add('active');
+    if (dot) {
+      dot.className = 'step-dot';
+      if (i < n) dot.classList.add('done');
+      if (i === n) dot.classList.add('active');
+    }
   }
-  document.getElementById('stepCount').textContent = `STEP ${n} OF 4`;
-  document.getElementById('stepNameLabel').textContent = stepNames[n - 1];
+  const stepCountEl = document.getElementById('stepCount');
+  if (stepCountEl) stepCountEl.textContent = `STEP ${n} OF 4`;
+
+  const stepLabelEl = document.getElementById('stepNameLabel');
+  if (stepLabelEl && stepNames[n - 1]) stepLabelEl.textContent = stepNames[n - 1];
+
+  // If showing step 2 (Colors), ensure colors grid is populated
+  if (n === 2) {
+    const grid = document.getElementById('colorGrid');
+    if (grid && (grid.children.length === 0 || grid.querySelector('p'))) {
+      renderColorCards(state.vessel || 'C');
+    }
+  }
+
+  // If showing step 4 (Box), ensure box grid is populated
+  if (n === 4) {
+    renderBoxCards(state.vessel || 'C');
+  }
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (!skipSync) syncUrlState();
 }
+
+const dbColorsData = <?= json_encode($dbColors ?? []); ?>;
 
 // ─── RENDER COLOR CARDS ──────────────────────────────────────────────────────
 function renderColorCards(vessel) {
   const grid = document.getElementById('colorGrid');
+  if (!grid) return;
+
+  vessel = vessel || state.vessel || 'C';
+  if (!state.vessel) {
+    state.vessel = vessel;
+  }
+
   grid.innerHTML = '';
-  
-  // Get colors available for this vessel
-  const availableColors = colorData.filter(c => c.vessels.includes(vessel));
-  
-  if (availableColors.length === 0) {
-    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#999;">No colors available for this vessel.</p>';
+
+  const colorsToRender = (dbColorsData && dbColorsData.length > 0) ? dbColorsData : colorData;
+
+  if (!colorsToRender || colorsToRender.length === 0) {
+    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#999;">No colors available right now.</p>';
     return;
   }
-  
-  availableColors.forEach(color => {
+
+  colorsToRender.forEach(color => {
     const card = document.createElement('div');
     card.className = 'color-card';
     card.dataset.color = color.name;
-    card.dataset.code = color.code;
-    card.dataset.type = color.type;
-    card.dataset.vessels = color.vessels.join(',');
-    
-    // Get the image for this vessel
-    const imgSrc = color.images[vessel] || color.images.C || 'img/placeholder.webp';
-    
+    card.dataset.code = color.code || ('0' + (color.id || 1));
+
+    let imgSrc = color.image || '';
+    if (!imgSrc && color.images) {
+      imgSrc = color.images[vessel] || color.images.C || '';
+    }
+    card.dataset.image = imgSrc;
+
+    const hexColor = color.hex || '#687382';
+
     card.innerHTML = `
-      <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-      <div class="color-swatch"><img src="${imgSrc}" alt="${color.name}" onerror="this.style.backgroundColor='#e2dcd5';this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23888\' font-family=\'Georgia\' font-size=\'10\'%3ELVB%3C/text%3E%3C/svg%3E';"></div>
+      <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="color-swatch">
+        ${imgSrc ? `<img src="${imgSrc}" alt="${color.name}" onerror="this.onerror=null; this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='block';}">
+                    <div class="swatch-fallback" style="display:none; width:64px; height:64px; border-radius:50%; background:${hexColor}; border:2.5px solid rgba(0,0,0,0.12); box-shadow:0 6px 16px rgba(0,0,0,0.12);"></div>`
+                 : `<div style="width:64px; height:64px; border-radius:50%; background:${hexColor}; border:2.5px solid rgba(0,0,0,0.12); box-shadow:0 6px 16px rgba(0,0,0,0.12);"></div>`}
+      </div>
       <div class="color-card-info">
-        <div class="color-card-name">${color.name}</div>
-        <div class="color-card-type">${color.type}</div>
+        <div style="display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+          <span style="width:14px; height:14px; border-radius:50%; background:${hexColor}; border:1.5px solid rgba(0,0,0,0.2); display:inline-block; flex-shrink:0;"></span>
+          <span class="color-card-name" style="font-size:13.5px; font-weight:500; color:#111827; letter-spacing:0.01em;">${color.name}</span>
+        </div>
       </div>
     `;
-    
+
     card.onclick = function() { selectColor(this); };
     grid.appendChild(card);
   });
+
+  // Highlight matching color card if previously selected by user, or auto-select first color card
+  if (state.color) {
+    const allCards = Array.from(grid.querySelectorAll('.color-card'));
+    const matchingCard = allCards.find(c => c.dataset.color === state.color || c.dataset.code === state.colorCode);
+    if (matchingCard) {
+      matchingCard.classList.add('selected');
+      const colorImg = matchingCard.dataset.image;
+      const cardImg = matchingCard.querySelector('img');
+      const previewImgEl = document.getElementById('previewImg');
+      if (previewImgEl) {
+        if (colorImg && colorImg.trim() !== '') {
+          previewImgEl.src = colorImg;
+          document.getElementById('previewCard').style.display = 'none';
+          document.getElementById('previewImgWrap').style.display = 'block';
+        } else if (cardImg && cardImg.src && !cardImg.src.endsWith('/')) {
+          previewImgEl.src = cardImg.src;
+          document.getElementById('previewCard').style.display = 'none';
+          document.getElementById('previewImgWrap').style.display = 'block';
+        }
+      }
+    }
+  } else {
+    const firstCard = grid.querySelector('.color-card');
+    if (firstCard) {
+      selectColor(firstCard, true);
+    }
+  }
 }
 
 // ─── STEP 1: VESSEL ──────────────────────────────────────────────────────────
-function selectVessel(el) {
+function selectVessel(el, skipSync) {
+  if (!el) return;
   document.querySelectorAll('.vessel-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   state.vessel = el.dataset.vessel;
   state.vesselPrice = parseInt(el.dataset.price) || 30;
 
-  // Update preview
-  const dims = {
-    C: 'Vessel C · 3" × 3.5"',
-    D: 'Vessel D · 3.5" × 4"',
-    E: 'Vessel E · 4" × 4.5"'
-  };
-  setSpec('specVessel', dims[state.vessel] || state.vessel);
-  setSpec('specWick', vesselWickMap[state.vessel] || '—');
+  // Update right-side live preview image
+  const vesselImgEl = el.querySelector('.vessel-img img');
+  if (vesselImgEl && vesselImgEl.src && !vesselImgEl.src.endsWith('/')) {
+    document.getElementById('previewImg').src = vesselImgEl.src;
+    document.getElementById('previewImgWrap').style.display = 'block';
+    document.getElementById('previewCard').style.display = 'none';
+  }
 
-  // Update candle card height
-  const card = document.getElementById('previewCard');
-  if (state.vessel === 'E') card.style.height = '290px';
-  else if (state.vessel === 'D') card.style.height = '265px';
-  else card.style.height = '240px';
+  // Update preview specs
+  const vesselNameEl = el.querySelector('.vessel-name');
+  const dimsEl = el.querySelector('.vessel-dims');
+  const wickEl = el.querySelector('.wick-badge');
+  const vName = vesselNameEl ? vesselNameEl.textContent.trim() : ('Vessel ' + state.vessel);
+  const vDims = dimsEl ? dimsEl.textContent.trim() : '';
+  const vWick = wickEl ? wickEl.textContent.trim() : (vesselWickMap[state.vessel] || '—');
+
+  setSpec('specVessel', vName + (vDims ? (' · ' + vDims) : ''));
+  setSpec('specWick', vWick);
 
   // Update flame display
   updateWickDisplay(state.vessel);
 
-  // Render color cards for this vessel
+  // Render color cards for this vessel (auto-selects first color and sets preview image)
   renderColorCards(state.vessel);
-
-  // Clear previously selected color
-  document.querySelectorAll('.color-card').forEach(c => c.classList.remove('selected'));
-  state.color = null;
-  state.colorCode = null;
-  setSpec('specColor', '—');
-  document.getElementById('previewCard').style.display = 'flex';
-  document.getElementById('previewImgWrap').style.display = 'none';
 
   // Update description
   const descEl = document.getElementById('colorDesc');
-  if (state.vessel === 'C') {
-    descEl.textContent = 'Choose from all 9 available finishes for Vessel C.';
-  } else if (state.vessel === 'D') {
-    descEl.textContent = 'Six finishes available for Vessel D.';
-  } else if (state.vessel === 'E') {
-    descEl.textContent = 'Two finishes available for Vessel E.';
+  if (descEl) {
+    descEl.textContent = 'Select a finish for ' + vName + '.';
   }
 
   // Update box visibility based on vessel
@@ -1493,42 +1912,85 @@ function selectVessel(el) {
   updateFragranceButton();
 
   recalcPrice();
-  setTimeout(() => goNext(2), 350);
+  if (!skipSync) syncUrlState();
+}
+
+const dbBoxesData = <?= json_encode($dbBoxes ?? []); ?>;
+
+// ─── RENDER BOX CARDS ────────────────────────────────────────────────────────
+function renderBoxCards(vessel) {
+  const grid = document.getElementById('boxGrid');
+  if (!grid) return;
+
+  if (vessel === 'E') {
+    grid.innerHTML = '';
+    return;
+  }
+
+  grid.innerHTML = '';
+
+  const boxesToRender = (dbBoxesData && dbBoxesData.length > 0) ? dbBoxesData : [
+    { name: 'White Cubic Box', code: 'B01W', price: 6, image: 'img/box4.webp', description: 'White cubic keepsake box.' },
+    { name: 'Black Cubic Box', code: 'B01B', price: 6, image: 'img/box2.webp', description: 'Black cubic keepsake box.' }
+  ];
+
+  const wickText = vessel === 'D' ? 'Double wick' : 'Single wick';
+
+  boxesToRender.forEach(box => {
+    const card = document.createElement('div');
+    card.className = 'box-card';
+    card.dataset.box = box.name;
+    const defaultCode = (vessel === 'D' ? 'B02' : 'B01') + (box.name.toLowerCase().includes('black') ? 'B' : 'W');
+    card.dataset.boxCode = box.code || defaultCode;
+    card.dataset.price = box.price || 6;
+
+    const fallbackImg = box.name.toLowerCase().includes('black') ? 'img/box2.webp' : (vessel === 'D' ? 'img/doublebox.webp' : 'img/box4.webp');
+    const imgSrc = box.image || fallbackImg;
+    const desc = box.description ? box.description : `${wickText} · ${box.name}`;
+
+    card.innerHTML = `
+      <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="box-img"><img src="${imgSrc}" alt="${box.name}" onerror="this.onerror=null; this.src='${fallbackImg}';"></div>
+      <div class="box-info">
+        <div class="box-title-row">
+          <span class="box-name">${box.name}</span>
+          <span class="box-price">+$${box.price}</span>
+        </div>
+        <div class="box-desc">${desc}</div>
+      </div>
+    `;
+
+    card.onclick = function() { selectBox(this); };
+    grid.appendChild(card);
+  });
+
+  // Highlight matching selected box if any
+  if (state.box) {
+    const allCards = Array.from(grid.querySelectorAll('.box-card'));
+    const matchingCard = allCards.find(c => c.dataset.box === state.box || c.dataset.boxCode === state.boxCode || c.dataset.box.toLowerCase().includes(state.box.toLowerCase()) || state.box.toLowerCase().includes(c.dataset.box.toLowerCase()));
+    if (matchingCard) matchingCard.classList.add('selected');
+  }
 }
 
 // ─── BOX VISIBILITY ──────────────────────────────────────────────────────────
 function updateBoxVisibility(vessel) {
   const step4 = document.getElementById('step4');
-  const boxGrid = document.querySelector('.box-grid');
-  
+  if (!step4) return;
+
   if (vessel === 'E') {
-    // Hide box step completely
     step4.classList.add('step-box-hidden');
-    // Reset box selection
     document.querySelectorAll('.box-card').forEach(c => c.classList.remove('selected'));
     state.box = null;
     state.boxCode = null;
     state.boxPrice = 0;
     setSpec('specBox', '—');
-    // Update step dots - we have 3 steps for vessel E
     document.querySelectorAll('.step-dot').forEach((dot, idx) => {
-      if (idx === 3) dot.style.display = 'none'; // hide 4th dot
+      if (idx === 3) dot.style.display = 'none';
     });
   } else {
     step4.classList.remove('step-box-hidden');
     document.querySelectorAll('.step-dot').forEach(dot => dot.style.display = '');
-    // show/hide based on wick
-    const allBoxCards = document.querySelectorAll('.box-card');
-    allBoxCards.forEach(card => {
-      const wick = card.dataset.wick;
-      if (vessel === 'C' && wick === 'single') {
-        card.style.display = '';
-      } else if (vessel === 'D' && wick === 'double') {
-        card.style.display = '';
-      } else {
-        card.style.display = 'none';
-      }
-    });
+    renderBoxCards(vessel);
   }
 }
 
@@ -1579,43 +2041,70 @@ function updateWickDisplay(vessel) {
 }
 
 // ─── STEP 2: COLOR ────────────────────────────────────────────────────────────
-function selectColor(el) {
+function selectColor(el, skipSync) {
+  if (!el) return;
   document.querySelectorAll('.color-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   state.color = el.dataset.color;
   state.colorCode = el.dataset.code;
   setSpec('specColor', state.color);
 
-  // Get the image for the current vessel
-  const vessel = state.vessel || 'C';
-  const colorInfo = colorData.find(c => c.name === state.color);
-  
-  if (colorInfo && colorInfo.images[vessel]) {
-    const imgSrc = colorInfo.images[vessel];
-    document.getElementById('previewImg').src = imgSrc;
+  // Update right-side preview image immediately
+  const colorImg = el.dataset.image;
+  const cardImg = el.querySelector('img');
+  const previewImgEl = document.getElementById('previewImg');
+
+  if (colorImg && colorImg.trim() !== '') {
+    previewImgEl.src = colorImg;
+    document.getElementById('previewCard').style.display = 'none';
+    document.getElementById('previewImgWrap').style.display = 'block';
+  } else if (cardImg && cardImg.src && !cardImg.src.endsWith('/')) {
+    previewImgEl.src = cardImg.src;
     document.getElementById('previewCard').style.display = 'none';
     document.getElementById('previewImgWrap').style.display = 'block';
   }
 
   recalcPrice();
-  setTimeout(() => goNext(3), 350);
+  if (!skipSync) syncUrlState();
 }
 
 // ─── STEP 3: FRAGRANCE ────────────────────────────────────────────────────────
-function selectFrag(event, el) {
-  if (event.target.closest('.frag-view-btn')) return;
+function selectFrag(event, el, skipSync) {
+  if (event && event.target && event.target.closest('.frag-view-btn')) return;
   document.querySelectorAll('.fragrance-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   state.frag = el.dataset.frag;
   state.fragCode = fragCodeMap[state.frag] || '01';
   setSpec('specFrag', state.frag);
   
-  // Auto-advance after fragrance selection
-  setTimeout(() => handleFragranceNext(), 400);
+  // Update candle text card name if visible
+  const previewNameEl = document.getElementById('previewName');
+  if (previewNameEl) {
+    previewNameEl.textContent = state.frag;
+  }
+
+  // Update right side live preview fragrance badge
+  const fragImgEl = el.querySelector('.frag-img img');
+  const fragImgSrc = fragImgEl ? fragImgEl.src : '';
+
+  const badgeEl = document.getElementById('previewFragBadge');
+  const badgeImgEl = document.getElementById('previewFragImg');
+  const badgeTitleEl = document.getElementById('previewFragTitle');
+
+  if (badgeEl && badgeTitleEl) {
+    badgeTitleEl.textContent = state.frag;
+    if (fragImgSrc && badgeImgEl) {
+      badgeImgEl.src = fragImgSrc;
+      badgeImgEl.style.display = 'block';
+    }
+    badgeEl.style.display = 'flex';
+  }
+  if (!skipSync) syncUrlState();
 }
 
 // ─── STEP 4: BOX ──────────────────────────────────────────────────────────────
-function selectBox(el) {
+function selectBox(el, skipSync) {
+  if (!el) return;
   if (state.vessel === 'E') {
     alert('Keepsake boxes are not available for Vessel E.');
     return;
@@ -1627,7 +2116,21 @@ function selectBox(el) {
   state.boxPrice = parseInt(el.dataset.price) || 0;
   setSpec('specBox', `${state.box} (+$${state.boxPrice})`);
   recalcPrice();
-  setTimeout(() => openReview(), 350);
+  if (!skipSync) {
+    syncUrlState();
+    setTimeout(() => openReview(), 350);
+  }
+}
+
+function checkoutWithoutPackaging() {
+  document.querySelectorAll('.box-card').forEach(c => c.classList.remove('selected'));
+  state.box = null;
+  state.boxCode = null;
+  state.boxPrice = 0;
+  setSpec('specBox', 'No Packaging');
+  recalcPrice();
+  syncUrlState();
+  openReview();
 }
 
 // ─── SKU GENERATION ───────────────────────────────────────────────────────────
@@ -1747,7 +2250,7 @@ document.getElementById('fragModal').addEventListener('click', function(e) {
   if (e.target === this) closeFragModal();
 });
 
-// ─── BROKEN IMAGE FALLBACK ────────────────────────────────────────────────────
+// ─── BROKEN IMAGE FALLBACK & INITIALIZATION ───────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('img').forEach(img => {
     img.onerror = function() {
@@ -1756,18 +2259,28 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   });
   
-  // Initialize with default vessel (C)
-  const defaultVessel = document.querySelector('.vessel-card[data-vessel="C"]');
-  if (defaultVessel) {
-    defaultVessel.classList.add('selected');
-    state.vessel = 'C';
-    state.vesselPrice = 30;
-    renderColorCards('C');
-    setSpec('specVessel', 'Vessel C · 3" × 3.5"');
-    setSpec('specWick', 'Single Wick');
-    updateWickDisplay('C');
-    updateBoxVisibility('C');
-    updateFragranceButton();
+  // 1. Try URL parameter restoration first (enables shareable links like builder/#step3?vessel=C&color=01&frag=AmberMusk)
+  let restored = parseUrlState();
+  
+  // 2. If no URL params, try restoring from localStorage
+  if (!restored) {
+    restored = restoreBuilderState();
+  }
+  
+  // 3. Fallback to default Vessel C setup if nothing was restored
+  if (!restored) {
+    const defaultVessel = document.querySelector('.vessel-card[data-vessel="C"]');
+    if (defaultVessel) {
+      selectVessel(defaultVessel);
+    } else {
+      renderColorCards('C');
+    }
+  } else {
+    // Ensure colors are rendered if colorGrid is still empty
+    const grid = document.getElementById('colorGrid');
+    if (grid && grid.children.length === 0) {
+      renderColorCards(state.vessel || 'C');
+    }
   }
 });
 
@@ -1861,6 +2374,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       closeReview();
+      clearBuilderState();
       // Show success message like shop page
       showSuccessMessage('Added to cart (SKU: ' + sku + ')');
       LVBCart.open();
@@ -1900,7 +2414,14 @@ styleSheet.textContent = `
 document.head.appendChild(styleSheet);
 
 // ─── INIT: push initial history state ─────────────────────────────────────────
-history.replaceState({ step: 1 }, '', '#step1');
+if (!window.location.hash || !window.location.hash.startsWith('#step')) {
+  history.replaceState({ step: 1 }, '', builderStepUrl + '1');
+} else {
+  const stepNum = parseInt(window.location.hash.replace('#step', ''));
+  if (stepNum >= 1 && stepNum <= 4) {
+    showStep(stepNum);
+  }
+}
 </script>
 </body>
 </html>

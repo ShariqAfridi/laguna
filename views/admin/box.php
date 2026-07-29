@@ -70,8 +70,7 @@ $result = $conn->query("SELECT * FROM boxes $whereSql ORDER BY sort_order ASC, b
                 <tr>
                     <th>Box Image</th>
                     <th>Box Name</th>
-                    <th>Dimensions</th>
-                    <th>Extra Price</th>
+                    <th>Price</th>
                     <th>Status</th>
                     <th style="text-align:right;">Actions</th>
                 </tr>
@@ -91,10 +90,9 @@ $result = $conn->query("SELECT * FROM boxes $whereSql ORDER BY sort_order ASC, b
                         <td>
                             <strong style="color:#111827; font-size:15px;"><?= htmlspecialchars($row['box_name']); ?></strong>
                             <?php if (!empty($row['box_description'])): ?>
-                                <div style="font-size:12px; color:#6b7280; margin-top:2px; max-width:280px;"><?= htmlspecialchars($row['box_description']); ?></div>
+                                <div style="font-size:12px; color:#6b7280; margin-top:2px; max-width:320px;"><?= htmlspecialchars($row['box_description']); ?></div>
                             <?php endif; ?>
                         </td>
-                        <td style="color:#4b5563;"><?= htmlspecialchars($row['box_dimensions'] ?? '-'); ?></td>
                         <td style="font-weight:600; color:#111827;">$<?= number_format((float)($row['box_price'] ?? 0), 2); ?></td>
                         <td>
                             <?php if (($row['status'] ?? 1) == 1): ?>
@@ -116,7 +114,7 @@ $result = $conn->query("SELECT * FROM boxes $whereSql ORDER BY sort_order ASC, b
                 <?php endwhile; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:40px; color:#9ca3af;">No packaging box designs created yet. Click "Add New Box Design" above.</td>
+                    <td colspan="5" style="text-align:center; padding:40px; color:#9ca3af;">No packaging box designs created yet. Click "Add New Box Design" above.</td>
                 </tr>
             <?php endif; ?>
             </tbody>

@@ -9,6 +9,8 @@ return [
     '/shop' => 'Frontend\ShopController@index',
     '/accessories' => 'Frontend\AccessoriesController@index',
     '/builder' => 'Frontend\DesignController@index',
+    '/customizer' => 'Frontend\DesignController@index',
+    '/design' => 'Frontend\DesignController@index',
     '/checkout' => 'Frontend\CheckoutController@index',
     '/thankyou' => 'Frontend\ThankyouController@index',
     '/privacy' => 'Frontend\PrivacyController@index',
