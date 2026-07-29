@@ -1,3 +1,10 @@
+<?php
+if (!isset($base)) {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
+    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1226,7 +1233,7 @@
   </div>
 </div>
 
-<script src="/views/cart.js"></script>
+<script src="<?php echo $base; ?>/views/frontend/home/cart.js"></script>
 <script>
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const state = {
@@ -1421,7 +1428,7 @@ function renderColorCards(vessel) {
     
     card.innerHTML = `
       <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2"/></svg></div>
-      <div class="color-swatch"><img src="${imgSrc}" alt="${color.name}"></div>
+      <div class="color-swatch"><img src="${imgSrc}" alt="${color.name}" onerror="this.style.backgroundColor='#e2dcd5';this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23888\' font-family=\'Georgia\' font-size=\'10\'%3ELVB%3C/text%3E%3C/svg%3E';"></div>
       <div class="color-card-info">
         <div class="color-card-name">${color.name}</div>
         <div class="color-card-type">${color.type}</div>

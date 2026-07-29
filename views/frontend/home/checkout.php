@@ -1,5 +1,10 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
+if (!isset($base)) {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
+    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
+}
 require_once __DIR__ . '/../../../db.php';
 
 $cart = $_SESSION['cart'] ?? [];
@@ -1153,7 +1158,8 @@ textarea { resize: vertical; min-height: 80px; }
     }
 
     function syncServer(items) {
-        fetch('/logic/sync_cart.php', {
+        var baseApiUrl = (typeof window.basePath !== 'undefined') ? window.basePath : (window.location.pathname.startsWith('/laguna') ? '/laguna' : '<?php echo $base; ?>');
+        fetch(baseApiUrl + '/logic/sync_cart.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ cart: items })
