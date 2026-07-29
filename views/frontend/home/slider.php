@@ -360,42 +360,63 @@
                     
                     <!-- Set 1 (original images) -->
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/lavender.webp" alt="Ocean Breeze Lavender" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Lavender+Candle'">
+                        <img class="lvh-candle-img" src="assets/slider/00_08_BLUR FROST.png" alt="Ocean Breeze Lavender" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Lavender+Candle'">
                     </div>
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/lattraction.webp" alt="Sea Salt Attraction" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Sea+Salt'">
+                        <img class="lvh-candle-img" src="assets/slider/00_09_PURPLE FROST.png" alt="Sea Salt Attraction" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Sea+Salt'">
                     </div>
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/fragrancefree.webp" alt="Driftwood Fragrance Free" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Driftwood'">
+                        <img class="lvh-candle-img" src="assets/slider/00_17_01 GREEN FROST TEMPLET.png" alt="Driftwood Fragrance Free" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Driftwood'">
                     </div>
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/musk.webp" alt="Musk Tidal Wave" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Musk'">
+                        <img class="lvh-candle-img" src="assets/slider/00_17_GREEN FROST TEMPLET.png" alt="Musk Tidal Wave" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Musk'">
                     </div>
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/lemonglass.webp" alt="Lemonglass Coral Reef" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Coral+Reef'">
+                        <img class="lvh-candle-img" src="assets/slider/00_18_RED FROST TEMPLET.png" alt="Lemonglass Coral Reef" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Coral+Reef'">
                     </div>
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/woods.webp" alt="Woods Moonlit Waters" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Moonlit+Waters'">
+                        <img class="lvh-candle-img" src="assets/slider/C0206.png" alt="Woods Moonlit Waters" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Moonlit+Waters'">
                     </div>
                     
-                    <!-- Duplicate set for seamless infinite loop (right-to-left) -->
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/lavender.webp" alt="Ocean Breeze Lavender" loading="lazy">
+                        <img class="lvh-candle-img" src="assets/slider/C0304.png" alt="Ocean Breeze Lavender" loading="lazy">
                     </div>
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/lattraction.webp" alt="Sea Salt Attraction" loading="lazy">
+                        <img class="lvh-candle-img" src="assets/slider/C0811.png" alt="Sea Salt Attraction" loading="lazy">
                     </div>
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/fragrancefree.webp" alt="Driftwood Fragrance Free" loading="lazy">
+                        <img class="lvh-candle-img" src="assets/slider/C1510.png" alt="Driftwood Fragrance Free" loading="lazy">
                     </div>
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/musk.webp" alt="Musk Tidal Wave" loading="lazy"> 
+                        <img class="lvh-candle-img" src="assets/slider/D0209.png" alt="Musk Tidal Wave" loading="lazy">
                     </div>
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/lemonglass.webp" alt="Lemonglass Coral Reef" loading="lazy">
+                        <img class="lvh-candle-img" src="assets/slider/D0313.png" alt="Lemonglass Coral Reef" loading="lazy">
                     </div>
                     <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="img/woods.webp" alt="Woods Moonlit Waters" loading="lazy"> 
+                        <img class="lvh-candle-img" src="assets/slider/D1205.png" alt="Woods Moonlit Waters" loading="lazy">
+                    </div>
+
+                    <div class="lvh-marquee-item">
+                        <img class="lvh-candle-img" src="assets/slider/D1604.png" alt="Ocean Breeze Lavender" loading="lazy">
+                    </div>
+                    <div class="lvh-marquee-item">
+                        <img class="lvh-candle-img" src="assets/slider/E0208.png" alt="Sea Salt Attraction" loading="lazy">
+                    </div>
+                    <div class="lvh-marquee-item">
+                        <img class="lvh-candle-img" src="assets/slider/E0314.png" alt="Driftwood Fragrance Free" loading="lazy">
+                    </div>
+                    <div class="lvh-marquee-item">
+                        <img class="lvh-candle-img" src="assets/slider/H50-3 VESSEL INSIDE.png" alt="Musk Tidal Wave" loading="lazy">
+                    </div>
+                    <div class="lvh-marquee-item">
+                        <img class="lvh-candle-img" src="assets/slider/H50-4 VESSEL INSIDE.png" alt="Lemonglass Coral Reef" loading="lazy">
+                    </div>
+                    <div class="lvh-marquee-item">
+                        <img class="lvh-candle-img" src="assets/slider/H50-5  VESSEL INSIDE.png" alt="Woods Moonlit Waters" loading="lazy">
+                    </div>
+                    <div class="lvh-marquee-item">
+                        <img class="lvh-candle-img" src="assets/slider/H50-6  VESSEL INSIDE.png" alt="Woods Moonlit Waters" loading="lazy">
                     </div>
                 </div>
             </div>

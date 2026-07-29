@@ -1461,12 +1461,14 @@ function resetBuilder() {
   if (previewImgWrap) previewImgWrap.style.display = 'none';
   if (previewCard) previewCard.style.display = 'flex';
 
+  const previewNameEl = document.getElementById('previewName');
+  if (previewNameEl) previewNameEl.textContent = '';
+
   const previewFragBadge = document.getElementById('previewFragBadge');
   if (previewFragBadge) previewFragBadge.style.display = 'none';
 
   // Reset flame container
-  const flameContainer = document.getElementById('previewFlameContainer');
-  if (flameContainer) flameContainer.innerHTML = '';
+  updateWickDisplay(null);
 
   clearBuilderState();
 }
@@ -1758,7 +1760,22 @@ function showStep(n, skipSync) {
         setSpec('specColor', state.color || '—');
         setSpec('specFrag', state.frag || '—');
         setSpec('specBox', state.box ? `${state.box} (+$${state.boxPrice})` : '—');
+        updateWickDisplay(state.vessel);
+
+        const vesselImgEl = vCard.querySelector('.vessel-img img');
+        if (vesselImgEl && vesselImgEl.src && !vesselImgEl.src.endsWith('/')) {
+          const previewImgEl = document.getElementById('previewImg');
+          if (previewImgEl) previewImgEl.src = vesselImgEl.src;
+          const imgWrap = document.getElementById('previewImgWrap');
+          if (imgWrap) imgWrap.style.display = 'block';
+          const pCard = document.getElementById('previewCard');
+          if (pCard) pCard.style.display = 'none';
+        }
+      } else {
+        resetBuilder();
       }
+    } else {
+      resetBuilder();
     }
   }
 
@@ -1836,18 +1853,29 @@ function renderColorCards(vessel) {
     const matchingCard = allCards.find(c => c.dataset.color === state.color || c.dataset.code === state.colorCode);
     if (matchingCard) {
       matchingCard.classList.add('selected');
-      const colorImg = matchingCard.dataset.image;
-      const cardImg = matchingCard.querySelector('img');
-      const previewImgEl = document.getElementById('previewImg');
-      if (previewImgEl) {
-        if (colorImg && colorImg.trim() !== '') {
-          previewImgEl.src = colorImg;
-          document.getElementById('previewCard').style.display = 'none';
-          document.getElementById('previewImgWrap').style.display = 'block';
-        } else if (cardImg && cardImg.src && !cardImg.src.endsWith('/')) {
-          previewImgEl.src = cardImg.src;
-          document.getElementById('previewCard').style.display = 'none';
-          document.getElementById('previewImgWrap').style.display = 'block';
+
+      // Only update preview image to color image if NOT on Step 1
+      if (typeof getCurrentStep === 'function' && getCurrentStep() !== 1) {
+        const colorImg = matchingCard.dataset.image;
+        const cardImg = matchingCard.querySelector('img');
+        const previewImgEl = document.getElementById('previewImg');
+        const selVesselCard = document.querySelector(`.vessel-card[data-vessel="${state.vessel}"]`);
+        const vesselImgSrc = selVesselCard ? (selVesselCard.querySelector('.vessel-img img')?.src || '') : '';
+
+        if (previewImgEl) {
+          if (colorImg && colorImg.trim() !== '' && !colorImg.endsWith('/')) {
+            previewImgEl.src = colorImg;
+            document.getElementById('previewCard').style.display = 'none';
+            document.getElementById('previewImgWrap').style.display = 'block';
+          } else if (cardImg && cardImg.src && !cardImg.src.endsWith('/') && !cardImg.src.includes('data:image')) {
+            previewImgEl.src = cardImg.src;
+            document.getElementById('previewCard').style.display = 'none';
+            document.getElementById('previewImgWrap').style.display = 'block';
+          } else if (vesselImgSrc && vesselImgSrc.trim() !== '') {
+            previewImgEl.src = vesselImgSrc;
+            document.getElementById('previewCard').style.display = 'none';
+            document.getElementById('previewImgWrap').style.display = 'block';
+          }
         }
       }
     }
@@ -2051,6 +2079,13 @@ function handleFragranceNext() {
 // ─── FLAME DISPLAY ───────────────────────────────────────────────────────────
 function updateWickDisplay(vessel) {
   const flameContainer = document.getElementById('previewFlameContainer');
+  if (!flameContainer) return;
+
+  if (!vessel) {
+    flameContainer.innerHTML = '';
+    return;
+  }
+
   const singleFlame = `<svg class="flame-svg" width="20" height="30" viewBox="0 0 24 36" fill="none">
     <path d="M12 2C12 2 6 10 6 18C6 24 8.5 30 12 32C15.5 30 18 24 18 18C18 10 12 2 12 2Z" fill="#f5a623" opacity="0.9"/>
     <path d="M12 8C12 8 9 14 9 19C9 23 10.5 27 12 28C13.5 27 15 23 15 19C15 14 12 8 12 8Z" fill="#fdd835" opacity="0.85"/>
@@ -2067,6 +2102,8 @@ function updateWickDisplay(vessel) {
     flameContainer.innerHTML = `<div style="display:flex; gap:36px; justify-content:center; align-items:center;">${singleFlame}${singleFlame}</div>`;
   } else if (vessel === 'E') {
     flameContainer.innerHTML = `<div style="display:flex; gap:24px; justify-content:center; align-items:center;">${singleFlame}${singleFlame}${singleFlame}</div>`;
+  } else {
+    flameContainer.innerHTML = '';
   }
 }
 
@@ -2079,19 +2116,21 @@ function selectColor(el, skipSync) {
   state.colorCode = el.dataset.code;
   setSpec('specColor', state.color);
 
-  // Update right-side preview image immediately
-  const colorImg = el.dataset.image;
-  const cardImg = el.querySelector('img');
-  const previewImgEl = document.getElementById('previewImg');
+  // Update right-side preview image immediately (only if not on Step 1)
+  if (typeof getCurrentStep === 'function' && getCurrentStep() !== 1) {
+    const colorImg = el.dataset.image;
+    const cardImg = el.querySelector('img');
+    const previewImgEl = document.getElementById('previewImg');
 
-  if (colorImg && colorImg.trim() !== '') {
-    previewImgEl.src = colorImg;
-    document.getElementById('previewCard').style.display = 'none';
-    document.getElementById('previewImgWrap').style.display = 'block';
-  } else if (cardImg && cardImg.src && !cardImg.src.endsWith('/')) {
-    previewImgEl.src = cardImg.src;
-    document.getElementById('previewCard').style.display = 'none';
-    document.getElementById('previewImgWrap').style.display = 'block';
+    if (colorImg && colorImg.trim() !== '') {
+      previewImgEl.src = colorImg;
+      document.getElementById('previewCard').style.display = 'none';
+      document.getElementById('previewImgWrap').style.display = 'block';
+    } else if (cardImg && cardImg.src && !cardImg.src.endsWith('/')) {
+      previewImgEl.src = cardImg.src;
+      document.getElementById('previewCard').style.display = 'none';
+      document.getElementById('previewImgWrap').style.display = 'block';
+    }
   }
 
   recalcPrice();

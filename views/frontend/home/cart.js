@@ -86,17 +86,19 @@
     '.lvb-sku{font-family:monospace;font-size:10px;color:#aabbc6;margin:0 0 4px;letter-spacing:0.5px}',
     '.lvb-scent{font-family:Georgia,serif;font-size:11px;text-transform:uppercase;',
     'letter-spacing:2px;color:#8fa3b0;margin:0 0 12px}',
-    '.lvb-controls{display:flex;align-items:center;gap:10px}',
+    '.lvb-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
     '.lvb-qbtn{background:none;border:1px solid #cdd8df;width:26px;height:26px;',
     'cursor:pointer;font-size:16px;color:#3a4f5c;display:flex;align-items:center;',
     'justify-content:center;transition:background .15s,border-color .15s;padding:0}',
     '.lvb-qbtn:hover{background:#1e2a32;color:#fff;border-color:#1e2a32}',
     '.lvb-qnum{font-family:Georgia,serif;font-size:14px;color:#1e2a32;',
     'min-width:18px;text-align:center}',
-    '.lvb-rm{background:none;border:none;cursor:pointer;font-size:11px;',
-    'text-transform:uppercase;letter-spacing:1.5px;color:#aabbc6;padding:0;',
-    'margin-left:6px;transition:color .2s;font-family:Georgia,serif}',
-    '.lvb-rm:hover{color:#c0392b}',
+    '.lvb-actions-row{display:flex;align-items:center;gap:6px;margin-left:auto}',
+    '.lvb-icon-btn{background:#fff;border:1px solid #cdd8df;border-radius:4px;width:28px;height:28px;',
+    'cursor:pointer;color:#3a4f5c;display:inline-flex;align-items:center;justify-content:center;',
+    'transition:all .18s ease;padding:0}',
+    '.lvb-edit-btn:hover{background:#004b66;color:#ffffff;border-color:#004b66}',
+    '.lvb-rm-btn:hover{background:#c0392b;color:#ffffff;border-color:#c0392b}',
     '.lvb-price{font-family:Georgia,serif;font-size:15px;color:#1e2a32;',
     'white-space:nowrap;padding-top:2px}',
 
@@ -219,14 +221,21 @@
             (item.image
               ? '<img class="lvb-img" src="' + item.image + '" alt="' + item.name + '">'
               : '<div class="lvb-img-ph"><svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0" stroke-linecap="round" stroke-linejoin="round"/></svg></div>') +
-        '<div class="lvb-info">' +
-  '<p class="lvb-name">' + escapeHtml(item.name) + '</p>' +
-  (item.sku ? '<p class="lvb-sku">SKU: ' + escapeHtml(item.sku) + '</p>' : '') +
-  '<div class="lvb-controls">' +
+            '<div class="lvb-info">' +
+              '<p class="lvb-name">' + escapeHtml(item.name) + '</p>' +
+              (item.sku ? '<p class="lvb-sku">SKU: ' + escapeHtml(item.sku) + '</p>' : '') +
+              '<div class="lvb-controls">' +
                 '<button class="lvb-qbtn" data-act="dec" data-id="' + item.id + '">−</button>' +
                 '<span class="lvb-qnum">' + item.qty + '</span>' +
                 '<button class="lvb-qbtn" data-act="inc" data-id="' + item.id + '">+</button>' +
-                '<button class="lvb-rm" data-act="rm" data-id="' + item.id + '">Remove</button>' +
+                '<div class="lvb-actions-row">' +
+                  '<button class="lvb-icon-btn lvb-edit-btn" data-act="edit" data-id="' + item.id + '" title="Edit custom candle">' +
+                    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>' +
+                  '</button>' +
+                  '<button class="lvb-icon-btn lvb-rm-btn" data-act="rm" data-id="' + item.id + '" title="Remove item">' +
+                    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>' +
+                  '</button>' +
+                '</div>' +
               '</div>' +
             '</div>' +
             '<div class="lvb-price">$' + (item.price * item.qty).toFixed(2) + '</div>' +
@@ -253,7 +262,7 @@
   }
 
   function updateBadges() {
-    var total = items.reduce(function (s, i) { return s + i.qty; }, 0);
+    var total = items.length;
     ['desktopCartBtn', 'mobileCartBtn'].forEach(function (id) {
       var el = document.getElementById(id);
       if (!el) return;
@@ -324,7 +333,11 @@
         box_id: item.box_id,
         box_name: item.box_name,
         fragrance_id: item.fragrance_id,
-        fragrance_name: item.fragrance_name
+        fragrance_name: item.fragrance_name,
+        color_name: item.color_name,
+        color_code: item.color_code,
+        vessel: item.vessel,
+        wick_type: item.wick_type
       });
     }
     
@@ -366,11 +379,11 @@
   }
 
   function getCartCount() {
-    return items.reduce(function (s, i) { return s + i.qty; }, 0);
+    return items.length;
   }
 
   /* ── 7. EVENTS ── */
-  // qty / remove delegation
+  // qty / remove / edit delegation
   var bodyElement = document.getElementById('lvbBody');
   if (bodyElement) {
     bodyElement.addEventListener('click', function (e) {
@@ -381,7 +394,29 @@
       if (act === 'inc') updateQty(id, +1);
       if (act === 'dec') updateQty(id, -1);
       if (act === 'rm')  removeItem(id);
+      if (act === 'edit') editItem(id);
     });
+  }
+
+  function buildEditUrl(item) {
+    var vessel = item.vessel || (item.sku ? item.sku.charAt(0) : 'C');
+    var params = new URLSearchParams();
+    if (vessel) params.set('vessel', vessel);
+    if (item.color_name) params.set('color', item.color_name);
+    if (item.fragrance_name) params.set('frag', item.fragrance_name);
+    if (item.box_name && item.box_name !== 'No Packaging' && item.box_name !== '—') params.set('box', item.box_name);
+
+    var base = (typeof window.basePath !== 'undefined') ? window.basePath : (window.location.pathname.startsWith('/laguna') ? '/laguna' : '');
+    var builderUrl = base + '/builder';
+    return builderUrl + '?' + params.toString() + '#step1';
+  }
+
+  function editItem(id) {
+    var item = items.find(function(i) { return i.id === id; });
+    if (!item) return;
+    closeCart();
+    var editUrl = buildEditUrl(item);
+    window.location.href = editUrl;
   }
 
   var closeBtn = document.getElementById('lvbClose');
