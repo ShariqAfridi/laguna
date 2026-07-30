@@ -53,7 +53,7 @@ if (!isset($base)) {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      height: 65px;
+      height: 90px;
       
       /* DESKTOP: 20% padding on large screens (above 1440px) */
       padding: 0 20%;
@@ -101,9 +101,9 @@ if (!isset($base)) {
 
     .logo-img {
       display: block;
-      height: 38px;
+      height: 72px;
       width: auto;
-      max-width: 160px;
+      max-width: 400px;
       object-fit: contain;
       transition: transform 0.2s ease;
     }
@@ -206,7 +206,7 @@ if (!isset($base)) {
 ?>
 <header class="header-desktop" id="mainHeader">
   <a href="<?php echo $base; ?>/" class="logo-link">
-    <img class="logo-img" src="<?php echo $base; ?>/img/newlogo.jpg" alt="L V B luxury brand logo">
+    <img class="logo-img" src="<?php echo $base; ?>/img/logo-wihtout-bg.png" alt="L V B luxury brand logo">
   </a>
 
   <nav class="nav-links">
@@ -326,6 +326,14 @@ if (!isset($base)) {
   </style>
 
   <div style="display:flex; align-items:center; gap:20px;">
+    <!-- Search Icon Button -->
+    <button class="user-dropdown-trigger" id="desktopSearchBtn" aria-label="Search Products" title="Search Products" style="background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; justify-content:center; color:inherit; outline:none;">
+      <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </button>
+
     <!-- User Icon Dropdown Container -->
     <div class="user-dropdown-wrapper" id="userDropdownWrapper">
       <button class="user-dropdown-trigger" id="userDropdownTrigger" aria-label="User Account">
@@ -470,6 +478,8 @@ if (!isset($base)) {
     window.addEventListener('load', handleScroll);
   })();
 </script>
+
+<?php include __DIR__ . '/search_modal.php'; ?>
 
 </body>
 </html>

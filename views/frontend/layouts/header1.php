@@ -180,9 +180,9 @@
 
 .logo-img {
     display: block;
-    height: 38px;
+    height: 62px;
     width: auto;
-    max-width: 160px;
+    max-width: 300px;
     object-fit: contain;
     transition: transform 0.2s ease;
 }
@@ -205,9 +205,16 @@ if (!isset($base)) {
 <!-- MOBILE HEADER -->
 <header class="header-mobile" id="mobileHeader">
    <a href="<?php echo $base; ?>/" class="logo-link">
-    <img class="logo-img" src="<?php echo $base; ?>/img/newlogo.jpg" alt="L V B luxury brand logo">
+    <img class="logo-img" src="<?php echo $base; ?>/img/logo-wihtout-bg.png" alt="L V B luxury brand logo">
 </a>
     <div class="mobile-actions">
+        <!-- Search icon -->
+        <button class="mobile-cart-btn" id="mobileSearchBtn" aria-label="Search products">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+        </button>
         <!-- Account icon -->
         <a href="<?php echo $base; ?>/dashboard" aria-label="Account" class="mobile-cart-btn" style="display:flex; text-decoration:none;">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -319,10 +326,6 @@ if (!isset($base)) {
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && open) closeMenu();
-    });
-
-    window.addEventListener('resize', function () {
-        if (window.innerWidth > 1024 && open) closeMenu();
     });
 
     var mobileLinks = document.querySelectorAll('.mobile-nav-links a');
