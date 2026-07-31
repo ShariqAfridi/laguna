@@ -331,7 +331,7 @@
         
         <div class="lvh-video-layer">
             <video id="lvhHeroVideo" autoplay muted loop playsinline preload="auto">
-                <source src="<?php echo base_url('/public/assets/videos/home-video.mp4'); ?>" type="video/mp4">
+                <source src="<?php echo base_url('/public/videos/Home-Video-comp.mp4'); ?>" type="video/mp4">
             </video>
         </div>
         <div class="lvh-gradient-overlay"></div>

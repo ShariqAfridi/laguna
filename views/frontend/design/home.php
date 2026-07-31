@@ -144,8 +144,9 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .builder-main {
-      padding: 60px 56px 80px;
-      max-width: 940px;
+      padding: 60px 40px 80px 0;
+      width: 100%;
+      max-width: 100%;
     }
 
     .step-label {
@@ -169,7 +170,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       font-size: 14px;
       line-height: 1.7;
       color: #555;
-      max-width: 600px;
+      max-width: 100%;
       margin-bottom: 48px;
     }
 
@@ -365,9 +366,10 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .vessel-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 20px;
       margin-bottom: 48px;
+      width: 100%;
     }
 
     .vessel-card {
@@ -380,6 +382,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       overflow: hidden;
       position: relative;
       height: 100%;
+      width: 100%;
     }
 
     .vessel-img {
@@ -472,9 +475,10 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .color-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 20px;
       margin-bottom: 48px;
+      width: 100%;
     }
 
     .color-card {
@@ -489,6 +493,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       cursor: pointer;
       position: relative;
       height: 100%;
+      width: 100%;
       box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     }
 
@@ -497,7 +502,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-swatch {
-      width: 200px;
+      width: 100%;
       height: 230px;
       overflow: hidden;
       background: #F9FAFB;
@@ -510,11 +515,10 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .color-swatch img {
       width: 100%;
-      /* max-width: 260px; */
-      /* height: 100%; */
-      /* object-fit: contain;
-      object-position: center; */
-      /* padding: 12px; */
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      padding: 12px;
       transition: transform 0.35s ease;
     }
 
@@ -554,9 +558,10 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .fragrance-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
       margin-bottom: 48px;
+      width: 100%;
     }
 
     .fragrance-card {
@@ -569,6 +574,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      width: 100%;
     }
 
     .frag-img {
@@ -594,10 +600,6 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       object-position: center;
       transition: transform 0.3s ease;
     }
-
-    /* .fragrance-card:hover .frag-img img {
-      transform: scale(1.05);
-    } */
 
     .frag-info-bar {
       display: flex;
@@ -713,8 +715,10 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .box-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 20px;
+      margin-bottom: 48px;
+      width: 100%;
     }
 
     .box-card {
@@ -725,6 +729,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       position: relative;
       overflow: hidden;
       background: #fff;
+      width: 100%;
     }
     .box-card:hover { border-color: #aaa; }
     .box-card.selected {
@@ -766,9 +771,10 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 16px;
+      padding-top: 24px;
       border-top: 1px solid var(--border);
-      max-width: 680px;
+      width: 100%;
+      max-width: 100%;
     }
 
     .btn-back {

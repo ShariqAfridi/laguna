@@ -2,8 +2,17 @@
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../../../db.php';
 
-// Get vessel from URL parameter
+// Get vessel and target product ID from URL parameter
 $selectedVessel = isset($_GET['vessel']) ? strtolower($_GET['vessel']) : '';
+$targetProductId = isset($_GET['product_id']) ? (int)$_GET['product_id'] : (isset($_GET['product']) ? (int)$_GET['product'] : 0);
+
+// Auto-detect vessel if product_id is provided without vessel
+if ($targetProductId > 0 && (empty($selectedVessel) || !in_array($selectedVessel, ['c', 'd']))) {
+    $vCheck = $conn->query("SELECT wick_type FROM products WHERE product_id = " . $targetProductId);
+    if ($vCheck && $vRow = $vCheck->fetch_assoc()) {
+        $selectedVessel = ($vRow['wick_type'] === 'double') ? 'd' : 'c';
+    }
+}
 
 // If no vessel selected or invalid, show the vessel selection page
 $showVesselSelection = empty($selectedVessel) || !in_array($selectedVessel, ['c', 'd']);
@@ -1066,6 +1075,69 @@ function escapeHtml(str) {
         return m;
     });
 }
+
+<?php
+$autoTargetProduct = null;
+if ($targetProductId > 0) {
+    if (!empty($products)) {
+        foreach ($products as $p) {
+            if ((int)$p['product_id'] === $targetProductId) {
+                $autoTargetProduct = $p;
+                break;
+            }
+        }
+    }
+    if (!$autoTargetProduct) {
+        $singleQuery = $conn->query("SELECT * FROM products WHERE product_id = " . $targetProductId);
+        if ($singleQuery && $sRow = $singleQuery->fetch_assoc()) {
+            $sRow['size_prices'] = json_decode($sRow['size_prices'], true);
+            $sRow['size_id']     = json_decode($sRow['size_id'], true);
+            $sRow['color_id']    = json_decode($sRow['color_id'], true);
+            $sRow['box_id']      = json_decode($sRow['box_id'], true);
+            $sRow['wick_type']   = $sRow['wick_type'] ?? 'single';
+
+            $image_name = $sRow['image'];
+            $image_path = '';
+            if (!empty($image_name)) {
+                if (strpos($image_name, 'http') === 0) {
+                    $image_path = $image_name;
+                } elseif (strpos($image_name, 'uploads/') !== false) {
+                    $image_path = base_url('/public/' . ltrim($image_name, '/'));
+                } else {
+                    $image_path = $base . '/img/' . ltrim($image_name, '/');
+                }
+            }
+            $sRow['image_url'] = $image_path ?: 'https://placehold.co/600x600?text=No+Image';
+
+            $fragrance_id = is_numeric($sRow['fragrance_id']) ? $sRow['fragrance_id'] : 0;
+            $sRow['fragrance_name'] = $fragrances[$fragrance_id] ?? 'Luxury Candle';
+
+            $fragrance_image_name = '';
+            if ($fragrance_id > 0 && !empty($fragrance_details[$fragrance_id])) {
+                $fImg = $fragrance_details[$fragrance_id];
+                $fragrance_image_name = (strpos($fImg, 'http') === 0) ? $fImg : $base . '/' . ltrim($fImg, '/');
+            }
+            $sRow['fragrance_image'] = $fragrance_image_name;
+            $autoTargetProduct = $sRow;
+        }
+    }
+}
+?>
+(function() {
+    var autoProduct = <?= json_encode($autoTargetProduct) ?>;
+    if (autoProduct && typeof openModal === 'function') {
+        function triggerModal() {
+            setTimeout(function() {
+                openModal(autoProduct);
+            }, 100);
+        }
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            triggerModal();
+        } else {
+            window.addEventListener('DOMContentLoaded', triggerModal);
+        }
+    }
+})();
 </script>
 <?php endif; ?>
 

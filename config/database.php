@@ -9,7 +9,7 @@ function get_db_connection()
         $host = env('DB_HOST', 'localhost');
         $username = env('DB_USER', 'root');
         $password = env('DB_PASS', '');
-        $database = env('DB_NAME', 'laguna');
+        $database = env('DB_NAME', 'onlifwko_laguna');
 
         $conn = new mysqli($host, $username, $password, $database);
         if ($conn->connect_error) {

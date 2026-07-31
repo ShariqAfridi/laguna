@@ -38,7 +38,7 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $delete_stmt->bind_param('i', $product_id);
     $delete_stmt->execute();
     $delete_stmt->close();
-    echo "<script>window.location.href='<?php echo base_url('/admin/list_product'); ?>';</script>";
+    echo "<script>window.location.href='" . base_url('/admin/list_product') . "';</script>";
     exit();
 }
 

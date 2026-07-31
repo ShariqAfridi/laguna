@@ -56,5 +56,7 @@ return [
     '/stripe/create-checkout-session.php' => 'Frontend\CheckoutController@createStripeSession',
     '/api/place-order' => 'Frontend\CheckoutController@placeOrder',
     '/logic/place_order.php' => 'Frontend\CheckoutController@placeOrder',
+    '/api/search' => 'Frontend\SearchController@search',
+    '/search' => 'Frontend\SearchController@search',
 ];
 ?>

@@ -8,5 +8,4 @@ error_log
 *.avi
 *.mov
 *.zip
-!public/videos/.gitkeep
-!public/assets/videos/.gitkeep
+
