@@ -627,10 +627,11 @@ select {
 .image-main img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     position: absolute;
     inset: 0;
     border-radius: 12px;
+    background: #f8fafc;
 }
 
 /* ── ALERTS ── */
@@ -896,7 +897,7 @@ select {
                     }
                     
                     if ($display_image_path): ?>
-                        <img src="<?= htmlspecialchars($display_image_path) ?>" alt="Product Image" style="width:100%; height:100%; object-fit:cover;">
+                        <img src="<?= htmlspecialchars($display_image_path) ?>" alt="Product Image" style="width:100%; height:100%; object-fit:contain; background:#f8fafc;">
                     <?php else: ?>
                         <div class="upload-icon">📷</div>
                         <div class="upload-text">Click to upload image</div>
