@@ -73,6 +73,7 @@ $result = $conn->query("SELECT * FROM categories $whereSql ORDER BY sort_order A
                 <tr>
                     <th>Image</th>
                     <th>Category Name</th>
+                    <th>SKU</th>
                     <th>Dimensions</th>
                     <th>Burn Time</th>
                     <th>Wick Type</th>
@@ -98,6 +99,9 @@ $result = $conn->query("SELECT * FROM categories $whereSql ORDER BY sort_order A
                             <?php if (!empty($row['description'])): ?>
                                 <div style="font-size:12px; color:#4b5563; margin-top:4px; max-width:280px;"><?= htmlspecialchars($row['description']); ?></div>
                             <?php endif; ?>
+                        </td>
+                        <td style="color:#111827; font-weight:500;">
+                            <?= htmlspecialchars($row['sku'] ?? '-'); ?>
                         </td>
                         <td style="color:#4b5563;">
                             <?= htmlspecialchars($row['dimensions_subtitle'] ?? '-'); ?>
@@ -128,7 +132,7 @@ $result = $conn->query("SELECT * FROM categories $whereSql ORDER BY sort_order A
                 <?php endwhile; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="7" style="text-align:center; padding:40px; color:#9ca3af;">
+                    <td colspan="8" style="text-align:center; padding:40px; color:#9ca3af;">
                         No vessel categories created yet. Click "Add New Category" above to create one.
                     </td>
                 </tr>

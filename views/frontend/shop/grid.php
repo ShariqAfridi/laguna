@@ -6,21 +6,43 @@ require_once __DIR__ . '/../../../db.php';
 $selectedVessel = isset($_GET['vessel']) ? strtolower($_GET['vessel']) : '';
 $targetProductId = isset($_GET['product_id']) ? (int)$_GET['product_id'] : (isset($_GET['product']) ? (int)$_GET['product'] : 0);
 
+// Fetch active categories to construct valid vessels map
+$categoriesMap = [];
+$catQuery = $conn->query("SELECT id, category_name, LOWER(sku) AS sku, wick_type FROM categories WHERE status = 1");
+if ($catQuery) {
+    while ($row = $catQuery->fetch_assoc()) {
+        if (!empty($row['sku'])) {
+            $categoriesMap[$row['sku']] = $row;
+        }
+    }
+}
+$validVessels = array_keys($categoriesMap);
+if (empty($validVessels)) {
+    $validVessels = ['c', 'd', 'e'];
+}
+
 // Auto-detect vessel if product_id is provided without vessel
-if ($targetProductId > 0 && (empty($selectedVessel) || !in_array($selectedVessel, ['c', 'd']))) {
-    $vCheck = $conn->query("SELECT wick_type FROM products WHERE product_id = " . $targetProductId);
+if ($targetProductId > 0 && (empty($selectedVessel) || !in_array($selectedVessel, $validVessels))) {
+    $vCheck = $conn->query("SELECT size_id, wick_type FROM products WHERE product_id = " . $targetProductId);
     if ($vCheck && $vRow = $vCheck->fetch_assoc()) {
-        $selectedVessel = ($vRow['wick_type'] === 'double') ? 'd' : 'c';
+        $p_sizes = json_decode($vRow['size_id'], true) ?: [];
+        foreach ($categoriesMap as $sku => $cat) {
+            if (in_array($cat['id'], $p_sizes)) {
+                $selectedVessel = $sku;
+                break;
+            }
+        }
     }
 }
 
 // If no vessel selected or invalid, show the vessel selection page
-$showVesselSelection = empty($selectedVessel) || !in_array($selectedVessel, ['c', 'd']);
+$showVesselSelection = empty($selectedVessel) || !in_array($selectedVessel, $validVessels);
 
 // If vessel is selected, fetch products
 if (!$showVesselSelection) {
-    $vesselSizeId = $selectedVessel === 'c' ? 4 : 2;
-    $wickType = $selectedVessel === 'c' ? 'single' : 'double';
+    $vesselSizeId = isset($categoriesMap[$selectedVessel]) ? (int)$categoriesMap[$selectedVessel]['id'] : 6;
+    $catWick = isset($categoriesMap[$selectedVessel]) ? strtolower($categoriesMap[$selectedVessel]['wick_type']) : 'single';
+    $wickType = strpos($catWick, 'double') !== false ? 'double' : (strpos($catWick, 'triple') !== false ? 'triple' : 'single');
 
     // Fetch products
     $sql = "SELECT * FROM products ORDER BY product_id DESC";
@@ -50,7 +72,7 @@ if (!$showVesselSelection) {
             }
         }
 
-        $size_result = $conn->query("SELECT size_id, size_name, size_details FROM sizes ORDER BY size_id");
+        $size_result = $conn->query("SELECT id AS size_id, category_name AS size_name, dimensions_subtitle AS size_details FROM categories ORDER BY sort_order ASC, id ASC");
         if ($size_result) {
             while ($row = $size_result->fetch_assoc()) {
                 $sizes[$row['size_id']] = $row;
@@ -649,50 +671,64 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
     </div>
 
     <div class="vessel-selection">
-        <a href="?vessel=c" class="vessel-card">
-            <img src="<?php echo $base; ?>/img/vessel2.webp" alt="Vessel C - Single Wick" onerror="this.src='https://placehold.co/600x600?text=Vessel+C'">
+        <?php
+        $catsQuery = $conn->query("SELECT * FROM categories WHERE status = 1 ORDER BY sort_order ASC, id ASC");
+        if ($catsQuery && $catsQuery->num_rows > 0):
+            while ($catRow = $catsQuery->fetch_assoc()):
+                $vesselCode = strtolower($catRow['sku'] ?? '');
+                if (empty($vesselCode)) continue;
+                
+                $imageSrc = !empty($catRow['image']) ? base_url('/' . ltrim($catRow['image'], '/')) : '';
+                $fallbackText = urlencode($catRow['category_name']);
+                
+                $wickText = htmlspecialchars($catRow['wick_type'] ?? '');
+                $wickIcon = '🕯️';
+                if (strpos(strtolower($wickText), 'double') !== false) {
+                    $wickIcon = '🕯️🕯️';
+                } elseif (strpos(strtolower($wickText), 'triple') !== false) {
+                    $wickIcon = '🕯️🕯️🕯️';
+                }
+        ?>
+        <a href="?vessel=<?= htmlspecialchars($vesselCode) ?>" class="vessel-card">
+            <img src="<?= $imageSrc ?>" alt="<?= htmlspecialchars($catRow['category_name']) ?> - <?= $wickText ?>" onerror="this.src='https://placehold.co/600x600?text=<?= $fallbackText ?>'">
             <div class="vessel-card-content">
-                <h3>Vessel C</h3>
-                <div class="vessel-subtitle">3" DIAMETER × 3.5" HEIGHT</div>
+                <h3><?= htmlspecialchars($catRow['category_name']) ?></h3>
+                <div class="vessel-subtitle"><?= htmlspecialchars($catRow['dimensions_subtitle'] ?? '') ?></div>
                 <div class="vessel-details">
-                    <span class="vessel-detail-item">3" × 3.5"</span>
-                    <span class="vessel-detail-item">45 hours burn time</span>
+                    <?php if (!empty($catRow['dimensions_subtitle'])): ?>
+                        <?php 
+                        $dims = $catRow['dimensions_subtitle'];
+                        if (preg_match('/(\d+(?:\.\d+)?(?:["\']|inch)?\s*[×x]\s*\d+(?:\.\d+)?(?:["\']|inch)?)/i', $dims, $m)) {
+                            $dims = $m[1];
+                        }
+                        ?>
+                        <span class="vessel-detail-item"><?= htmlspecialchars($dims) ?></span>
+                    <?php endif; ?>
+                    <?php if (!empty($catRow['burn_time_badge'])): ?>
+                        <span class="vessel-detail-item"><?= htmlspecialchars($catRow['burn_time_badge']) ?></span>
+                    <?php endif; ?>
                 </div>
-                <span class="vessel-wick">🕯️ Single Wick</span>
+                <span class="vessel-wick"><?= $wickIcon ?> <?= $wickText ?></span>
                 <div>
                     <span class="shop-now-btn">Shop Collection →</span>
                 </div>
             </div>
         </a>
-
-        <a href="?vessel=d" class="vessel-card">
-            <img src="<?php echo $base; ?>/img/vessel1.webp" alt="Vessel D - Double Wick" onerror="this.src='https://placehold.co/600x600?text=Vessel+D'">
-            <div class="vessel-card-content">
-                <h3>Vessel D</h3>
-                <div class="vessel-subtitle">3.5" DIAMETER × 4" HEIGHT</div>
-                <div class="vessel-details">
-                    <span class="vessel-detail-item">3.5" × 4"</span>
-                    <span class="vessel-detail-item">60 hours burn time</span>
-                </div>
-                <span class="vessel-wick">🕯️🕯️ Double Wick</span>
-                <div>
-                    <span class="shop-now-btn">Shop Collection →</span>
-                </div>
-            </div>
-        </a>
+        <?php endwhile; endif; ?>
     </div>
 
 <?php else: ?>
     <!-- PRODUCT LISTING PAGE -->
     <?php 
-    $vesselLabel = $selectedVessel === 'c' ? 'Vessel C' : 'Vessel D';
-    $wickLabel = $selectedVessel === 'c' ? 'Single Wick' : 'Double Wick';
+    $currentCategory = $categoriesMap[strtolower($selectedVessel)] ?? null;
+    $vesselLabel = $currentCategory ? $currentCategory['category_name'] : 'Vessel ' . strtoupper($selectedVessel);
+    $wickLabel = $currentCategory ? $currentCategory['wick_type'] : '';
     ?>
     
     <div class="page-header">
         <div class="page-header-left">
-            <h1><?= $vesselLabel ?></h1>
-            <div class="subtitle"><?= ucfirst($wickLabel) ?> Collection</div>
+            <h1><?= htmlspecialchars($vesselLabel) ?></h1>
+            <div class="subtitle"><?= htmlspecialchars($wickLabel) ?> Collection</div>
            
         </div>
         <a href="<?php echo $base; ?>/shop" class="back-btn">← Back to Vessels</a>
@@ -810,7 +846,7 @@ const colorsData = <?php
 ?>;
 const sizesData = <?php
     $sizes_js = [];
-    $size_res = $conn->query("SELECT size_id, size_name, size_details FROM sizes ORDER BY size_id");
+    $size_res = $conn->query("SELECT id AS size_id, category_name AS size_name, dimensions_subtitle AS size_details FROM categories ORDER BY sort_order ASC, id ASC");
     if ($size_res) { while ($row = $size_res->fetch_assoc()) $sizes_js[$row['size_id']] = $row; }
     echo json_encode($sizes_js);
 ?>;

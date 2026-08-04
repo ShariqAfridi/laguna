@@ -38,7 +38,7 @@ if ($product_id > 0) {
 
 // ── FETCH LOOKUPS ─────────────────────────────────────────────────────
 $fragrances = $conn->query("SELECT fragrance_id, fragrance_name FROM fragrances ORDER BY fragrance_name ASC");
-$sizes      = $conn->query("SELECT size_id, size_name, size_details FROM sizes ORDER BY size_name ASC");
+$sizes      = $conn->query("SELECT id AS size_id, category_name AS size_name, dimensions_subtitle AS size_details FROM categories WHERE status = 1 ORDER BY sort_order ASC, id ASC");
 $boxes      = $conn->query("SELECT box_id, box_name FROM boxes ORDER BY box_name ASC");
 $colors     = $conn->query("SELECT color_id, color_name, color_hex FROM colors ORDER BY color_name ASC");
 
@@ -992,13 +992,14 @@ select {
                             <div class="size-row-body" id="sizeBody_<?= $s['size_id'] ?>">
                                 <div class="form-group">
                                     <label>Price ($) <span class="req">*</span></label>
-                                    <input type="text"
+                                    <input type="number"
+                                           step="0.01"
                                            name="size_prices[<?= $s['size_id'] ?>]"
                                            id="price_<?= $s['size_id'] ?>"
-                                           placeholder="0"
+                                           placeholder="0.00"
                                            class="price-input"
                                            value="<?= htmlspecialchars($price_value) ?>"
-                                           oninput="formatPrice(this); updateSizeBadge(<?= $s['size_id'] ?>)">
+                                           oninput="updateSizeBadge(<?= $s['size_id'] ?>)">
                                 </div>
                                 <div class="form-group">
                                     <label>Quantity</label>

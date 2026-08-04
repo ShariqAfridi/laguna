@@ -71,6 +71,7 @@ $fragrances = $conn->query("SELECT * FROM fragrances $whereSql ORDER BY sort_ord
                     <th>Fragrance Image</th>
                     <th>Scent Notes Image</th>
                     <th>Fragrance Name</th>
+                    <th>SKU</th>
                     <th>Description / Scent Notes</th>
                     <th>Status</th>
                     <th style="text-align:right;">Actions</th>
@@ -96,6 +97,7 @@ $fragrances = $conn->query("SELECT * FROM fragrances $whereSql ORDER BY sort_ord
                             <?php endif; ?>
                         </td>
                         <td><strong style="color:#111827; font-size:15px;"><?= htmlspecialchars($row['fragrance_name']); ?></strong></td>
+                        <td style="color:#111827; font-weight:500;"><?= htmlspecialchars($row['sku'] ?? '-'); ?></td>
                         <td style="max-width:280px; font-size:13px; color:#4b5563; line-height:1.5;">
                             <?php if (!empty($row['fragrance_description'])): ?>
                                 <?= nl2br(htmlspecialchars($row['fragrance_description'])); ?>
@@ -123,7 +125,7 @@ $fragrances = $conn->query("SELECT * FROM fragrances $whereSql ORDER BY sort_ord
                 <?php endwhile; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:40px; color:#9ca3af;">No fragrance profiles created yet. Click "Add New Fragrance Profile" above.</td>
+                    <td colspan="7" style="text-align:center; padding:40px; color:#9ca3af;">No fragrance profiles created yet. Click "Add New Fragrance Profile" above.</td>
                 </tr>
             <?php endif; ?>
             </tbody>

@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $slug = preg_replace('/-+/', '-', $slug);
     if (empty($slug)) { $slug = 'category-' . time(); }
 
+    $sku                 = trim($_POST['sku'] ?? '');
     $dimensions_subtitle = trim($_POST['dimensions_subtitle'] ?? '');
     $size_badge          = '';
     $burn_time_badge     = trim($_POST['burn_time_badge'] ?? '');
@@ -42,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($error_message) && !empty($category_name)) {
-        $stmt = $conn->prepare('INSERT INTO categories (category_name, description, slug, dimensions_subtitle, image, size_badge, burn_time_badge, wick_type, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $stmt->bind_param('ssssssssii', $category_name, $description, $slug, $dimensions_subtitle, $image_path, $size_badge, $burn_time_badge, $wick_type, $status, $sort_order);
+        $stmt = $conn->prepare('INSERT INTO categories (category_name, description, slug, sku, dimensions_subtitle, image, size_badge, burn_time_badge, wick_type, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $stmt->bind_param('sssssssssii', $category_name, $description, $slug, $sku, $dimensions_subtitle, $image_path, $size_badge, $burn_time_badge, $wick_type, $status, $sort_order);
 
         if ($stmt->execute()) {
             echo "<script>window.location.href='" . base_url('/admin/categories') . "';</script>";
@@ -76,6 +77,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div>
                     <label class="admin-label">Category Name *</label>
                     <input type="text" name="category_name" class="admin-input" placeholder="e.g. Vessel C" required>
+                </div>
+
+                <div>
+                    <label class="admin-label">SKU</label>
+                    <input type="text" name="sku" class="admin-input" placeholder="e.g. C">
                 </div>
 
                 <div style="grid-column: 1 / -1;">

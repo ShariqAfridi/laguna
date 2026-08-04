@@ -522,7 +522,7 @@ $products = $conn->query($query);
                                         foreach ($size_prices as $size_id => $price) {
                                             // Get size name from database
                                             $size_name = '';
-                                            $size_query = $conn->prepare('SELECT size_name, size_details FROM sizes WHERE size_id = ?');
+                                            $size_query = $conn->prepare('SELECT category_name AS size_name, dimensions_subtitle AS size_details FROM categories WHERE id = ?');
                                             $size_query->bind_param('i', $size_id);
                                             $size_query->execute();
                                             $size_result = $size_query->get_result();

@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $slug = preg_replace('/-+/', '-', $slug);
     if (empty($slug)) { $slug = $category['slug'] ?? ('category-' . $id); }
 
+    $sku                 = trim($_POST['sku'] ?? '');
     $dimensions_subtitle = trim($_POST['dimensions_subtitle'] ?? '');
     $size_badge          = $category['size_badge'] ?? '';
     $burn_time_badge     = trim($_POST['burn_time_badge'] ?? '');
@@ -58,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($error_message) && !empty($category_name)) {
-        $update_stmt = $conn->prepare('UPDATE categories SET category_name=?, description=?, slug=?, dimensions_subtitle=?, image=?, size_badge=?, burn_time_badge=?, wick_type=?, status=?, sort_order=? WHERE id=?');
-        $update_stmt->bind_param('ssssssssiii', $category_name, $description, $slug, $dimensions_subtitle, $image_path, $size_badge, $burn_time_badge, $wick_type, $status, $sort_order, $id);
+        $update_stmt = $conn->prepare('UPDATE categories SET category_name=?, description=?, slug=?, sku=?, dimensions_subtitle=?, image=?, size_badge=?, burn_time_badge=?, wick_type=?, status=?, sort_order=? WHERE id=?');
+        $update_stmt->bind_param('sssssssssiii', $category_name, $description, $slug, $sku, $dimensions_subtitle, $image_path, $size_badge, $burn_time_badge, $wick_type, $status, $sort_order, $id);
 
         if ($update_stmt->execute()) {
             echo "<script>window.location.href='" . base_url('/admin/categories') . "';</script>";
@@ -92,6 +93,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div>
                     <label class="admin-label">Category Name *</label>
                     <input type="text" name="category_name" class="admin-input" value="<?= htmlspecialchars($category['category_name']); ?>" required>
+                </div>
+
+                <div>
+                    <label class="admin-label">SKU</label>
+                    <input type="text" name="sku" class="admin-input" value="<?= htmlspecialchars($category['sku'] ?? ''); ?>" placeholder="e.g. C">
                 </div>
 
                 <div style="grid-column: 1 / -1;">

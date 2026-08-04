@@ -5,6 +5,7 @@ $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name                  = trim($_POST['fragrance_name'] ?? '');
+    $sku                   = trim($_POST['sku'] ?? '');
     $fragrance_description = trim($_POST['fragrance_description'] ?? '');
     $status                = isset($_POST['status']) ? (int)$_POST['status'] : 1;
     $sort_order            = (int)($_POST['sort_order'] ?? 0);
@@ -58,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($error_message) && !empty($name)) {
-        $stmt = $conn->prepare("INSERT INTO fragrances (fragrance_name, fragrance_image, scent_note_image, fragrance_description, status, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssii", $name, $fragrance_image, $scent_note_image, $fragrance_description, $status, $sort_order);
+        $stmt = $conn->prepare("INSERT INTO fragrances (fragrance_name, sku, fragrance_image, scent_note_image, fragrance_description, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssii", $name, $sku, $fragrance_image, $scent_note_image, $fragrance_description, $status, $sort_order);
 
         if ($stmt->execute()) {
             echo "<script>window.location.href='" . base_url('/admin/fragrance') . "';</script>";
@@ -89,9 +90,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post" enctype="multipart/form-data">
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:20px;">
                 
-                <div style="grid-column: 1 / -1;">
+                <div>
                     <label class="admin-label">Fragrance Name *</label>
                     <input type="text" name="fragrance_name" class="admin-input" placeholder="e.g. Amber Musk & Warm Vanilla" required>
+                </div>
+
+                <div>
+                    <label class="admin-label">SKU</label>
+                    <input type="text" name="sku" class="admin-input" placeholder="e.g. 02">
                 </div>
 
 <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
