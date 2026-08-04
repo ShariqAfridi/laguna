@@ -53,19 +53,80 @@ $limit = 10;
 $offset = ($page - 1) * $limit;
 
 $stockFilter = isset($_GET['stock']) ? $_GET['stock'] : 'all';
+$searchQuery = isset($_GET['search']) ? trim($_GET['search']) : '';
+$wickFilter = isset($_GET['wick']) ? trim($_GET['wick']) : '';
+$fragranceFilter = isset($_GET['fragrance']) ? (int)$_GET['fragrance'] : 0;
+$colorFilter = isset($_GET['color']) ? (int)$_GET['color'] : 0;
+$categoryFilter = isset($_GET['category']) ? (int)$_GET['category'] : 0;
+
+// Fetch filter options (fragrances, colors, categories)
+$filter_fragrances = [];
+$res_frag = $conn->query("SELECT fragrance_id, fragrance_name FROM fragrances ORDER BY fragrance_name ASC");
+if ($res_frag) {
+    while ($row = $res_frag->fetch_assoc()) {
+        $filter_fragrances[] = $row;
+    }
+}
+
+$filter_colors = [];
+$res_col = $conn->query("SELECT color_id, color_name FROM colors ORDER BY color_name ASC");
+if ($res_col) {
+    while ($row = $res_col->fetch_assoc()) {
+        $filter_colors[] = $row;
+    }
+}
+
+$filter_categories = [];
+$res_cat = $conn->query("SELECT id, category_name FROM categories ORDER BY category_name ASC");
+if ($res_cat) {
+    while ($row = $res_cat->fetch_assoc()) {
+        $filter_categories[] = $row;
+    }
+}
 
 $allProductsCount = (int) ($conn->query('SELECT COUNT(*) as total FROM products')->fetch_assoc()['total'] ?? 0);
 $inStockCount = (int) ($conn->query("SELECT COUNT(*) as total FROM products WHERE qty > 0 OR size_qtys LIKE '%\"[1-9]%' OR size_qtys LIKE '%:[1-9]%'")->fetch_assoc()['total'] ?? 0);
 $outOfStockCount = max(0, $allProductsCount - $inStockCount);
 
-$whereSql = '';
+// Build dynamic WHERE clauses
+$whereClauses = [];
+
 if ($stockFilter === 'instock') {
-    $whereSql = "WHERE (p.qty > 0 OR p.size_qtys REGEXP ':[1-9]')";
+    $whereClauses[] = "(p.qty > 0 OR p.size_qtys REGEXP ':[1-9]')";
 } elseif ($stockFilter === 'outofstock') {
-    $whereSql = "WHERE (p.qty <= 0 OR p.qty IS NULL) AND (p.size_qtys NOT REGEXP ':[1-9]')";
+    $whereClauses[] = "((p.qty <= 0 OR p.qty IS NULL) AND (p.size_qtys NOT REGEXP ':[1-9]'))";
 }
 
-$totalRows = ($stockFilter === 'instock') ? $inStockCount : (($stockFilter === 'outofstock') ? $outOfStockCount : $allProductsCount);
+if (!empty($searchQuery)) {
+    $searchEscaped = $conn->real_escape_string($searchQuery);
+    $whereClauses[] = "(p.product_name LIKE '%$searchEscaped%' OR p.description LIKE '%$searchEscaped%' OR p.sku LIKE '%$searchEscaped%')";
+}
+
+if (!empty($wickFilter)) {
+    $wickEscaped = $conn->real_escape_string($wickFilter);
+    $whereClauses[] = "p.wick_type = '$wickEscaped'";
+}
+
+if ($fragranceFilter > 0) {
+    $whereClauses[] = "p.fragrance_id = $fragranceFilter";
+}
+
+if ($colorFilter > 0) {
+    $whereClauses[] = "(JSON_CONTAINS(p.color_id, '$colorFilter') OR p.color_id LIKE '%\"$colorFilter\"%' OR p.color_id LIKE '%$colorFilter%')";
+}
+
+if ($categoryFilter > 0) {
+    $whereClauses[] = "(JSON_CONTAINS(p.size_id, '$categoryFilter') OR p.size_id LIKE '%\"$categoryFilter\"%' OR p.size_id LIKE '%$categoryFilter%')";
+}
+
+$whereSql = '';
+if (!empty($whereClauses)) {
+    $whereSql = 'WHERE ' . implode(' AND ', $whereClauses);
+}
+
+// Compute total rows matching the filters
+$countQuery = "SELECT COUNT(*) as total FROM products p $whereSql";
+$totalRows = (int)($conn->query($countQuery)->fetch_assoc()['total'] ?? 0);
 $totalPages = max(1, ceil($totalRows / $limit));
 
 // Fetch products with joins to get related data
@@ -86,6 +147,21 @@ $query = "
 ";
 
 $products = $conn->query($query);
+
+// Helper function to build status filter links with other parameters
+function build_filter_url($stock = 'all') {
+    $params = $_GET;
+    $params['stock'] = $stock;
+    $params['page'] = 1;
+    return base_url('/admin/list_product?' . http_build_query($params));
+}
+
+// Helper function to build page links
+function build_page_url($p) {
+    $params = $_GET;
+    $params['page'] = $p;
+    return base_url('/admin/list_product?' . http_build_query($params));
+}
 ?>
 
 <!DOCTYPE html>
@@ -431,16 +507,90 @@ $products = $conn->query($query);
 
     <!-- Stock Filter Pills -->
     <div class="status-filters">
-        <a href="<?= base_url('/admin/list_product'); ?>" class="status-pill <?= $stockFilter === 'all' ? 'active' : ''; ?>">
+        <a href="<?= build_filter_url('all'); ?>" class="status-pill <?= $stockFilter === 'all' ? 'active' : ''; ?>">
             All Products <span class="count"><?= $allProductsCount; ?></span>
         </a>
-        <a href="<?= base_url('/admin/list_product?stock=instock'); ?>" class="status-pill <?= $stockFilter === 'instock' ? 'active' : ''; ?>">
+        <a href="<?= build_filter_url('instock'); ?>" class="status-pill <?= $stockFilter === 'instock' ? 'active' : ''; ?>">
             In Stock <span class="count"><?= $inStockCount; ?></span>
         </a>
-        <a href="<?= base_url('/admin/list_product?stock=outofstock'); ?>" class="status-pill <?= $stockFilter === 'outofstock' ? 'active' : ''; ?>">
+        <a href="<?= build_filter_url('outofstock'); ?>" class="status-pill <?= $stockFilter === 'outofstock' ? 'active' : ''; ?>">
             Out of Stock <span class="count"><?= $outOfStockCount; ?></span>
         </a>
     </div>
+
+    <!-- Search & Filter Bar -->
+    <form method="GET" action="<?= base_url('/admin/list_product') ?>" class="filter-form-wrapper" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <!-- Keep stock filter state -->
+        <input type="hidden" name="stock" value="<?= htmlspecialchars($stockFilter) ?>">
+        
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; align-items:end;">
+            <!-- Search Input -->
+            <div class="form-group" style="margin-bottom:0;">
+                <label style="display:block; font-size:11px; font-weight:600; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Search Product</label>
+                <input type="text" name="search" placeholder="Search name, SKU, desc..." value="<?= htmlspecialchars($searchQuery) ?>" style="width:100%; height:40px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff;">
+            </div>
+
+            <!-- Wick Filter -->
+            <div class="form-group" style="margin-bottom:0;">
+                <label style="display:block; font-size:11px; font-weight:600; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Wick Type</label>
+                <select name="wick" style="width:100%; height:40px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff; cursor:pointer;">
+                    <option value="">All Wicks</option>
+                    <option value="single" <?= $wickFilter === 'single' ? 'selected' : '' ?>>Single Wick</option>
+                    <option value="double" <?= $wickFilter === 'double' ? 'selected' : '' ?>>Double Wick</option>
+                    <option value="triple" <?= $wickFilter === 'triple' ? 'selected' : '' ?>>Triple Wick</option>
+                </select>
+            </div>
+
+            <!-- Fragrance Filter -->
+            <div class="form-group" style="margin-bottom:0;">
+                <label style="display:block; font-size:11px; font-weight:600; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Fragrance</label>
+                <select name="fragrance" style="width:100%; height:40px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff; cursor:pointer;">
+                    <option value="">All Fragrances</option>
+                    <?php foreach ($filter_fragrances as $f): ?>
+                        <option value="<?= $f['fragrance_id'] ?>" <?= $fragranceFilter === (int)$f['fragrance_id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($f['fragrance_name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Color Filter -->
+            <div class="form-group" style="margin-bottom:0;">
+                <label style="display:block; font-size:11px; font-weight:600; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Color</label>
+                <select name="color" style="width:100%; height:40px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff; cursor:pointer;">
+                    <option value="">All Colors</option>
+                    <?php foreach ($filter_colors as $c): ?>
+                        <option value="<?= $c['color_id'] ?>" <?= $colorFilter === (int)$c['color_id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($c['color_name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Size / Category Filter -->
+            <div class="form-group" style="margin-bottom:0;">
+                <label style="display:block; font-size:11px; font-weight:600; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Vessel / Size</label>
+                <select name="category" style="width:100%; height:40px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff; cursor:pointer;">
+                    <option value="">All Categories</option>
+                    <?php foreach ($filter_categories as $cat): ?>
+                        <option value="<?= $cat['id'] ?>" <?= $categoryFilter === (int)$cat['id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($cat['category_name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Buttons -->
+            <div style="display:flex; gap:10px;">
+                <button type="submit" style="flex:1; height:40px; background:#2563eb; color:#ffffff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:background 0.2s;">
+                    Filter
+                </button>
+                <a href="<?= base_url('/admin/list_product') ?>" style="flex:1; height:40px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-weight:600; text-decoration:none; display:flex; align-items:center; justify-content:center; transition:background 0.2s;">
+                    Reset
+                </a>
+            </div>
+        </div>
+    </form>
 
     <?php if ($success_message): ?>
         <div style="background:#dcfce7; color:#15803d; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-weight:600;">✅ <?= htmlspecialchars($success_message) ?></div>
@@ -698,11 +848,11 @@ $products = $conn->query($query);
                 <div class="admin-pagination">
                     <div>Showing <?= min($offset + 1, $totalRows); ?> to <?= min($offset + $limit, $totalRows); ?> of <?= $totalRows; ?> products</div>
                     <div class="admin-pagination-pages">
-                        <a href="<?= base_url('/admin/list_product?page=' . max(1, $page - 1)); ?>" class="admin-page-link <?= $page <= 1 ? 'disabled' : ''; ?>">&laquo; Prev</a>
+                        <a href="<?= build_page_url(max(1, $page - 1)); ?>" class="admin-page-link <?= $page <= 1 ? 'disabled' : ''; ?>">&laquo; Prev</a>
                         <?php for ($p = 1; $p <= $totalPages; $p++): ?>
-                            <a href="<?= base_url('/admin/list_product?page=' . $p); ?>" class="admin-page-link <?= $p == $page ? 'active' : ''; ?>"><?= $p; ?></a>
+                            <a href="<?= build_page_url($p); ?>" class="admin-page-link <?= $p == $page ? 'active' : ''; ?>"><?= $p; ?></a>
                         <?php endfor; ?>
-                        <a href="<?= base_url('/admin/list_product?page=' . min($totalPages, $page + 1)); ?>" class="admin-page-link <?= $page >= $totalPages ? 'disabled' : ''; ?>">Next &raquo;</a>
+                        <a href="<?= build_page_url(min($totalPages, $page + 1)); ?>" class="admin-page-link <?= $page >= $totalPages ? 'disabled' : ''; ?>">Next &raquo;</a>
                     </div>
                 </div>
             <?php endif; ?>
