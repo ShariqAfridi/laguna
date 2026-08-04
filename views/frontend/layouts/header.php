@@ -16,7 +16,7 @@ if (!isset($base)) {
   <base href="<?php echo rtrim($base, '/') . '/'; ?>">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> Test L V B — Luxury Fashion | Desktop Header</title>
+  <title>L V B — Luxury Fashion | Desktop Header</title>
   <link rel="icon" type="image/png" href="favicon.png">
 
   <!-- Open Graph -->
