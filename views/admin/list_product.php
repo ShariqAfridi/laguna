@@ -508,6 +508,11 @@ $products = $conn->query($query);
                             
                             <td>
                                 <strong><?= htmlspecialchars($row['product_name']) ?></strong>
+                                <?php if (!empty($row['sku'])): ?>
+                                    <div style="font-size: 10px; font-family: monospace; color: #1e3a8a; background: #eff6ff; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: 600; text-transform: uppercase;">
+                                        SKU: <?= htmlspecialchars($row['sku']) ?>
+                                    </div>
+                                <?php endif; ?>
                                 <?php if ($row['fragrance_names']): ?>
                                     <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">
                                         🏷️ <?= htmlspecialchars($row['fragrance_names']) ?>

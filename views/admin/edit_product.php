@@ -186,16 +186,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Total qty = sum across all selected sizes
         $total_qty = array_sum(array_column($sizes_to_insert, 'qty'));
         
+        // ── DYNAMIC SKU GENERATION ────────────────────────────────────────
+        $vessel_sku = 'C';
+        if ($selected_size > 0) {
+            $cat_stmt = $conn->prepare("SELECT sku FROM categories WHERE id = ?");
+            if ($cat_stmt) {
+                $cat_stmt->bind_param("i", $selected_size);
+                $cat_stmt->execute();
+                $cat_res = $cat_stmt->get_result();
+                if ($cat_row = $cat_res->fetch_assoc()) {
+                    if (!empty($cat_row['sku'])) {
+                        $vessel_sku = $cat_row['sku'];
+                    }
+                }
+                $cat_stmt->close();
+            }
+        }
+
+        $color_sku = '00';
+        if (!empty($selected_colors)) {
+            $first_color_id = $selected_colors[0];
+            $col_stmt = $conn->prepare("SELECT sku FROM colors WHERE color_id = ?");
+            if ($col_stmt) {
+                $col_stmt->bind_param("i", $first_color_id);
+                $col_stmt->execute();
+                $col_res = $col_stmt->get_result();
+                if ($col_row = $col_res->fetch_assoc()) {
+                    if (!empty($col_row['sku'])) {
+                        $color_sku = $col_row['sku'];
+                    }
+                }
+                $col_stmt->close();
+            }
+        }
+
+        $fragrance_sku = '00';
+        if ($fragrance_id !== null && $fragrance_id > 0) {
+            $frag_stmt = $conn->prepare("SELECT sku FROM fragrances WHERE fragrance_id = ?");
+            if ($frag_stmt) {
+                $frag_stmt->bind_param("i", $fragrance_id);
+                $frag_stmt->execute();
+                $frag_res = $frag_stmt->get_result();
+                if ($frag_row = $frag_res->fetch_assoc()) {
+                    if (!empty($frag_row['sku'])) {
+                        $fragrance_sku = $frag_row['sku'];
+                    }
+                }
+                $frag_stmt->close();
+            }
+        }
+
+        $dynamic_sku = strtoupper($vessel_sku . $color_sku . $fragrance_sku);
+
         // Handle null values for foreign keys
         $fragrance_id_db = $fragrance_id !== null ? $fragrance_id : 0;
         
         $conn->begin_transaction();
         try {
             if ($edit_mode && $product_id > 0) {
-                // UPDATE existing product with wick_type column
+                // UPDATE existing product with wick_type and sku column
                 $stmt = $conn->prepare("
                     UPDATE products SET
                         product_name = ?,
+                        sku = ?,
                         description = ?,
                         image = ?,
                         qty = ?,
@@ -213,8 +266,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
                 
                 $stmt->bind_param(
-                    "sssiissssssi", // 12 parameters for UPDATE (added wick_type)
+                    "ssssiissssssi", // 13 parameters for UPDATE (added sku and wick_type)
                     $product_name,
+                    $dynamic_sku, // dynamic SKU
                     $description,
                     $image,
                     $total_qty,
@@ -224,24 +278,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $size_prices_json,
                     $size_qtys_json,
                     $boxes_json,
-                    $wick_type, // ADDED: Bind wick_type
+                    $wick_type,
                     $product_id
                 );
             } else {
-                // INSERT new product with wick_type column
+                // INSERT new product with wick_type and sku column
                 $stmt = $conn->prepare("
                     INSERT INTO products
-                        (product_name, description, image, qty,
+                        (product_name, sku, description, image, qty,
                          fragrance_id, color_id, size_id, size_prices, size_qtys, box_id, wick_type,
                          created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 ");
                 
                 if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
                 
                 $stmt->bind_param(
-                    "sssiissssss", // 11 parameters for INSERT (added wick_type)
+                    "ssssiissssss", // 12 parameters for INSERT (added sku and wick_type)
                     $product_name,
+                    $dynamic_sku, // dynamic SKU
                     $description,
                     $image,
                     $total_qty,
@@ -251,7 +306,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $size_prices_json,
                     $size_qtys_json,
                     $boxes_json,
-                    $wick_type // ADDED: Bind wick_type
+                    $wick_type
                 );
             }
 
