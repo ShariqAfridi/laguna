@@ -1,0 +1,28 @@
+name: Deploy to Namecheap
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy Website
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          port: 21098
+          script: |
+            cd /home/onlifwko/lagunavibe.onlinedemoserver2.com
+            git reset --hard HEAD
+            git pull https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ShariqAfridi/laguna.git main
