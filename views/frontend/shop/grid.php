@@ -182,21 +182,27 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
 
     /* Vessel Selection Styles */
     .vessel-selection {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        justify-content: center;
         gap: 32px;
-        max-width: 900px;
+        max-width: 1200px;
         margin: 0 auto;
     }
 
     @media (max-width: 768px) {
         .vessel-selection {
-            grid-template-columns: 1fr;
+            flex-direction: column;
+            align-items: center;
             gap: 20px;
+        }
+        .vessel-card {
+            max-width: 100% !important;
         }
     }
 
     .vessel-card {
+        flex: 1;
+        max-width: 380px;
         background: white;
         border-radius: 12px;
         overflow: hidden;
