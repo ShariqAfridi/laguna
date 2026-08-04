@@ -39,8 +39,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $colors_json = !empty($selected_colors) ? json_encode($selected_colors) : '[]';
     $boxes_json  = !empty($selected_boxes)  ? json_encode($selected_boxes)  : '[]';
 
-    $selected_sizes = $_POST['sizes']       ?? [];
-    $size_prices    = $_POST['size_prices'] ?? [];
+    $selected_size = isset($_POST['size_id']) ? (int)$_POST['size_id'] : 0;
+    $selected_sizes = $selected_size > 0 ? [$selected_size] : [];
+
+    $single_price = floatval($_POST['price'] ?? 0);
+    $size_prices = [];
+    if ($selected_size > 0) {
+        $size_prices[$selected_size] = $single_price;
+    }
+
+    $single_qty = isset($_POST['qty']) ? max(0, (int)$_POST['qty']) : 0;
+    $_POST['qty_' . $selected_size] = $single_qty;
 
     // ── IMAGE UPLOAD ──────────────────────────────────────────────────
    $image = null;
@@ -831,57 +840,45 @@ select {
                 </div>
             </div>
 
-            <!-- Sizes & Pricing -->
+            <!-- Vessel Category / Size & Pricing -->
             <div class="card">
-                <h3><span class="icon">📏</span> Sizes &amp; Pricing
-                    <span style="font-size:0.8rem;font-weight:400;color:var(--muted);margin-left:6px">— select all that apply</span>
-                </h3>
+                <h3><span class="icon">📏</span> Size &amp; Pricing</h3>
 
                 <?php if (empty($sizes_arr)): ?>
-                    <div class="empty-state">No sizes found. Please add sizes first.</div>
+                    <div class="empty-state">No vessel categories found. Please add categories first.</div>
                 <?php else: ?>
-                    <?php foreach ($sizes_arr as $s): ?>
-                        <div class="size-row" id="sizeRow_<?= $s['size_id'] ?>">
-                            <div class="size-row-header" onclick="toggleSize(<?= $s['size_id'] ?>)">
-                                <input type="checkbox"
-                                       class="size-checkbox"
-                                       name="sizes[]"
-                                       id="size_<?= $s['size_id'] ?>"
-                                       value="<?= $s['size_id'] ?>"
-                                       onclick="event.stopPropagation(); toggleSize(<?= $s['size_id'] ?>)"
-                                       <?= in_array((string)$s['size_id'], (array)($_POST['sizes'] ?? [])) ? 'checked' : '' ?>>
-                                <span class="size-label-text">
-                                    <?= htmlspecialchars($s['size_name']) ?>
-                                    <?php if ($s['size_details']): ?>
-                                        <span class="size-label-detail">(<?= htmlspecialchars($s['size_details']) ?>)</span>
-                                    <?php endif; ?>
-                                </span>
-                                <span class="size-badge" id="sizeBadge_<?= $s['size_id'] ?>">Not selected</span>
-                            </div>
-                            <div class="size-row-body" id="sizeBody_<?= $s['size_id'] ?>">
-                                <div class="form-group">
-                                    <label>Price ($) <span class="req">*</span></label>
-                                    <input type="number"
-                                           step="0.01"
-                                           name="size_prices[<?= $s['size_id'] ?>]"
-                                           id="price_<?= $s['size_id'] ?>"
-                                           placeholder="0.00"
-                                           class="price-input"
-                                           value="<?= htmlspecialchars($_POST['size_prices'][$s['size_id']] ?? '') ?>"
-                                           oninput="updateSizeBadge(<?= $s['size_id'] ?>)">
-                                </div>
-                                <div class="form-group">
-                                    <label>Quantity</label>
-                                    <input type="number"
-                                           name="qty_<?= $s['size_id'] ?>"
-                                           id="qty_<?= $s['size_id'] ?>"
-                                           placeholder="0"
-                                           min="0"
-                                           value="<?= (int)($_POST['qty_' . $s['size_id']] ?? 0) ?>">
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
+                    <div class="form-group">
+                        <label>Vessel Category (Size) <span class="req">*</span></label>
+                        <select name="size_id" class="admin-select" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff;">
+                            <option value="">Select Vessel Category (Size)...</option>
+                            <?php foreach ($sizes_arr as $s): ?>
+                                <option value="<?= $s['size_id'] ?>" <?= (isset($_POST['size_id']) && (int)$_POST['size_id'] === (int)$s['size_id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($s['size_name']) ?> <?= $s['size_details'] ? '(' . htmlspecialchars($s['size_details']) . ')' : '' ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>Price ($) <span class="req">*</span></label>
+                        <input type="number"
+                               step="0.01"
+                               name="price"
+                               placeholder="0.00"
+                               class="admin-input"
+                               value="<?= htmlspecialchars($_POST['price'] ?? '') ?>"
+                               required>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>Quantity</label>
+                        <input type="number"
+                               name="qty"
+                               placeholder="0"
+                               min="0"
+                               class="admin-input"
+                               value="<?= htmlspecialchars($_POST['qty'] ?? '0') ?>">
+                    </div>
                 <?php endif; ?>
             </div>
 
