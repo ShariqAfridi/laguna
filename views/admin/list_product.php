@@ -313,6 +313,11 @@ $products = $conn->query($query);
     color: #92400e;
 }
 
+.wick-triple {
+    background: #fbcfe8;
+    color: #831843;
+}
+
 .wick-none {
     background: #e5e7eb;
     color: #6b7280;
@@ -561,15 +566,17 @@ $products = $conn->query($query);
                             <td>
                                 <?php
                                 // Determine wick display
-                                // Determine wick display
                                 $wick_icon = '🕯️';
                                 $wick_class = 'wick-single';
                                 $wick_label = 'Single';
-
                                 if ($wick_type === 'double') {
                                     $wick_icon = '🕯️🕯️';
                                     $wick_class = 'wick-double';
                                     $wick_label = 'Double';
+                                } elseif ($wick_type === 'triple') {
+                                    $wick_icon = '🕯️🕯️🕯️';
+                                    $wick_class = 'wick-triple';
+                                    $wick_label = 'Triple';
                                 } elseif ($wick_type === 'none') {
                                     $wick_icon = '🚫';
                                     $wick_class = 'wick-none';
