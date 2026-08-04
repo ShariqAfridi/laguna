@@ -829,14 +829,6 @@ select {
                                 Double Wick
                             </label>
                         </div>
-                       <div class="wick-option">
-                            <input type="radio" name="wick_type" id="wick_none" value="none"
-                                   <?= (isset($_POST['wick_type']) && $_POST['wick_type'] === 'none') ? 'checked' : '' ?>>
-                            <label for="wick_none">
-                                <span class="wick-icon">🚫</span>
-                                No Wick
-                            </label>
-                        </div>
                         <div class="wick-option">
                             <input type="radio" name="wick_type" id="wick_triple" value="triple"
                                    <?= (isset($_POST['wick_type']) && $_POST['wick_type'] === 'triple') ? 'checked' : '' ?>>
