@@ -182,14 +182,11 @@
         
         /* ---------- INFINITE SCROLLING MARQUEE (right to left, seamless loop) ---------- */
         .lvh-marquee-section {
-            /* position: absolute; */
-            /* bottom: 0; */
-            /* left: 0; */
-            /* right: 0; */
-            padding-top:50px;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-top: 0;
             z-index: 15;
             pointer-events: none;
-            padding-bottom: 1.5rem;
         }
         
         /* Gradient fade at bottom (soft overlay) matching reference */
@@ -209,22 +206,25 @@
             width: 100%;
             overflow: hidden;
             pointer-events: auto;
-            padding: 0.5rem 0 0.8rem;
+            padding: 0;
+            margin: 0;
         }
         
         .lvh-marquee-track {
             display: flex;
-              gap: clamp(1rem, 2vw, 3.5rem);
-            animation: scrollMarquee 12s linear infinite;
-            gap: 2rem;
+            gap: 0 !important;
+            animation: scrollMarquee 35s linear infinite;
             align-items: flex-end;
             will-change: transform;
+            width: max-content;
         }
         
         /* Individual candle card (matching reference interactive style) */
         .lvh-marquee-item {
             flex: 0 0 auto;
-              width: clamp(120px, 14vw, 240px);
+            width: clamp(140px, 16vw, 240px);
+            padding: 0 !important;
+            margin: 0 !important;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -237,12 +237,14 @@
             transform: translateY(-8px);
         }
 
-.lvh-candle-img {
-    width: 100%;
-    height: clamp(180px, 22vw, 350px);
-    object-fit: cover;
-    display: block;
-}
+        .lvh-candle-img {
+            width: 100%;
+            height: clamp(180px, 22vw, 350px);
+            object-fit: cover;
+            display: block;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
      
         /* Responsive sizing for larger screens */
         @media (min-width: 768px) {
@@ -253,7 +255,7 @@
                 max-height: 270px;
             }
             .lvh-marquee-track {
-                gap: 2.5rem;
+                gap: 0 !important;
             }
         }
         
@@ -265,17 +267,17 @@
                 max-height: 310px;
             }
             .lvh-marquee-track {
-                gap: 3rem;
+                gap: 0 !important;
             }
         }
         
         /* Keyframes for infinite right-to-left scroll */
         @keyframes scrollMarquee {
             0% {
-                transform: translateX(0);
+                transform: translate3d(0, 0, 0);
             }
             100% {
-                transform: translateX(-50%);
+                transform: translate3d(-50%, 0, 0);
             }
         }
         
@@ -354,122 +356,53 @@
      
     </section>
        
-        <!-- INFINITE SCROLLING MARQUEE (right-to-left, no gaps, seamless loop) -->
+        <!-- INFINITE SCROLLING MARQUEE (hero-products folder, no padding on top & in between) -->
         <div class="lvh-marquee-section">
             <div class="lvh-marquee-container">
                 <div class="lvh-marquee-track" id="marqueeTrack">
-                    <!-- All your provided candle images — each appears once in this set, 
-                         then duplicated via CSS animation (translateX -50%) for seamless loop.
-                         We include TWO identical sets to ensure smooth infinite scroll. -->
-                    
-                    <!-- Set 1 (original images) -->
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/00_08_BLUR FROST.png" alt="Ocean Breeze Lavender" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Lavender+Candle'">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/00_09_PURPLE FROST.png" alt="Sea Salt Attraction" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Sea+Salt'">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/00_17_01 GREEN FROST TEMPLET.png" alt="Driftwood Fragrance Free" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Driftwood'">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/00_17_GREEN FROST TEMPLET.png" alt="Musk Tidal Wave" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Musk'">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/00_18_RED FROST TEMPLET.png" alt="Lemonglass Coral Reef" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Coral+Reef'">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/C0206.png" alt="Woods Moonlit Waters" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Moonlit+Waters'">
-                    </div>
-                    
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/C0304.png" alt="Ocean Breeze Lavender" loading="lazy">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/C0811.png" alt="Sea Salt Attraction" loading="lazy">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/C1510.png" alt="Driftwood Fragrance Free" loading="lazy">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/D0209.png" alt="Musk Tidal Wave" loading="lazy">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/D0313.png" alt="Lemonglass Coral Reef" loading="lazy">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/D1205.png" alt="Woods Moonlit Waters" loading="lazy">
-                    </div>
+                    <?php
+                    $heroProductPaths = [];
+                    $heroFolder = __DIR__ . '/../../../public/uploads/hero-products/';
+                    if (is_dir($heroFolder)) {
+                        $found = glob($heroFolder . '*.{png,jpg,jpeg,webp,PNG,JPG,JPEG,WEBP}', GLOB_BRACE);
+                        if ($found) {
+                            foreach ($found as $f) {
+                                $heroProductPaths[] = 'public/uploads/hero-products/' . basename($f);
+                            }
+                        }
+                    }
 
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/D1604.png" alt="Ocean Breeze Lavender" loading="lazy">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/E0208.png" alt="Sea Salt Attraction" loading="lazy">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/E0314.png" alt="Driftwood Fragrance Free" loading="lazy">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/H50-3 VESSEL INSIDE.png" alt="Musk Tidal Wave" loading="lazy">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/H50-4 VESSEL INSIDE.png" alt="Lemonglass Coral Reef" loading="lazy">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/H50-5  VESSEL INSIDE.png" alt="Woods Moonlit Waters" loading="lazy">
-                    </div>
-                    <div class="lvh-marquee-item">
-                        <img class="lvh-candle-img" src="assets/slider/H50-6  VESSEL INSIDE.png" alt="Woods Moonlit Waters" loading="lazy">
-                    </div>
+                    if (empty($heroProductPaths)) {
+                        $defaultImages = [
+                            '00_08_BLUR FROST.png', '00_09_PURPLE FROST.png', '00_17_01 GREEN FROST TEMPLET.png',
+                            '00_17_GREEN FROST TEMPLET.png', '00_18_RED FROST TEMPLET.png', 'C0206.png',
+                            'C0304.png', 'C0811.png', 'C1510.png', 'D0209.png', 'D0313.png', 'D1205.png',
+                            'D1604.png', 'E0208.png', 'E0314.png', 'H50-3 VESSEL INSIDE.png',
+                            'H50-4 VESSEL INSIDE.png', 'H50-5  VESSEL INSIDE.png', 'H50-6  VESSEL INSIDE.png'
+                        ];
+                        foreach ($defaultImages as $img) {
+                            $heroProductPaths[] = 'public/uploads/hero-products/' . $img;
+                        }
+                    }
+
+                    for ($set = 0; $set < 2; $set++):
+                        foreach ($heroProductPaths as $relPath):
+                            $imgUrl = base_url('/' . rawurlencode($relPath));
+                            $imgUrl = str_replace('%2F', '/', $imgUrl);
+                    ?>
+                        <div class="lvh-marquee-item">
+                            <img class="lvh-candle-img" src="<?= htmlspecialchars($imgUrl); ?>" alt="Hero Product Candle" loading="lazy">
+                        </div>
+                    <?php 
+                        endforeach;
+                    endfor; 
+                    ?>
                 </div>
             </div>
         </div>
         
     <script>
         (function() {
-            // Ensure infinite marquee works flawlessly: if content width is less than container, duplicate again
-            const track = document.getElementById('marqueeTrack');
-            if (!track) return;
-            
-            function ensureSeamlessInfinite() {
-                const items = track.querySelectorAll('.lvh-marquee-item');
-                if (items.length === 0) return;
-                
-                // Get the total width of one full set (half of current items because we have duplicate)
-                const halfCount = items.length / 2;
-                if (halfCount === 0) return;
-                
-                const firstSet = Array.from(items).slice(0, halfCount);
-                let firstSetWidth = 0;
-                firstSet.forEach(item => {
-                    firstSetWidth += item.offsetWidth + parseFloat(getComputedStyle(item).marginRight || 0);
-                });
-                
-                const container = track.parentElement;
-                const containerWidth = container.offsetWidth;
-                
-                // If the original set width is less than container, add another clone to avoid gaps
-                if (firstSetWidth < containerWidth && halfCount > 1) {
-                    const extraClone = firstSet.map(item => item.cloneNode(true));
-                    extraClone.forEach(clone => {
-                        track.appendChild(clone);
-                    });
-                    // Double-check again (simple fallback)
-                }
-            }
-            
-            // Run after images have loaded
-            window.addEventListener('load', () => {
-                ensureSeamlessInfinite();
-                // Restart animation to be super smooth
-                track.style.animation = 'none';
-                track.offsetHeight; // force reflow
-                track.style.animation = 'scrollMarquee 12s linear infinite';
-            });
-            
-          
-            
             // Video pointer events disabled & playback resilience
             const videoElem = document.getElementById('lvhHeroVideo');
             if (videoElem) {

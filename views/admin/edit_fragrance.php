@@ -49,9 +49,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    $scent_note_image = $fragrance['scent_note_image'] ?? '';
+    if (!empty($_FILES['scent_note_image']['tmp_name'])) {
+        $file = $_FILES['scent_note_image'];
+        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+        if (in_array($ext, $allowed)) {
+            $upload_dir = __DIR__ . '/../../public/uploads/fragrances/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+            $filename = 'scent_note_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+            $target_file = $upload_dir . $filename;
+
+            if (move_uploaded_file($file['tmp_name'], $target_file)) {
+                $scent_note_image = 'public/uploads/fragrances/' . $filename;
+            } else {
+                $error_message = 'Failed to upload scent note image.';
+            }
+        } else {
+            $error_message = 'Invalid scent note image format.';
+        }
+    }
+
     if (empty($error_message) && !empty($name)) {
-        $update_stmt = $conn->prepare("UPDATE fragrances SET fragrance_name=?, fragrance_image=?, fragrance_description=?, status=?, sort_order=? WHERE fragrance_id=?");
-        $update_stmt->bind_param("sssiii", $name, $fragrance_image, $fragrance_description, $status, $sort_order, $id);
+        $update_stmt = $conn->prepare("UPDATE fragrances SET fragrance_name=?, fragrance_image=?, scent_note_image=?, fragrance_description=?, status=?, sort_order=? WHERE fragrance_id=?");
+        $update_stmt->bind_param("ssssiii", $name, $fragrance_image, $scent_note_image, $fragrance_description, $status, $sort_order, $id);
 
         if ($update_stmt->execute()) {
             echo "<script>window.location.href='" . base_url('/admin/fragrance') . "';</script>";
@@ -86,16 +110,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" name="fragrance_name" class="admin-input" value="<?= htmlspecialchars($fragrance['fragrance_name']); ?>" required>
                 </div>
 
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+
+                <div style="grid-column: 1 / -1;">
+                    <label class="admin-label">Description / Scent Notes</label>
+                    <textarea name="fragrance_description" id="fragrance_description_editor" class="admin-input" rows="5" placeholder="Enter top, mid, and base scent notes or fragrance description..."><?= htmlspecialchars($fragrance['fragrance_description'] ?? ''); ?></textarea>
+                </div>
+
                 <div>
                     <label class="admin-label">Fragrance Image</label>
                     <input type="file" name="fragrance_image" accept="image/*" class="admin-input" style="padding:8px;">
                     <?php if (!empty($fragrance['fragrance_image'])): ?>
-                        <div style="margin-top:8px;">
-                            <img src="<?= htmlspecialchars(base_url('/' . ltrim($fragrance['fragrance_image'], '/'))); ?>" alt="Current Image" class="admin-thumb">
+                        <div style="margin-top:12px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; display:inline-block;">
+                            <div style="font-size:12px; font-weight:600; color:#4b5563; margin-bottom:8px;">Current Fragrance Image:</div>
+                            <img src="<?= htmlspecialchars(base_url('/' . ltrim($fragrance['fragrance_image'], '/'))); ?>" alt="Current Fragrance Image" style="width:160px; height:160px; object-fit:contain; border-radius:8px; background:#fff; border:1px solid #d1d5db; padding:4px; box-shadow:0 2px 6px rgba(0,0,0,0.06); display:block;">
                         </div>
                     <?php else: ?>
-                        <div style="margin-top:8px;">
-                            <div class="admin-no-thumb">No<br>Image</div>
+                        <div style="margin-top:12px;">
+                            <div class="admin-no-thumb" style="width:120px; height:120px; font-size:13px;">No Fragrance<br>Image</div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div>
+                    <label class="admin-label">Scent Notes Image</label>
+                    <input type="file" name="scent_note_image" accept="image/*" class="admin-input" style="padding:8px;">
+                    <?php if (!empty($fragrance['scent_note_image'])): ?>
+                        <div style="margin-top:12px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; display:inline-block;">
+                            <div style="font-size:12px; font-weight:600; color:#4b5563; margin-bottom:8px;">Current Scent Notes Image:</div>
+                            <img src="<?= htmlspecialchars(base_url('/' . ltrim($fragrance['scent_note_image'], '/'))); ?>" alt="Current Scent Notes Image" style="width:160px; height:160px; object-fit:contain; border-radius:8px; background:#fff; border:1px solid #d1d5db; padding:4px; box-shadow:0 2px 6px rgba(0,0,0,0.06); display:block;">
+                        </div>
+                    <?php else: ?>
+                        <div style="margin-top:12px;">
+                            <div class="admin-no-thumb" style="width:120px; height:120px; font-size:13px;">No Scent Notes<br>Image</div>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -115,11 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 -->
 
-                <div style="grid-column: 1 / -1;">
-                    <label class="admin-label">Description & Scent Notes</label>
-                    <textarea name="fragrance_description" class="admin-textarea" rows="4"><?= htmlspecialchars($fragrance['fragrance_description'] ?? ''); ?></textarea>
-                </div>
-
             </div>
 
             <div style="margin-top:30px; display:flex; gap:12px;">
@@ -128,4 +170,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </form>
     </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof ClassicEditor !== 'undefined') {
+        ClassicEditor
+            .create(document.querySelector('#fragrance_description_editor'), {
+                toolbar: ['heading', '|', 'bold', 'italic', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo']
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }
+});
+</script>
 </div>

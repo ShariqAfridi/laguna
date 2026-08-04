@@ -68,9 +68,10 @@ $fragrances = $conn->query("SELECT * FROM fragrances $whereSql ORDER BY sort_ord
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th>Image</th>
+                    <th>Fragrance Image</th>
+                    <th>Scent Notes Image</th>
                     <th>Fragrance Name</th>
-                    <th>Description & Scent Notes</th>
+                    <th>Description / Scent Notes</th>
                     <th>Status</th>
                     <th style="text-align:right;">Actions</th>
                 </tr>
@@ -82,14 +83,25 @@ $fragrances = $conn->query("SELECT * FROM fragrances $whereSql ORDER BY sort_ord
                     <tr>
                         <td>
                             <?php if (!empty($row['fragrance_image'])): ?>
-                                <img src="<?= htmlspecialchars(base_url('/' . ltrim($row['fragrance_image'], '/'))); ?>" alt="Fragrance Profile" class="admin-thumb">
+                                <img src="<?= htmlspecialchars(base_url('/' . ltrim($row['fragrance_image'], '/'))); ?>" alt="Fragrance Profile" style="width:110px; height:110px; object-fit:contain; border-radius:8px; background:#fff; border:1px solid #d1d5db; padding:4px; box-shadow:0 2px 5px rgba(0,0,0,0.05); display:block;">
                             <?php else: ?>
-                                <div class="admin-no-thumb">No<br>Image</div>
+                                <div class="admin-no-thumb" style="width:110px; height:110px; font-size:12px;">No<br>Image</div>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if (!empty($row['scent_note_image'])): ?>
+                                <img src="<?= htmlspecialchars(base_url('/' . ltrim($row['scent_note_image'], '/'))); ?>" alt="Scent Notes" style="width:110px; height:110px; object-fit:contain; border-radius:8px; background:#fff; border:1px solid #d1d5db; padding:4px; box-shadow:0 2px 5px rgba(0,0,0,0.05); display:block;">
+                            <?php else: ?>
+                                <div class="admin-no-thumb" style="width:110px; height:110px; font-size:12px;">No<br>Image</div>
                             <?php endif; ?>
                         </td>
                         <td><strong style="color:#111827; font-size:15px;"><?= htmlspecialchars($row['fragrance_name']); ?></strong></td>
-                        <td style="color:#4b5563; font-size:13px; max-width:380px;">
-                            <?= htmlspecialchars($row['fragrance_description'] ?? '-'); ?>
+                        <td style="max-width:280px; font-size:13px; color:#4b5563; line-height:1.5;">
+                            <?php if (!empty($row['fragrance_description'])): ?>
+                                <?= nl2br(htmlspecialchars($row['fragrance_description'])); ?>
+                            <?php else: ?>
+                                <span style="color:#9ca3af; italic;">— No Description —</span>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <?php if (($row['status'] ?? 1) == 1): ?>
@@ -111,7 +123,7 @@ $fragrances = $conn->query("SELECT * FROM fragrances $whereSql ORDER BY sort_ord
                 <?php endwhile; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="5" style="text-align:center; padding:40px; color:#9ca3af;">No fragrance profiles created yet. Click "Add New Fragrance Profile" above.</td>
+                    <td colspan="6" style="text-align:center; padding:40px; color:#9ca3af;">No fragrance profiles created yet. Click "Add New Fragrance Profile" above.</td>
                 </tr>
             <?php endif; ?>
             </tbody>

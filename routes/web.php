@@ -54,6 +54,8 @@ return [
     '/logic/sync_cart.php' => 'Frontend\CartController@sync',
     '/api/stripe/create-checkout-session' => 'Frontend\CheckoutController@createStripeSession',
     '/stripe/create-checkout-session.php' => 'Frontend\CheckoutController@createStripeSession',
+    '/api/stripe/webhook' => 'Frontend\CheckoutController@stripeWebhook',
+    '/stripe/webhook.php' => 'Frontend\CheckoutController@stripeWebhook',
     '/api/place-order' => 'Frontend\CheckoutController@placeOrder',
     '/logic/place_order.php' => 'Frontend\CheckoutController@placeOrder',
     '/api/search' => 'Frontend\SearchController@search',

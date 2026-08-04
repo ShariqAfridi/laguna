@@ -64,6 +64,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       'id' => $row['fragrance_id'],
       'name' => $row['fragrance_name'],
       'image' => !empty($row['fragrance_image']) ? base_url('/' . ltrim($row['fragrance_image'], '/')) : '',
+      'scent_note_image' => !empty($row['scent_note_image']) ? base_url('/' . ltrim($row['scent_note_image'], '/')) : '',
       'description' => $row['fragrance_description'] ?? '',
       'code' => sprintf('%02d', $row['fragrance_id'])
     ];
@@ -137,7 +138,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .builder-layout {
       display: grid;
-      grid-template-columns: 1fr 380px;
+      grid-template-columns: 1fr 340px;
       min-height: calc(100vh - 60px);
       background: linear-gradient(to bottom, #F6FBFD, #DEEFF5);
       padding: 10px 50px;
@@ -183,12 +184,13 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       max-height: calc(100vh - 105px);
       display: flex;
       flex-direction: column;
-      padding: 36px 32px;
+      padding: 20px 18px;
       border-radius: 16px;
       box-shadow: 0 20px 50px rgba(0,0,0,0.08);
       overflow-y: auto;
       margin-top: 20px;
       z-index: 10;
+      transition: background-color 0.4s ease, color 0.4s ease;
     }
 
     .preview-label {
@@ -196,22 +198,23 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       letter-spacing: 0.2em;
       color: var(--text-muted);
       font-weight: 500;
-      margin-bottom: 28px;
+      margin-bottom: 40px;
     }
 
     .preview-candle {
-      flex: 1;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      margin-bottom: 28px;
-      min-height: 280px;
+      margin-bottom: 14px;
+      padding-top: 10px;
       position: relative;
+      width: 100%;
     }
 
     .candle-visual {
-      width: 240px;
-      height: 280px;
+      width: 270px;
+      height: 300px;
       position: relative;
       display: flex;
       align-items: center;
@@ -219,17 +222,17 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .candle-card {
-      width: 200px;
-      height: 240px;
+      width: 250px;
+      height: 280px;
       background: var(--cream);
-      border-radius: 2px;
+      border-radius: 6px;
       position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-end;
-      padding-bottom: 24px;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.015), 0 7px 14px rgba(0,0,0,0.03), 0 12px 25px rgba(0,0,0,0.05), 0 20px 45px rgba(0,0,0,0.06);
+      padding-bottom: 28px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
       transition: background 0.4s, box-shadow 0.4s;
     }
 
@@ -239,62 +242,134 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       line-height: 1.4;
     }
     .candle-brand { font-size: 9px; letter-spacing: 0.15em; color: #999; }
-    .candle-name { font-size: 15px; color: #555; font-style: italic; }
+    .candle-name { font-size: 16px; color: #555; font-style: italic; }
     .candle-loc { font-size: 9px; letter-spacing: 0.15em; color: #aaa; }
 
     .candle-flame {
       position: absolute;
-      top: -34px;
+      top: -32px;
       left: 50%;
       transform: translateX(-50%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
     }
-    .flame-svg { animation: flicker 1.8s ease-in-out infinite alternate; }
-    @keyframes flicker {
-      0% { transform: scaleX(1) scaleY(1); opacity: 1; }
-      50% { transform: scaleX(0.85) scaleY(1.08); opacity: 0.9; }
-      100% { transform: scaleX(1.1) scaleY(0.95); opacity: 1; }
+
+    .flame-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .flame-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 54px;
+      height: 54px;
+      background: radial-gradient(circle, rgba(255, 190, 60, 0.65) 0%, rgba(255, 130, 0, 0.25) 45%, rgba(255, 100, 0, 0) 80%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: candleGlow 3s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .flame-svg {
+      position: relative;
+      z-index: 2;
+      transform-origin: 50% 95%;
+      animation: gentleSway 2.6s ease-in-out infinite alternate;
+      filter: drop-shadow(0 0 9px rgba(255, 170, 30, 0.85));
+    }
+
+    .flame-wrapper:nth-child(2) .flame-svg {
+      animation-delay: -0.9s;
+      animation-duration: 2.9s;
+    }
+
+    .flame-wrapper:nth-child(3) .flame-svg {
+      animation-delay: -1.7s;
+      animation-duration: 2.3s;
+    }
+
+    @keyframes candleGlow {
+      0% { transform: translate(-50%, -50%) scale(0.88); opacity: 0.55; }
+      50% { transform: translate(-50%, -50%) scale(1.18); opacity: 0.85; }
+      100% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.6; }
+    }
+
+    @keyframes gentleSway {
+      0% {
+        transform: rotate(-6.5deg) translateX(-1.8px);
+        filter: drop-shadow(-3px 0 8px rgba(255, 150, 20, 0.8));
+      }
+      25% {
+        transform: rotate(-1.5deg) translateX(-0.4px);
+        filter: drop-shadow(0 0 9px rgba(255, 175, 30, 0.85));
+      }
+      50% {
+        transform: rotate(6.0deg) translateX(1.8px);
+        filter: drop-shadow(3px 0 11px rgba(255, 185, 35, 0.95));
+      }
+      75% {
+        transform: rotate(2.0deg) translateX(0.6px);
+        filter: drop-shadow(1px 0 9px rgba(255, 170, 25, 0.85));
+      }
+      100% {
+        transform: rotate(-5.8deg) translateX(-1.5px);
+        filter: drop-shadow(-3px 0 8px rgba(255, 150, 20, 0.8));
+      }
     }
 
     .candle-img-wrap {
-      width: 200px;
-      height: 240px;
-      border-radius: 2px;
+      width: 250px;
+      height: 280px;
+      border-radius: 6px;
       overflow: hidden;
       display: none;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.14);
+      background: transparent;
+      align-items: center;
+      justify-content: center;
     }
-    .candle-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .candle-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 6px;
+    }
 
     .preview-frag-badge {
-      position: absolute;
-      bottom: -15px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: calc(100% - 20px);
-      max-width: 210px;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1.5px solid var(--teal);
+      position: relative;
+      width: 100%;
+      max-width: 250px;
+      margin: 12px auto 0 auto;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1.5px solid var(--teal, #1b4d4f);
       border-radius: 12px;
-      padding: 8px 12px;
+      padding: 10px 14px;
       display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: 0 8px 20px rgba(45, 90, 92, 0.18);
-      z-index: 10;
+      align-items: flex-start;
+      gap: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      z-index: 5;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       animation: fragBadgePop 0.3s ease-out;
     }
 
     @keyframes fragBadgePop {
-      0% { opacity: 0; transform: translate(-50%, 8px) scale(0.96); }
-      100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+      0% { opacity: 0; transform: translateY(6px) scale(0.97); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .preview-frag-img {
-      width: 38px;
-      height: 38px;
+      width: 42px;
+      height: 42px;
       border-radius: 8px;
       overflow: hidden;
       flex-shrink: 0;
@@ -303,6 +378,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       display: flex;
       align-items: center;
       justify-content: center;
+      margin-top: 2px;
     }
 
     .preview-frag-img img {
@@ -317,6 +393,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       flex-direction: column;
       overflow: hidden;
       text-align: left;
+      flex: 1;
     }
 
     .preview-frag-label {
@@ -324,18 +401,27 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       font-size: 8px;
       font-weight: 700;
       letter-spacing: 0.12em;
-      color: var(--teal);
+      color: var(--teal, #1b4d4f);
       text-transform: uppercase;
     }
 
     .preview-frag-name {
       font-family: var(--sans);
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 700;
       color: #111827;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    .preview-frag-desc {
+      font-family: var(--sans);
+      font-size: 10.5px;
+      font-weight: 500;
+      color: #334155;
+      margin-top: 4px;
+      line-height: 1.45;
+      white-space: pre-line;
+      word-break: break-word;
     }
 
     .preview-specs {
@@ -474,9 +560,9 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
       margin-bottom: 48px;
       width: 100%;
     }
@@ -484,77 +570,86 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     .color-card {
       background: #FFFFFF;
       border: 1.5px solid #E5E7EB;
-      border-radius: 14px;
-      padding: 0;
+      border-radius: 12px;
+      padding: 14px 20px;
       display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.25s ease;
       cursor: pointer;
       position: relative;
-      height: 100%;
-      width: 100%;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      user-select: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
 
     .color-card.hidden {
       display: none;
     }
 
-    .color-swatch {
-      width: 100%;
-      height: 230px;
-      overflow: hidden;
-      background: #F9FAFB;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      flex-shrink: 0;
+    .color-card:hover {
+      border-color: #CBD5E1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
-
-    .color-swatch img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      object-position: center;
-      padding: 12px;
-      transition: transform 0.35s ease;
-    }
-
-    .color-card:hover .color-swatch img {
-      transform: scale(1.04);
-    }
-
 
     .color-card.selected {
-      border: 2px solid var(--teal);
-      box-shadow: 0 8px 24px rgba(45,90,92,0.2);
+      border: 2px solid var(--teal, #1b4d4f);
+      background-color: #F8FAFC;
+      box-shadow: 0 4px 14px rgba(27,77,79,0.12);
     }
 
-    .color-card-info {
-      padding: 14px 8px;
-      background: #FFFFFF;
-      text-align: center;
-      font-family: var(--sans);
-      flex-grow: 1;
+    .color-card input[type="radio"] {
+      display: none;
+    }
+
+    .radio-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #CBD5E1;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-top: 1px solid #F3F4F6;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      background: #FFFFFF;
     }
 
-    .color-card .vessel-check {
-      top: 12px;
-      right: 12px;
-      width: 28px;
-      height: 28px;
-      background: var(--teal);
-      border-radius: 50%;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-      z-index: 5;
+    .color-card.selected .radio-indicator {
+      border-color: var(--teal, #1b4d4f);
     }
-    .color-card .vessel-check svg { width: 13px; height: 13px; }
+
+    .radio-indicator::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--teal, #1b4d4f);
+      transform: scale(0);
+      transition: transform 0.2s ease;
+    }
+
+    .color-card.selected .radio-indicator::after {
+      transform: scale(1);
+    }
+
+    .color-swatch-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.15);
+      flex-shrink: 0;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .color-name-label {
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 500;
+      color: #1E293B;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
 
     .fragrance-grid {
       display: grid;
@@ -621,20 +716,42 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .frag-view-btn {
       font-family: var(--sans);
-      font-size: 9px;
-      font-weight: 500;
-      letter-spacing: 0.12em;
-      color: var(--text-muted);
-      border: 1px solid #D1E5ED;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--teal, #2d5a5c);
+      border: 1px solid var(--teal, #2d5a5c);
       border-radius: 40px;
-      padding: 5px 14px;
+      padding: 6px 14px;
       cursor: pointer;
-      background: #fff;
-      transition: color 0.2s, border-color 0.2s;
+      background: #f0f7f7;
+      transition: all 0.2s ease;
       text-transform: uppercase;
       white-space: nowrap;
       z-index: 3;
       position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .frag-view-btn:hover {
+      background: var(--teal, #2d5a5c);
+      color: #ffffff !important;
+      border-color: var(--teal, #2d5a5c);
+      box-shadow: 0 3px 10px rgba(45,90,92,0.25);
+    }
+
+    .frag-view-btn svg.eye-icon {
+      flex-shrink: 0;
+      stroke: var(--teal, #2d5a5c);
+      transition: stroke 0.2s ease, color 0.2s ease;
+    }
+
+    .frag-view-btn:hover svg.eye-icon {
+      stroke: #ffffff !important;
+      color: #ffffff !important;
     }
 
     .fragrance-card:hover { border-color: #aaa; }
@@ -1165,9 +1282,17 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     <div class="step-content" id="step3">
       <p class="step-label">STEP 03</p>
       <h1 class="step-title">Choose your fragrance.</h1>
-      <p class="step-desc">Tap any scent to read its full description and notes.</p>
+      <p class="step-desc">Tap any scent to select and read its full description and notes.</p>
       <div class="fragrance-grid" id="fragranceGrid">
         <!-- Dynamic Fragrance Cards Rendered via JS -->
+      </div>
+      <!-- SELECTED FRAGRANCE DETAIL BOX -->
+      <div class="selected-frag-detail-box" id="selectedFragDetailBox" style="display:none; margin-top:20px; padding:18px 22px; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.04);">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+          <span style="font-size:10px; letter-spacing:0.12em; text-transform:uppercase; font-weight:700; color:var(--teal, #1b4d4f); background:#e2f1f7; padding:3px 8px; border-radius:4px;">SELECTED SCENT NOTES</span>
+          <h4 id="selectedFragDetailTitle" style="font-size:16px; font-weight:600; color:#1e293b; margin:0;"></h4>
+        </div>
+        <div id="selectedFragDetailDesc" style="font-size:13px; color:#475569; line-height:1.6; white-space:pre-line;"></div>
       </div>
       <div class="step-nav">
         <button class="btn-back" onclick="goBack(2)">
@@ -1204,11 +1329,16 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     <div class="preview-candle">
       <div class="candle-visual">
         <div class="candle-flame" id="previewFlameContainer">
-          <svg class="flame-svg" width="24" height="36" viewBox="0 0 24 36" fill="none">
-            <path d="M12 2C12 2 6 10 6 18C6 24 8.5 30 12 32C15.5 30 18 24 18 18C18 10 12 2 12 2Z" fill="#f5a623" opacity="0.9"/>
-            <path d="M12 8C12 8 9 14 9 19C9 23 10.5 27 12 28C13.5 27 15 23 15 19C15 14 12 8 12 8Z" fill="#fdd835" opacity="0.85"/>
-            <line x1="12" y1="32" x2="12" y2="36" stroke="#555" stroke-width="1.5"/>
-          </svg>
+          <div class="flame-wrapper">
+            <div class="flame-glow"></div>
+            <svg class="flame-svg" width="26" height="38" viewBox="0 0 24 36" fill="none">
+              <path d="M12 2C12 2 6 10 6 18C6 24 8.5 30 12 32C15.5 30 18 24 18 18C18 10 12 2 12 2Z" fill="#ff7700"/>
+              <path d="M12 5C12 5 7.5 11.5 7.5 18C7.5 23 9.5 28 12 29.5C14.5 28 16.5 23 16.5 18C16.5 11.5 12 5 12 5Z" fill="#ffcc00"/>
+              <path d="M12 11C12 11 9.5 15.5 9.5 20C9.5 23.5 10.5 26.5 12 27.5C13.5 26.5 14.5 23.5 14.5 20C14.5 15.5 12 11 12 11Z" fill="#ffffff" opacity="0.9"/>
+              <ellipse cx="12" cy="31" rx="2.5" ry="1.2" fill="#38bdf8" opacity="0.8"/>
+              <line x1="12" y1="31" x2="12" y2="36" stroke="#222" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </div>
         </div>
         <div class="candle-img-wrap" id="previewImgWrap" style="display:none;">
           <img id="previewImg" src="" alt="Selected candle">
@@ -1220,15 +1350,13 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
             <div class="candle-loc">CALIFORNIA</div>
           </div>
         </div>
-        <!-- FRAGRANCE PREVIEW BADGE -->
-        <div class="preview-frag-badge" id="previewFragBadge" style="display:none;">
-          <div class="preview-frag-img">
-            <img id="previewFragImg" src="" alt="Fragrance Preview">
-          </div>
-          <div class="preview-frag-info">
-            <span class="preview-frag-label">SELECTED SCENT</span>
-            <span class="preview-frag-name" id="previewFragTitle"></span>
-          </div>
+      </div>
+      <!-- FRAGRANCE PREVIEW BADGE (AFTER THE IMAGE) -->
+      <div class="preview-frag-badge" id="previewFragBadge" style="display:none;">
+        <div class="preview-frag-info">
+          <span class="preview-frag-label">SELECTED SCENT</span>
+          <span class="preview-frag-name" id="previewFragTitle"></span>
+          <span class="preview-frag-desc" id="previewFragDesc" style="font-size: 10.5px; margin-top: 4px; line-height: 1.45; opacity: 0.9; white-space: pre-line; display: none;"></span>
         </div>
       </div>
     </div>
@@ -1239,6 +1367,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       <div class="spec-row"><span class="spec-key">FRAGRANCE</span><span class="spec-val empty" id="specFrag">—</span></div>
       <div class="spec-row"><span class="spec-key">LID</span><span class="spec-val" id="specLid">Black Lid</span></div>
       <div class="spec-row"><span class="spec-key">BOX</span><span class="spec-val empty" id="specBox">—</span></div>
+      <div class="spec-row"><span class="spec-key">SKU</span><span class="spec-val empty" id="specSku">—</span></div>
     </div>
   </div>
 
@@ -1304,6 +1433,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     <div class="frag-modal-img">
       <img id="fragModalImg" src="" alt="">
     </div>
+    <div class="frag-modal-desc" id="fragModalDesc" style="padding:16px 20px; font-size:13px; color:#475569; line-height:1.6; white-space:pre-line; background:#f8fafc; border-top:1px solid #e2e8f0; text-align:center; display:none;"></div>
   </div>
 </div>
 
@@ -1604,21 +1734,25 @@ function restoreBuilderState() {
 }
 
 // ─── URL STATE SYNC ──────────────────────────────────────────────────────────
-function syncUrlState() {
+function syncUrlState(isPush = false) {
   const currentStep = getCurrentStep();
   const params = new URLSearchParams();
 
-  if (state.vessel) params.set('vessel', state.vessel);
-  if (state.color) params.set('color', state.color);
-  if (state.frag) params.set('frag', state.frag);
-  if (state.box) params.set('box', state.box);
+  if (currentStep >= 1 && state.vessel) params.set('vessel', state.vessel);
+  if (currentStep >= 2 && state.color) params.set('color', state.color);
+  if (currentStep >= 3 && state.frag) params.set('frag', state.frag);
+  if (currentStep >= 4 && state.box) params.set('box', state.box);
 
   const queryString = params.toString();
   const basePath = window.location.pathname.replace(/\/$/, '');
   const newHash = `#step${currentStep}`;
   const newUrl = basePath + (queryString ? `?${queryString}` : '') + newHash;
 
-  window.history.replaceState({ step: currentStep }, '', newUrl);
+  if (isPush) {
+    window.history.pushState({ step: currentStep }, '', newUrl);
+  } else {
+    window.history.replaceState({ step: currentStep }, '', newUrl);
+  }
   saveBuilderState();
 }
 
@@ -1708,10 +1842,17 @@ function parseUrlState() {
 
 // ─── NAVIGATION ──────────────────────────────────────────────────────────────
 window.addEventListener('popstate', function(e) {
-  const currentStep = getCurrentStep();
-  if (currentStep > 1) {
-    showStep(currentStep - 1);
+  let targetStep = 1;
+  if (e.state && typeof e.state.step === 'number') {
+    targetStep = e.state.step;
+  } else if (window.location.hash && window.location.hash.includes('#step')) {
+    const hashPart = window.location.hash.split('?')[0];
+    const parsedNum = parseInt(hashPart.replace('#step', ''));
+    if (!isNaN(parsedNum) && parsedNum >= 1 && parsedNum <= 4) {
+      targetStep = parsedNum;
+    }
   }
+  showStep(targetStep, true);
 });
 
 function getCurrentStep() {
@@ -1724,14 +1865,120 @@ function getCurrentStep() {
 const builderStepUrl = '<?= base_url('/builder/#step'); ?>';
 
 function goNext(step) {
-  showStep(step);
+  showStep(step, false, true);
 }
 
 function goBack(step) {
-  showStep(step);
+  showStep(step, false, false);
 }
 
-function showStep(n, skipSync) {
+function updatePreviewPanelTypography() {
+  const previewPanel = document.querySelector('.preview-panel');
+  if (!previewPanel) return;
+
+  const currentStep = typeof getCurrentStep === 'function' ? getCurrentStep() : 1;
+
+  if (currentStep === 1 || !previewPanel.style.backgroundColor || previewPanel.style.backgroundColor === '#E2F1F7' || previewPanel.style.backgroundColor === 'rgb(226, 241, 247)') {
+    resetPreviewPanelStyle();
+    return;
+  }
+
+  const contrastColor = previewPanel.style.color || '#FFFFFF';
+  const isWhiteText = (contrastColor === '#FFFFFF' || contrastColor === 'rgb(255, 255, 255)');
+
+  // 1. Label
+  const previewLabel = previewPanel.querySelector('.preview-label');
+  if (previewLabel) {
+    previewLabel.style.color = isWhiteText ? 'rgba(255, 255, 255, 0.85)' : 'var(--text-muted)';
+  }
+
+  // 2. All spec-key and spec-val
+  const specRows = previewPanel.querySelectorAll('.spec-row');
+  specRows.forEach(row => {
+    const key = row.querySelector('.spec-key');
+    const val = row.querySelector('.spec-val');
+    if (key) {
+      key.style.color = isWhiteText ? 'rgba(255, 255, 255, 0.85)' : 'var(--text-muted)';
+    }
+    if (val) {
+      const isValEmpty = val.classList.contains('empty') || val.textContent.trim() === '—' || val.textContent.trim() === '';
+      if (!isValEmpty) {
+        val.style.color = isWhiteText ? '#FFFFFF' : '#111827';
+        val.style.fontWeight = '600';
+      } else {
+        val.style.color = isWhiteText ? 'rgba(255, 255, 255, 0.4)' : '#a1a1aa';
+        val.style.fontWeight = '400';
+      }
+    }
+  });
+
+  // 3. Price
+  const priceLabel = previewPanel.querySelector('.preview-price-label');
+  const priceVal = previewPanel.querySelector('.preview-price-val');
+  if (priceLabel) priceLabel.style.color = isWhiteText ? 'rgba(255, 255, 255, 0.85)' : '#777777';
+  if (priceVal) priceVal.style.color = contrastColor;
+
+  // 4. Borders
+  const specsBox = previewPanel.querySelector('.preview-specs');
+  if (specsBox) {
+    specsBox.style.borderColor = isWhiteText ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
+  }
+  const priceRow = previewPanel.querySelector('.preview-price-row');
+  if (priceRow) {
+    priceRow.style.borderColor = isWhiteText ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
+  }
+}
+
+function setSpec(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (val && val !== '—') {
+    el.textContent = val;
+    el.classList.remove('empty');
+  } else {
+    el.textContent = '—';
+    el.classList.add('empty');
+  }
+  updatePreviewPanelTypography();
+}
+
+function resetPreviewPanelStyle() {
+  const previewPanel = document.querySelector('.preview-panel');
+  if (previewPanel) {
+    previewPanel.style.backgroundColor = '#E2F1F7';
+    previewPanel.style.color = 'inherit';
+
+    const previewLabel = previewPanel.querySelector('.preview-label');
+    if (previewLabel) previewLabel.style.color = 'var(--text-muted)';
+
+    const specRows = previewPanel.querySelectorAll('.spec-row');
+    specRows.forEach(row => {
+      const key = row.querySelector('.spec-key');
+      const val = row.querySelector('.spec-val');
+      if (key) key.style.color = 'var(--text-muted)';
+      if (val) {
+        if (!val.classList.contains('empty')) {
+          val.style.color = 'var(--text)';
+        } else {
+          val.style.color = '#ccc';
+        }
+      }
+    });
+
+    const priceLabel = previewPanel.querySelector('.preview-price-label');
+    const priceVal = previewPanel.querySelector('.preview-price-val');
+    if (priceLabel) priceLabel.style.color = '#777777';
+    if (priceVal) priceVal.style.color = 'var(--text)';
+
+    const specsBox = previewPanel.querySelector('.preview-specs');
+    if (specsBox) specsBox.style.borderColor = 'rgba(0,0,0,0.1)';
+
+    const priceRow = previewPanel.querySelector('.preview-price-row');
+    if (priceRow) priceRow.style.borderColor = 'rgba(0,0,0,0.1)';
+  }
+}
+
+function showStep(n, skipSync, isPush = false) {
   document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
   const targetStepEl = document.getElementById('step' + n);
   if (targetStepEl) targetStepEl.classList.add('active');
@@ -1750,8 +1997,37 @@ function showStep(n, skipSync) {
   const stepLabelEl = document.getElementById('stepNameLabel');
   if (stepLabelEl && stepNames[n - 1]) stepLabelEl.textContent = stepNames[n - 1];
 
-  // If showing step 1, sync vessel card highlight and preview panel specs without wiping state/URL
+  // Clean up selections from steps ahead of current step n
+  if (n < 4) {
+    state.box = null;
+    state.boxCode = null;
+    state.boxPrice = 0;
+    setSpec('specBox', '—');
+    document.querySelectorAll('.box-card').forEach(c => c.classList.remove('selected'));
+  }
+
+  if (n < 3) {
+    state.frag = null;
+    state.fragCode = null;
+    setSpec('specFrag', '—');
+    const previewFragBadge = document.getElementById('previewFragBadge');
+    if (previewFragBadge) previewFragBadge.style.display = 'none';
+    const previewNameEl = document.getElementById('previewName');
+    if (previewNameEl) previewNameEl.textContent = '';
+    document.querySelectorAll('.fragrance-card').forEach(c => c.classList.remove('selected'));
+  }
+
+  if (n < 2) {
+    state.color = null;
+    state.colorCode = null;
+    state.colorHex = null;
+    setSpec('specColor', '—');
+    document.querySelectorAll('.color-card').forEach(c => c.classList.remove('selected'));
+  }
+
+  // If showing step 1, sync vessel card highlight and preview panel specs
   if (n === 1) {
+    resetPreviewPanelStyle();
     if (state.vessel) {
       const vCards = Array.from(document.querySelectorAll('.vessel-card'));
       const cleanV = state.vessel.trim().toUpperCase();
@@ -1763,9 +2039,6 @@ function showStep(n, skipSync) {
         const vDims = state.vessel === 'C' ? '3" × 3.5"' : (state.vessel === 'D' ? '3.5" × 4"' : '4" × 4.5"');
         setSpec('specVessel', vName + (vDims ? (' · ' + vDims) : ''));
         setSpec('specWick', vesselWickMap[state.vessel] || '—');
-        setSpec('specColor', state.color || '—');
-        setSpec('specFrag', state.frag || '—');
-        setSpec('specBox', state.box ? `${state.box} (+$${state.boxPrice})` : '—');
         updateWickDisplay(state.vessel);
 
         const vesselImgEl = vCard.querySelector('.vessel-img img');
@@ -1777,11 +2050,7 @@ function showStep(n, skipSync) {
           const pCard = document.getElementById('previewCard');
           if (pCard) pCard.style.display = 'none';
         }
-      } else {
-        resetBuilder();
       }
-    } else {
-      resetBuilder();
     }
   }
 
@@ -1795,8 +2064,22 @@ function showStep(n, skipSync) {
     renderBoxCards(state.vessel || 'C');
   }
 
+  // Update SKU visibility (only show SKU value on Step 4 - last step)
+  const skuEl = document.getElementById('specSku');
+  if (skuEl) {
+    if (n === 4 && typeof generateSKU === 'function') {
+      skuEl.textContent = generateSKU();
+      skuEl.classList.remove('empty');
+    } else {
+      skuEl.textContent = '—';
+      skuEl.classList.add('empty');
+    }
+  }
+
+  updatePreviewPanelTypography();
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (!skipSync) syncUrlState();
+  if (!skipSync) syncUrlState(isPush);
 }
 
 const dbColorsData = <?= json_encode($dbColors ?? []); ?>;
@@ -1821,7 +2104,7 @@ function renderColorCards(vessel) {
   }
 
   colorsToRender.forEach(color => {
-    const card = document.createElement('div');
+    const card = document.createElement('label');
     card.className = 'color-card';
     card.dataset.color = color.name;
     card.dataset.code = color.code || ('0' + (color.id || 1));
@@ -1835,18 +2118,10 @@ function renderColorCards(vessel) {
     const hexColor = color.hex || '#687382';
 
     card.innerHTML = `
-      <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div class="color-swatch">
-        ${imgSrc ? `<img src="${imgSrc}" alt="${color.name}" onerror="this.onerror=null; this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='block';}">
-                    <div class="swatch-fallback" style="display:none; width:64px; height:64px; border-radius:50%; background:${hexColor}; border:2.5px solid rgba(0,0,0,0.12); box-shadow:0 6px 16px rgba(0,0,0,0.12);"></div>`
-                 : `<div style="width:64px; height:64px; border-radius:50%; background:${hexColor}; border:2.5px solid rgba(0,0,0,0.12); box-shadow:0 6px 16px rgba(0,0,0,0.12);"></div>`}
-      </div>
-      <div class="color-card-info">
-        <div style="display:inline-flex; align-items:center; justify-content:center; gap:8px;">
-          <span style="width:14px; height:14px; border-radius:50%; background:${hexColor}; border:1.5px solid rgba(0,0,0,0.2); display:inline-block; flex-shrink:0;"></span>
-          <span class="color-card-name" style="font-size:13.5px; font-weight:500; color:#111827; letter-spacing:0.01em;">${color.name}</span>
-        </div>
-      </div>
+      <input type="radio" name="builder_vessel_color" value="${color.name}">
+      <span class="radio-indicator"></span>
+      <span class="color-swatch-dot" style="background:${hexColor};"></span>
+      <span class="color-name-label">${color.name}</span>
     `;
 
     card.onclick = function() { selectColor(this); };
@@ -1858,32 +2133,10 @@ function renderColorCards(vessel) {
     const allCards = Array.from(grid.querySelectorAll('.color-card'));
     const matchingCard = allCards.find(c => c.dataset.color === state.color || c.dataset.code === state.colorCode);
     if (matchingCard) {
-      matchingCard.classList.add('selected');
-
-      // Only update preview image to color image if NOT on Step 1
-      if (typeof getCurrentStep === 'function' && getCurrentStep() !== 1) {
-        const colorImg = matchingCard.dataset.image;
-        const cardImg = matchingCard.querySelector('img');
-        const previewImgEl = document.getElementById('previewImg');
-        const selVesselCard = document.querySelector(`.vessel-card[data-vessel="${state.vessel}"]`);
-        const vesselImgSrc = selVesselCard ? (selVesselCard.querySelector('.vessel-img img')?.src || '') : '';
-
-        if (previewImgEl) {
-          if (colorImg && colorImg.trim() !== '' && !colorImg.endsWith('/')) {
-            previewImgEl.src = colorImg;
-            document.getElementById('previewCard').style.display = 'none';
-            document.getElementById('previewImgWrap').style.display = 'block';
-          } else if (cardImg && cardImg.src && !cardImg.src.endsWith('/') && !cardImg.src.includes('data:image')) {
-            previewImgEl.src = cardImg.src;
-            document.getElementById('previewCard').style.display = 'none';
-            document.getElementById('previewImgWrap').style.display = 'block';
-          } else if (vesselImgSrc && vesselImgSrc.trim() !== '') {
-            previewImgEl.src = vesselImgSrc;
-            document.getElementById('previewCard').style.display = 'none';
-            document.getElementById('previewImgWrap').style.display = 'block';
-          }
-        }
-      }
+      selectColor(matchingCard, true);
+    } else {
+      const firstCard = grid.querySelector('.color-card');
+      if (firstCard) selectColor(firstCard, true);
     }
   } else {
     const firstCard = grid.querySelector('.color-card');
@@ -2027,11 +2280,18 @@ function renderFragranceCards() {
     card.dataset.frag = frag.name;
     const code = frag.code || fragCodeMap[frag.name] || '01';
     card.dataset.fragCode = code;
+    const descText = frag.description || '';
+    card.dataset.description = descText;
 
     fragCodeMap[frag.name] = code;
 
     const fallbackImg = 'img/02 AMBER MUSK FRAGRANT.webp';
     const imgSrc = frag.image || fallbackImg;
+    const scentNoteImgSrc = frag.scent_note_image || imgSrc;
+
+    const safeName = (frag.name || '').replace(/'/g, "\\'");
+    const safeNoteImg = (scentNoteImgSrc || '').replace(/'/g, "\\'");
+    const safeDesc = (descText || '').replace(/'/g, "\\'").replace(/\r?\n/g, "\\n");
 
     card.innerHTML = `
       <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -2040,7 +2300,9 @@ function renderFragranceCards() {
       </div>
       <div class="frag-info-bar">
         <span class="frag-label">${frag.name}</span>
-        <button class="frag-view-btn" type="button" onclick="openFragModal(event, '${frag.name.replace(/'/g, "\\'")}', '${imgSrc}')">View Notes</button>
+        <button class="frag-view-btn" type="button" onclick="openFragModal(event, '${safeName}', '${safeNoteImg}', '${safeDesc}')">
+          <svg class="eye-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> View Notes
+        </button>
       </div>
     `;
 
@@ -2092,18 +2354,19 @@ function updateWickDisplay(vessel) {
     return;
   }
 
-  const singleFlame = `<svg class="flame-svg" width="20" height="30" viewBox="0 0 24 36" fill="none">
-    <path d="M12 2C12 2 6 10 6 18C6 24 8.5 30 12 32C15.5 30 18 24 18 18C18 10 12 2 12 2Z" fill="#f5a623" opacity="0.9"/>
-    <path d="M12 8C12 8 9 14 9 19C9 23 10.5 27 12 28C13.5 27 15 23 15 19C15 14 12 8 12 8Z" fill="#fdd835" opacity="0.85"/>
-    <line x1="12" y1="32" x2="12" y2="36" stroke="#555" stroke-width="1.5"/>
-  </svg>`;
+  const singleFlame = `<div class="flame-wrapper">
+    <div class="flame-glow"></div>
+    <svg class="flame-svg" width="24" height="36" viewBox="0 0 24 36" fill="none">
+      <path d="M12 2C12 2 6 10 6 18C6 24 8.5 30 12 32C15.5 30 18 24 18 18C18 10 12 2 12 2Z" fill="#ff7700"/>
+      <path d="M12 5C12 5 7.5 11.5 7.5 18C7.5 23 9.5 28 12 29.5C14.5 28 16.5 23 16.5 18C16.5 11.5 12 5 12 5Z" fill="#ffcc00"/>
+      <path d="M12 11C12 11 9.5 15.5 9.5 20C9.5 23.5 10.5 26.5 12 27.5C13.5 26.5 14.5 23.5 14.5 20C14.5 15.5 12 11 12 11Z" fill="#ffffff" opacity="0.9"/>
+      <ellipse cx="12" cy="31" rx="2.5" ry="1.2" fill="#38bdf8" opacity="0.8"/>
+      <line x1="12" y1="31" x2="12" y2="36" stroke="#222" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+  </div>`;
 
   if (vessel === 'C') {
-    flameContainer.innerHTML = `<svg class="flame-svg" width="24" height="36" viewBox="0 0 24 36" fill="none">
-      <path d="M12 2C12 2 6 10 6 18C6 24 8.5 30 12 32C15.5 30 18 24 18 18C18 10 12 2 12 2Z" fill="#f5a623" opacity="0.9"/>
-      <path d="M12 8C12 8 9 14 9 19C9 23 10.5 27 12 28C13.5 27 15 23 15 19C15 14 12 8 12 8Z" fill="#fdd835" opacity="0.85"/>
-      <line x1="12" y1="32" x2="12" y2="36" stroke="#555" stroke-width="1.5"/>
-    </svg>`;
+    flameContainer.innerHTML = singleFlame;
   } else if (vessel === 'D') {
     flameContainer.innerHTML = `<div style="display:flex; gap:36px; justify-content:center; align-items:center;">${singleFlame}${singleFlame}</div>`;
   } else if (vessel === 'E') {
@@ -2113,34 +2376,269 @@ function updateWickDisplay(vessel) {
   }
 }
 
+const defaultColorImageMap = {
+  '02': '<?= base_url('/public/assets/img/color111.webp'); ?>',
+  '03': '<?= base_url('/public/assets/img/color112.webp'); ?>',
+  '05': '<?= base_url('/public/assets/img/color5.webp'); ?>',
+  '07': '<?= base_url('/public/assets/img/color7.webp'); ?>',
+  '08': '<?= base_url('/public/assets/img/color114.webp'); ?>',
+  '09': '<?= base_url('/public/assets/img/color9.webp'); ?>',
+  '12': '<?= base_url('/public/assets/img/color115.webp'); ?>',
+  '13': '<?= base_url('/public/assets/img/color116.webp'); ?>',
+  '14': '<?= base_url('/public/assets/img/color1.webp'); ?>',
+  '15': '<?= base_url('/public/assets/img/color117.webp'); ?>',
+  '16': '<?= base_url('/public/assets/img/color118.webp'); ?>',
+  '17': '<?= base_url('/public/assets/img/color4.webp'); ?>',
+  '18': '<?= base_url('/public/assets/img/color3.webp'); ?>',
+
+  'White Frost': '<?= base_url('/public/assets/img/color111.webp'); ?>',
+  'Black Matte': '<?= base_url('/public/assets/img/color112.webp'); ?>',
+  'Peach Frost': '<?= base_url('/public/assets/img/color5.webp'); ?>',
+  'Mocha Frost': '<?= base_url('/public/assets/img/color7.webp'); ?>',
+  'Blue Frost': '<?= base_url('/public/assets/img/color114.webp'); ?>',
+  'Purple Frost': '<?= base_url('/public/assets/img/color9.webp'); ?>',
+  'Blush Pink': '<?= base_url('/public/assets/img/color115.webp'); ?>',
+  'Charcoal Grey Matte': '<?= base_url('/public/assets/img/color116.webp'); ?>',
+  'Charcoal Gray Matte': '<?= base_url('/public/assets/img/color116.webp'); ?>',
+  'Gold Electroplate': '<?= base_url('/public/assets/img/color1.webp'); ?>',
+  'Silver Electroplate': '<?= base_url('/public/assets/img/color117.webp'); ?>',
+  'Smoky Grey Electroplate': '<?= base_url('/public/assets/img/color118.webp'); ?>',
+  'Smokey Gray Electroplate': '<?= base_url('/public/assets/img/color118.webp'); ?>',
+  'Green Frost Dark': '<?= base_url('/public/assets/img/color4.webp'); ?>',
+  'Red Frost': '<?= base_url('/public/assets/img/color3.webp'); ?>'
+};
+
+// ─── RENDER COLOR CARDS ──────────────────────────────────────────────────────
+function renderColorCards(vessel) {
+  const grid = document.getElementById('colorGrid');
+  if (!grid) return;
+
+  vessel = vessel || state.vessel || 'C';
+  if (!state.vessel) {
+    state.vessel = vessel;
+  }
+
+  grid.innerHTML = '';
+
+  const colorsToRender = (dbColorsData && dbColorsData.length > 0) ? dbColorsData : colorData;
+
+  if (!colorsToRender || colorsToRender.length === 0) {
+    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#999;">No colors available right now.</p>';
+    return;
+  }
+
+  colorsToRender.forEach(color => {
+    const card = document.createElement('label');
+    card.className = 'color-card';
+    card.dataset.color = color.name;
+    const colorCode = color.code || color.sku || ('0' + (color.id || 1));
+    card.dataset.code = colorCode;
+
+    let imgSrc = color.image || '';
+    if (!imgSrc || imgSrc.trim() === '' || imgSrc.endsWith('/')) {
+      if (color.images) {
+        imgSrc = color.images[vessel] || color.images.C || '';
+      }
+      if (!imgSrc || imgSrc.trim() === '' || imgSrc.endsWith('/')) {
+        imgSrc = defaultColorImageMap[color.sku] || defaultColorImageMap[colorCode] || defaultColorImageMap[color.name] || '';
+      }
+    }
+    card.dataset.image = imgSrc;
+
+    const hexColor = color.hex || '#687382';
+    card.dataset.hex = hexColor;
+
+    card.innerHTML = `
+      <input type="radio" name="builder_vessel_color" value="${color.name}">
+      <span class="radio-indicator"></span>
+      <span class="color-swatch-dot" style="background:${hexColor};"></span>
+      <span class="color-name-label">${color.name}</span>
+    `;
+
+    card.onclick = function() { selectColor(this); };
+    grid.appendChild(card);
+  });
+
+  // Highlight matching color card if previously selected by user, or auto-select first color card
+  if (state.color) {
+    const allCards = Array.from(grid.querySelectorAll('.color-card'));
+    const matchingCard = allCards.find(c => c.dataset.color === state.color || c.dataset.code === state.colorCode);
+    if (matchingCard) {
+      selectColor(matchingCard, true);
+    } else {
+      const firstCard = grid.querySelector('.color-card');
+      if (firstCard) selectColor(firstCard, true);
+    }
+  } else {
+    const firstCard = grid.querySelector('.color-card');
+    if (firstCard) {
+      selectColor(firstCard, true);
+    }
+  }
+}
+
+// ─── LUMINANCE / CONTRAST HELPER ─────────────────────────────────────────────
+function getContrastYIQ(hexcolor) {
+  if (!hexcolor || hexcolor === 'transparent') return '#111827';
+  hexcolor = hexcolor.replace('#', '').trim();
+  if (hexcolor.length === 3) {
+    hexcolor = hexcolor[0] + hexcolor[0] + hexcolor[1] + hexcolor[1] + hexcolor[2] + hexcolor[2];
+  }
+  if (hexcolor.length !== 6) return '#111827';
+  const r = parseInt(hexcolor.substr(0, 2), 16);
+  const g = parseInt(hexcolor.substr(2, 2), 16);
+  const b = parseInt(hexcolor.substr(4, 2), 16);
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return (yiq >= 155) ? '#111827' : '#FFFFFF';
+}
+
 // ─── STEP 2: COLOR ────────────────────────────────────────────────────────────
 function selectColor(el, skipSync) {
   if (!el) return;
-  document.querySelectorAll('.color-card').forEach(c => c.classList.remove('selected'));
+
+  // Reset all color cards back to default white background and dark text
+  document.querySelectorAll('.color-card').forEach(c => {
+    c.classList.remove('selected');
+    c.style.backgroundColor = '#FFFFFF';
+    c.style.borderColor = '#E5E7EB';
+    c.style.color = '#1E293B';
+    const label = c.querySelector('.color-name-label');
+    if (label) {
+      label.style.color = '#1E293B';
+      label.style.fontWeight = 'normal';
+    }
+    const radInd = c.querySelector('.radio-indicator');
+    if (radInd) {
+      radInd.style.borderColor = '#CBD5E1';
+      radInd.style.backgroundColor = '#FFFFFF';
+    }
+    const radInput = c.querySelector('input[type="radio"]');
+    if (radInput) radInput.checked = false;
+  });
+
+  // Apply selected class and radio input state
   el.classList.add('selected');
+  const activeRadInput = el.querySelector('input[type="radio"]');
+  if (activeRadInput) activeRadInput.checked = true;
+
   state.color = el.dataset.color;
   state.colorCode = el.dataset.code;
+  const hexColor = el.dataset.hex || '#687382';
+  state.colorHex = hexColor;
   setSpec('specColor', state.color);
 
-  // Update right-side preview image immediately (only if not on Step 1)
-  if (typeof getCurrentStep === 'function' && getCurrentStep() !== 1) {
-    const colorImg = el.dataset.image;
-    const cardImg = el.querySelector('img');
-    const previewImgEl = document.getElementById('previewImg');
+  // Apply background of selected color to option card container and calculate high contrast text
+  const contrastColor = getContrastYIQ(hexColor);
+  el.style.backgroundColor = hexColor;
+  el.style.borderColor = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.85)' : 'var(--teal, #1b4d4f)';
+  el.style.color = contrastColor;
 
-    if (colorImg && colorImg.trim() !== '') {
-      previewImgEl.src = colorImg;
-      document.getElementById('previewCard').style.display = 'none';
-      document.getElementById('previewImgWrap').style.display = 'block';
-    } else if (cardImg && cardImg.src && !cardImg.src.endsWith('/')) {
-      previewImgEl.src = cardImg.src;
-      document.getElementById('previewCard').style.display = 'none';
-      document.getElementById('previewImgWrap').style.display = 'block';
+  const activeLabel = el.querySelector('.color-name-label');
+  if (activeLabel) {
+    activeLabel.style.color = contrastColor;
+    activeLabel.style.fontWeight = '600';
+  }
+
+  const activeRadInd = el.querySelector('.radio-indicator');
+  if (activeRadInd) {
+    activeRadInd.style.borderColor = contrastColor;
+    activeRadInd.style.backgroundColor = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.1)';
+  }
+
+  // Update the whole right-side preview-panel background color and text contrast ONLY if on Step 2 or above
+  if (typeof getCurrentStep === 'function' && getCurrentStep() > 1) {
+    const previewPanel = document.querySelector('.preview-panel');
+    if (previewPanel) {
+      previewPanel.style.backgroundColor = hexColor;
+      previewPanel.style.color = contrastColor;
+
+      const previewLabel = previewPanel.querySelector('.preview-label');
+      if (previewLabel) {
+        previewLabel.style.color = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)';
+      }
+
+      const specRows = previewPanel.querySelectorAll('.spec-row');
+      specRows.forEach(row => {
+        const key = row.querySelector('.spec-key');
+        const val = row.querySelector('.spec-val');
+        if (key) {
+          key.style.color = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.85)' : 'var(--text-muted)';
+        }
+        if (val) {
+          if (!val.classList.contains('empty')) {
+            val.style.color = contrastColor;
+          } else {
+            val.style.color = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.4)' : '#ccc';
+          }
+        }
+      });
+
+      const priceLabel = previewPanel.querySelector('.preview-price-label');
+      const priceVal = previewPanel.querySelector('.preview-price-val');
+      if (priceLabel) priceLabel.style.color = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.75)' : '#777777';
+      if (priceVal) priceVal.style.color = contrastColor;
+
+      const specsBox = previewPanel.querySelector('.preview-specs');
+      if (specsBox) {
+        specsBox.style.borderColor = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+      }
+      const priceRow = previewPanel.querySelector('.preview-price-row');
+      if (priceRow) {
+        priceRow.style.borderColor = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+      }
+    }
+  } else {
+    resetPreviewPanelStyle();
+  }
+
+  // Update right-side preview image ONLY if on Step 2 or above
+  if (typeof getCurrentStep === 'function' && getCurrentStep() > 1) {
+    let colorImg = el.dataset.image;
+    if (!colorImg || colorImg.trim() === '' || colorImg.endsWith('/')) {
+      colorImg = defaultColorImageMap[state.colorCode] || defaultColorImageMap[state.color] || '';
+    }
+
+    const previewImgEl = document.getElementById('previewImg');
+    const previewImgWrap = document.getElementById('previewImgWrap');
+    const previewCard = document.getElementById('previewCard');
+
+    if (previewImgEl) {
+      if (colorImg && colorImg.trim() !== '' && !colorImg.endsWith('/')) {
+        previewImgEl.src = colorImg;
+        if (previewImgWrap) {
+          previewImgWrap.style.display = 'flex';
+          previewImgWrap.style.backgroundColor = 'transparent';
+        }
+        if (previewCard) previewCard.style.display = 'none';
+      }
+    }
+  } else {
+    // On Step 1 (Choose your vessel), ensure the preview image always displays the selected vessel image
+    const selVesselCard = document.querySelector(`.vessel-card[data-vessel="${state.vessel || 'C'}"]`);
+    const vesselImgEl = selVesselCard ? selVesselCard.querySelector('.vessel-img img') : null;
+    const previewImgEl = document.getElementById('previewImg');
+    if (previewImgEl && vesselImgEl && vesselImgEl.src && !vesselImgEl.src.endsWith('/')) {
+      previewImgEl.src = vesselImgEl.src;
+      const imgWrap = document.getElementById('previewImgWrap');
+      if (imgWrap) imgWrap.style.display = 'block';
+      const pCard = document.getElementById('previewCard');
+      if (pCard) pCard.style.display = 'none';
     }
   }
 
   recalcPrice();
   if (!skipSync) syncUrlState();
+}
+
+function formatFragranceDescription(text) {
+  if (!text) return '';
+  let formatted = text
+    .replace(/\s*\|\s*(?=(TOP|MID|BASE):)/gi, '')
+    .replace(/(TOP:)/gi, '<strong>$1</strong>')
+    .replace(/(?:<br\/?>|\s)*(MID:)/gi, '<br><strong>$1</strong>')
+    .replace(/(?:<br\/?>|\s)*(BASE:)/gi, '<br><strong>$1</strong>');
+  formatted = formatted.replace(/^([^\n<]+)\s+(<strong>TOP:<\/strong>)/gi, '$1<br>$2');
+  return formatted;
 }
 
 // ─── STEP 3: FRAGRANCE ────────────────────────────────────────────────────────
@@ -2150,6 +2648,8 @@ function selectFrag(event, el, skipSync) {
   el.classList.add('selected');
   state.frag = el.dataset.frag;
   state.fragCode = fragCodeMap[state.frag] || '01';
+  const fragDesc = el.dataset.description || '';
+
   setSpec('specFrag', state.frag);
   
   // Update candle text card name if visible
@@ -2158,19 +2658,31 @@ function selectFrag(event, el, skipSync) {
     previewNameEl.textContent = state.frag;
   }
 
-  // Update right side live preview fragrance badge
-  const fragImgEl = el.querySelector('.frag-img img');
-  const fragImgSrc = fragImgEl ? fragImgEl.src : '';
+  // Update selected fragrance detail box in Step 3
+  const detailBox = document.getElementById('selectedFragDetailBox');
+  const detailTitle = document.getElementById('selectedFragDetailTitle');
+  const detailDesc = document.getElementById('selectedFragDetailDesc');
 
+  if (detailBox && detailTitle && detailDesc) {
+    if (fragDesc) {
+      detailTitle.textContent = state.frag;
+      detailDesc.innerHTML = formatFragranceDescription(fragDesc);
+      detailBox.style.display = 'block';
+    } else {
+      detailBox.style.display = 'none';
+    }
+  }
+
+  // Update right side live preview fragrance badge
   const badgeEl = document.getElementById('previewFragBadge');
-  const badgeImgEl = document.getElementById('previewFragImg');
   const badgeTitleEl = document.getElementById('previewFragTitle');
+  const badgeDescEl = document.getElementById('previewFragDesc');
 
   if (badgeEl && badgeTitleEl) {
     badgeTitleEl.textContent = state.frag;
-    if (fragImgSrc && badgeImgEl) {
-      badgeImgEl.src = fragImgSrc;
-      badgeImgEl.style.display = 'block';
+    if (badgeDescEl) {
+      badgeDescEl.innerHTML = formatFragranceDescription(fragDesc);
+      badgeDescEl.style.display = fragDesc ? 'block' : 'none';
     }
     badgeEl.style.display = 'flex';
   }
@@ -2209,8 +2721,8 @@ function generateSKU() {
   const container = state.vessel || 'C';
   const colorCode = state.colorCode || '01';
   const fragCode = state.fragCode || '01';
-  let boxCode = 'NONE';
-  if (state.box && state.box !== 'No Packaging' && state.box !== '—') {
+  let boxCode = '';
+  if (state.box && state.box !== 'No Packaging' && state.box !== '—' && state.box !== 'NONE') {
     boxCode = state.boxCode || 'B01W';
   }
   return `${container}${colorCode}${fragCode}${boxCode}`;
@@ -2258,11 +2770,7 @@ function openReview() {
   } else if (state.vessel === 'D') {
     modalFlameContainer.innerHTML = `<div style="display:flex; gap:30px;">${sf}${sf}</div>`;
   } else {
-    modalFlameContainer.innerHTML = `<svg class="flame-svg" width="20" height="30" viewBox="0 0 24 36" fill="none">
-      <path d="M12 2C12 2 6 10 6 18C6 24 8.5 30 12 32C15.5 30 18 24 18 18C18 10 12 2 12 2Z" fill="#f5a623" opacity="0.9"/>
-      <path d="M12 8C12 8 9 14 9 19C9 23 10.5 27 12 28C13.5 27 15 23 15 19C15 14 12 8 12 8Z" fill="#fdd835" opacity="0.85"/>
-      <line x1="12" y1="32" x2="12" y2="36" stroke="#555" stroke-width="1.5"/>
-    </svg>`;
+    modalFlameContainer.innerHTML = sf;
   }
 
   document.getElementById('modalCandleName').textContent = 'laguna vibe';
@@ -2280,6 +2788,17 @@ function setSpec(id, val) {
   if (el) {
     el.textContent = val || '—';
     el.classList.toggle('empty', !val || val === '—');
+  }
+  const skuEl = document.getElementById('specSku');
+  if (skuEl && typeof generateSKU === 'function') {
+    const currentStep = typeof getCurrentStep === 'function' ? getCurrentStep() : 1;
+    if (currentStep === 4) {
+      skuEl.textContent = generateSKU();
+      skuEl.classList.remove('empty');
+    } else {
+      skuEl.textContent = '—';
+      skuEl.classList.add('empty');
+    }
   }
 }
 
@@ -2308,11 +2827,16 @@ document.getElementById('reviewModal').addEventListener('click', function(e) {
 });
 
 // ─── FRAGRANCE LIGHTBOX ───────────────────────────────────────────────────────
-function openFragModal(e, name, imgSrc) {
+function openFragModal(e, name, imgSrc, desc) {
   e.stopPropagation();
   document.getElementById('fragModalTitle').textContent = name;
   document.getElementById('fragModalImg').src = imgSrc;
   document.getElementById('fragModalImg').alt = name;
+  const descEl = document.getElementById('fragModalDesc');
+  if (descEl) {
+    descEl.innerHTML = formatFragranceDescription(desc || '');
+    descEl.style.display = desc ? 'block' : 'none';
+  }
   document.getElementById('fragModal').classList.add('open');
 }
 

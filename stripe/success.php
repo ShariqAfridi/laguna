@@ -59,11 +59,26 @@ try {
         exit;
     }
     
+    // Check if order already created (e.g. by Webhook or previous attempt)
+    $stmtExisting = $conn->prepare("SELECT id, order_number FROM orders WHERE stripe_payment_intent_id = ?");
+    if ($stmtExisting) {
+        $stmtExisting->bind_param("s", $stripe_payment_intent_id);
+        $stmtExisting->execute();
+        $resExisting = $stmtExisting->get_result();
+        if ($resExisting && $existingOrder = $resExisting->fetch_assoc()) {
+            unset($_SESSION['cart']);
+            unset($_SESSION['pending_order']);
+            header('Location: /thankyou?order_id=' . $existingOrder['id'] . '&order_number=' . urlencode($existingOrder['order_number']));
+            exit;
+        }
+        $stmtExisting->close();
+    }
+
     // Get pending order data from session
     $pendingOrder = $_SESSION['pending_order'] ?? null;
     
     if (!$pendingOrder) {
-        error_log("No pending order data found in session");
+        error_log("No pending order data found in session for Intent: " . $stripe_payment_intent_id);
         header("Location: /shop?payment=error");
         exit;
     }

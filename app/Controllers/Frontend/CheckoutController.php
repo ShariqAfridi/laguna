@@ -48,6 +48,12 @@ class CheckoutController {
         require_once dirname(__DIR__, 3) . '/logic/place_order.php';
         exit;
     }
+
+    public static function stripeWebhook() {
+        if (session_status() === PHP_SESSION_NONE) { session_start(); }
+        require_once dirname(__DIR__, 3) . '/stripe/webhook.php';
+        exit;
+    }
 }
 ?>
 

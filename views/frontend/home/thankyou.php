@@ -390,6 +390,11 @@ $customer_email = $order['email'] ?? 'your email';
                     <?php endif; ?>
                 </div>
 
+                <div class="pci-notice" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:0.8rem; padding:0.7rem 1rem; display:flex; align-items:center; gap:0.7rem; margin:1rem 0; font-size:0.78rem; color:#166534;">
+                    <i class="fa-solid fa-shield-check" style="font-size:1.2rem; color:#16a34a;"></i>
+                    <span><strong>PCI-DSS Compliant Transaction</strong> — Processed via Stripe Level 1 PCI Gateway. Card details are fully encrypted and zero card data is retained on our servers.</span>
+                </div>
+
                 <div class="email-sent">
                     <i class="fa-regular fa-envelope-open"></i>
                     <span><strong>Instant confirmation</strong> — We've emailed your order details & receipt.<br> (Customer & admin copies sent to <?php echo htmlspecialchars($customer_email); ?>)</span>

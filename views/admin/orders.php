@@ -301,6 +301,9 @@ function statusBadgeClass($sk) {
         <div>
             <h2 class="admin-title">Order Management & History</h2>
             <p class="admin-subtitle">Track customer candle orders, payment statuses, and order fulfillments.</p>
+            <div style="margin-top:6px; display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d; font-size:11px; padding:3px 10px; border-radius:12px; font-weight:600;">
+                <i class="fas fa-shield-alt"></i> PCI-DSS Level 1 Gateway · Zero Cardholder Data Retention
+            </div>
         </div>
         <div>
             <form method="GET" action="" style="display:flex;gap:10px;flex-wrap:wrap;">

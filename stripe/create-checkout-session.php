@@ -3,6 +3,8 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../config/app.php';
 
 header('Content-Type: application/json');
+header("X-Frame-Options: SAMEORIGIN");
+header("X-Content-Type-Options: nosniff");
 
 $stripeSecret = env('STRIPE_SECRET_KEY', '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');
 \Stripe\Stripe::setApiKey($stripeSecret);

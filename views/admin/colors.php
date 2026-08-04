@@ -70,6 +70,7 @@ $result = $conn->query("SELECT * FROM colors $whereSql ORDER BY sort_order ASC, 
                 <tr>
                     <th>Swatch</th>
                     <th>Candle Image</th>
+                    <th>SKU</th>
                     <th>Color Name</th>
                     <th>HEX Code</th>
                     <th>Status</th>
@@ -101,6 +102,7 @@ $result = $conn->query("SELECT * FROM colors $whereSql ORDER BY sort_order ASC, 
                                 <div class="admin-no-thumb">No<br>Image</div>
                             <?php endif; ?>
                         </td>
+                        <td><code style="background:#eef2ff; padding:3px 8px; border-radius:6px; font-weight:700; color:#4338ca; font-size:13px; font-family:monospace;"><?= htmlspecialchars($row['sku'] ?? '—'); ?></code></td>
                         <td><strong style="color:#111827; font-size:15px;"><?= htmlspecialchars($row['color_name']); ?></strong></td>
                         <td><code style="background:#f1f3f5; padding:3px 8px; border-radius:4px; font-family:monospace;"><?= htmlspecialchars($formattedHex); ?></code></td>
                         <td>

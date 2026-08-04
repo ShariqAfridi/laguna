@@ -975,13 +975,26 @@ textarea { resize: vertical; min-height: 80px; }
                 Credit / Debit Card (Stripe)
             </div>
             <div class="payment-desc">
-                Pay securely with any major credit or debit card. You'll be redirected to Stripe's secure payment page.
+                Pay securely with any major credit or debit card. You'll be redirected to Stripe's PCI-DSS Level 1 certified payment gateway.
             </div>
             <div class="payment-logos">
                 <i class="fab fa-cc-visa" style="font-size:24px; color:#1A1F71;"></i>
                 <i class="fab fa-cc-mastercard" style="font-size:24px; color:#F79E1B;"></i>
                 <i class="fab fa-cc-amex" style="font-size:24px; color:#006FCF;"></i>
                 <i class="fab fa-cc-discover" style="font-size:24px; color:#FF6000;"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- PCI-DSS Compliance & Security Guarantee -->
+    <div class="pci-compliance-box" style="margin-top: 16px; padding: 14px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 12px;">
+        <i class="fas fa-shield-check" style="font-size: 24px; color: #16a34a; flex-shrink: 0;"></i>
+        <div>
+            <div style="font-size: 13px; font-weight: 700; color: #15803d; display: flex; align-items: center; gap: 6px;">
+                <span>PCI-DSS Level 1 Certified & 256-Bit SSL Encrypted</span>
+            </div>
+            <div style="font-size: 11.5px; color: #166534; margin-top: 2px; line-height: 1.4;">
+                Your payment data is processed securely through Stripe's PCI-DSS certified gateway. We never store or log your credit card numbers or security (CVV) codes.
             </div>
         </div>
     </div>
@@ -1085,15 +1098,15 @@ textarea { resize: vertical; min-height: 80px; }
             <div class="trust-row">
                 <div class="trust-item">
                     <i class="fas fa-shield-alt"></i>
-                    <span>SSL Secure</span>
+                    <span>PCI-DSS Compliant</span>
                 </div>
                 <div class="trust-item">
                     <i class="fas fa-lock"></i>
-                    <span>Encrypted</span>
+                    <span>256-Bit SSL</span>
                 </div>
                 <div class="trust-item">
-                    <i class="fas fa-undo"></i>
-                    <span>Easy Returns</span>
+                    <i class="fas fa-user-shield"></i>
+                    <span>Zero Data Retention</span>
                 </div>
             </div>
 

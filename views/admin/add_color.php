@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../db.php';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $sku        = trim($_POST['sku'] ?? '');
     $color_name = trim($_POST['color_name'] ?? '');
     $raw_hex    = trim($_POST['color_hex'] ?? '#687382');
     $clean_hex  = preg_replace('/[^0-9A-Fa-f]/', '', $raw_hex);
@@ -43,8 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($error_message) && !empty($color_name)) {
-        $stmt = $conn->prepare("INSERT INTO colors (color_name, color_hex, color_image, status, sort_order) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssii", $color_name, $color_hex, $color_image, $status, $sort_order);
+        $stmt = $conn->prepare("INSERT INTO colors (sku, color_name, color_hex, color_image, status, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssii", $sku, $color_name, $color_hex, $color_image, $status, $sort_order);
 
         if ($stmt->execute()) {
             echo "<script>window.location.href='" . base_url('/admin/colors') . "';</script>";
@@ -74,6 +75,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post" enctype="multipart/form-data">
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:20px;">
                 
+                <div>
+                    <label class="admin-label">Color SKU</label>
+                    <input type="text" name="sku" class="admin-input" placeholder="e.g. 02, 03, 12">
+                </div>
+
                 <div>
                     <label class="admin-label">Color Name *</label>
                     <input type="text" name="color_name" class="admin-input" placeholder="e.g. Ocean Blue" required>
