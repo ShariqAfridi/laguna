@@ -36,7 +36,7 @@ if ($colorsResult && $colorsResult->num_rows > 0) {
       'name' => $row['color_name'],
       'hex' => strtoupper($fmtHex),
       'image' => !empty($row['color_image']) ? base_url('/' . ltrim($row['color_image'], '/')) : '',
-      'code' => sprintf('%02d', $row['color_id'])
+      'code' => !empty($row['sku']) ? $row['sku'] : sprintf('%02d', $row['color_id'])
     ];
   }
 }
@@ -66,7 +66,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       'image' => !empty($row['fragrance_image']) ? base_url('/' . ltrim($row['fragrance_image'], '/')) : '',
       'scent_note_image' => !empty($row['scent_note_image']) ? base_url('/' . ltrim($row['scent_note_image'], '/')) : '',
       'description' => $row['fragrance_description'] ?? '',
-      'code' => sprintf('%02d', $row['fragrance_id'])
+      'code' => !empty($row['sku']) ? $row['sku'] : sprintf('%02d', $row['fragrance_id'])
     ];
   }
 }
@@ -1233,7 +1233,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
               $price = 55;
             }
             ?>
-            <div class="vessel-card" data-vessel="<?= htmlspecialchars($vesselKey); ?>" data-price="<?= $price; ?>" onclick="selectVessel(this)">
+            <div class="vessel-card" data-vessel="<?= htmlspecialchars($vesselKey); ?>" data-sku="<?= htmlspecialchars($cat['sku'] ?? $vesselKey); ?>" data-price="<?= $price; ?>" onclick="selectVessel(this)">
               <div class="vessel-check"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
               <div class="vessel-img"><img src="<?= htmlspecialchars($imgSrc); ?>" alt="<?= htmlspecialchars($catName); ?>"></div>
               <div class="vessel-info">
@@ -1442,6 +1442,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const state = {
   vessel: null,
+  vesselSku: null,
   vesselPrice: 0,
   color: null,
   colorCode: null,
@@ -1640,18 +1641,10 @@ function restoreBuilderState() {
 
     // Restore Vessel selection
     if (state.vessel) {
-      document.querySelectorAll('.vessel-card').forEach(c => {
-        if (c.dataset.vessel === state.vessel) c.classList.add('selected');
-        else c.classList.remove('selected');
-      });
-      const vName = 'Vessel ' + state.vessel;
-      const vDims = state.vessel === 'C' ? '3" × 3.5"' : (state.vessel === 'D' ? '3.5" × 4"' : '4" × 4.5"');
-      setSpec('specVessel', vName + ' · ' + vDims);
-      setSpec('specWick', vesselWickMap[state.vessel] || '—');
-      updateWickDisplay(state.vessel);
-      updateBoxVisibility(state.vessel);
-      updateFragranceButton();
-      renderColorCards(state.vessel);
+      const vCard = Array.from(document.querySelectorAll('.vessel-card')).find(c => c.dataset.vessel === state.vessel);
+      if (vCard) {
+        selectVessel(vCard, true);
+      }
     }
 
     // Restore Color selection
@@ -2108,14 +2101,14 @@ function renderColorCards(vessel) {
     card.className = 'color-card';
     card.dataset.color = color.name;
     card.dataset.code = color.code || ('0' + (color.id || 1));
+    const hexColor = color.hex || '#687382';
+    card.dataset.hex = hexColor;
 
     let imgSrc = color.image || '';
     if (!imgSrc && color.images) {
       imgSrc = color.images[vessel] || color.images.C || '';
     }
     card.dataset.image = imgSrc;
-
-    const hexColor = color.hex || '#687382';
 
     card.innerHTML = `
       <input type="radio" name="builder_vessel_color" value="${color.name}">
@@ -2152,6 +2145,7 @@ function selectVessel(el, skipSync) {
   document.querySelectorAll('.vessel-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   state.vessel = el.dataset.vessel;
+  state.vesselSku = el.dataset.sku || el.dataset.vessel;
   state.vesselPrice = parseInt(el.dataset.price) || 30;
 
   // Update right-side live preview image
@@ -2718,14 +2712,14 @@ function checkoutWithoutPackaging() {
 
 // ─── SKU GENERATION ───────────────────────────────────────────────────────────
 function generateSKU() {
-  const container = state.vessel || 'C';
+  const container = state.vesselSku || state.vessel || 'C';
   const colorCode = state.colorCode || '01';
   const fragCode = state.fragCode || '01';
   let boxCode = '';
   if (state.box && state.box !== 'No Packaging' && state.box !== '—' && state.box !== 'NONE') {
     boxCode = state.boxCode || 'B01W';
   }
-  return `${container}${colorCode}${fragCode}${boxCode}`;
+  return `${container.toUpperCase()}${colorCode}${fragCode}${boxCode}`;
 }
 
 // ─── REVIEW MODAL ─────────────────────────────────────────────────────────────
