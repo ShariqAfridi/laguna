@@ -562,7 +562,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     .color-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 20px;
       margin-bottom: 48px;
       width: 100%;
     }
@@ -570,16 +570,16 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     .color-card {
       background: #FFFFFF;
       border: 1.5px solid #E5E7EB;
-      border-radius: 12px;
-      padding: 14px 20px;
+      border-radius: 14px;
+      padding: 16px 24px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
       transition: all 0.25s ease;
       cursor: pointer;
       position: relative;
       user-select: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
     }
 
     .color-card.hidden {
@@ -587,15 +587,15 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-card:hover {
-      border-color: #CBD5E1;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      border-color: #94A3B8;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
     }
 
     .color-card.selected {
       border: 2px solid var(--teal, #1b4d4f);
       background-color: #F8FAFC;
-      box-shadow: 0 4px 14px rgba(27,77,79,0.12);
+      box-shadow: 0 6px 18px rgba(27,77,79,0.15);
     }
 
     .color-card input[type="radio"] {
@@ -603,8 +603,8 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .radio-indicator {
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       border: 2px solid #CBD5E1;
       display: flex;
@@ -621,8 +621,8 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .radio-indicator::after {
       content: '';
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: var(--teal, #1b4d4f);
       transform: scale(0);
@@ -634,19 +634,87 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-swatch-dot {
-      width: 22px;
-      height: 22px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      border: 1px solid rgba(0,0,0,0.15);
+      border: 1.5px solid rgba(0,0,0,0.18);
       flex-shrink: 0;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .color-card:hover .color-swatch-dot {
+      transform: scale(1.08);
+    }
+
+    /* Brighter, highly reflective mirror-like finish for Electroplate colors */
+    .color-swatch-dot.electroplate-dot {
+      background: linear-gradient(135deg, 
+        #ffffff 0%, 
+        #cbd5e1 18%, 
+        #64748b 38%, 
+        #ffffff 50%, 
+        #334155 68%, 
+        #94a3b8 85%, 
+        #ffffff 100%
+      ) !important;
+      border: 1.5px solid #ffffff !important;
+      box-shadow: 
+        inset 2px 2px 5px rgba(255, 255, 255, 0.95), 
+        inset -2px -2px 6px rgba(0, 0, 0, 0.5), 
+        0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    .color-swatch-dot.electroplate-dot::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      left: -30%;
+      width: 160%;
+      height: 160%;
+      background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.85) 50%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .color-swatch-dot.electroplate-smoky {
+      background: linear-gradient(135deg, 
+        #94a3b8 0%, 
+        #475569 20%, 
+        #1e293b 40%, 
+        #ffffff 52%, 
+        #0f172a 72%, 
+        #64748b 100%
+      ) !important;
+      border: 1.5px solid rgba(255,255,255,0.7) !important;
+      box-shadow: 
+        inset 2px 2px 4px rgba(255, 255, 255, 0.85), 
+        inset -2px -2px 6px rgba(0, 0, 0, 0.7), 
+        0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .color-swatch-dot.electroplate-gold {
+      background: linear-gradient(135deg, 
+        #ffffff 0%, 
+        #facc15 20%, 
+        #a16207 40%, 
+        #ffffff 52%, 
+        #713f12 72%, 
+        #fef08a 100%
+      ) !important;
+      border: 1.5px solid #ffffff !important;
+      box-shadow: 
+        inset 2px 2px 5px rgba(255, 255, 255, 0.95), 
+        inset -2px -2px 6px rgba(113, 63, 18, 0.6), 
+        0 4px 12px rgba(161, 98, 7, 0.3) !important;
     }
 
     .color-name-label {
       font-family: var(--sans);
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 500;
-      color: #1E293B;
+      color: #0F172A;
       letter-spacing: 0.01em;
       white-space: nowrap;
     }
@@ -2127,10 +2195,21 @@ function renderColorCards(vessel) {
     }
     card.dataset.image = imgSrc;
 
+    const isElectro = /electroplate|mirror|chrome|metallic/i.test(color.name || '') || (color.type === 'ELECTROPLATE');
+    let electroClass = '';
+    if (isElectro) {
+      electroClass = ' electroplate-dot';
+      if (/smoky|dark|black/i.test(color.name || '')) {
+        electroClass += ' electroplate-smoky';
+      } else if (/gold|yellow/i.test(color.name || '')) {
+        electroClass += ' electroplate-gold';
+      }
+    }
+
     card.innerHTML = `
       <input type="radio" name="builder_vessel_color" value="${color.name}">
       <span class="radio-indicator"></span>
-      <span class="color-swatch-dot" style="background:${hexColor};"></span>
+      <span class="color-swatch-dot${electroClass}" style="background:${hexColor};"></span>
       <span class="color-name-label">${color.name}</span>
     `;
 
@@ -2459,10 +2538,21 @@ function renderColorCards(vessel) {
     const hexColor = color.hex || '#687382';
     card.dataset.hex = hexColor;
 
+    const isElectro = /electroplate|mirror|chrome|metallic/i.test(color.name || '') || (color.type === 'ELECTROPLATE');
+    let electroClass = '';
+    if (isElectro) {
+      electroClass = ' electroplate-dot';
+      if (/smoky|dark|black/i.test(color.name || '')) {
+        electroClass += ' electroplate-smoky';
+      } else if (/gold|yellow/i.test(color.name || '')) {
+        electroClass += ' electroplate-gold';
+      }
+    }
+
     card.innerHTML = `
       <input type="radio" name="builder_vessel_color" value="${color.name}">
       <span class="radio-indicator"></span>
-      <span class="color-swatch-dot" style="background:${hexColor};"></span>
+      <span class="color-swatch-dot${electroClass}" style="background:${hexColor};"></span>
       <span class="color-name-label">${color.name}</span>
     `;
 
