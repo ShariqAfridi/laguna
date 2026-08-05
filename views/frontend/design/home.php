@@ -559,6 +559,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       margin-bottom: 6px;
     }
 
+    /* ─── COLOR CARD BASE & FINISH VARIATIONS ─── */
     .color-grid {
       display: flex;
       flex-wrap: wrap;
@@ -570,7 +571,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     .color-card {
       background: #FFFFFF;
       border: 1.5px solid #E5E7EB;
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 16px 24px;
       display: flex;
       align-items: center;
@@ -579,7 +580,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       cursor: pointer;
       position: relative;
       user-select: none;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
 
     .color-card.hidden {
@@ -587,15 +588,14 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-card:hover {
-      border-color: #94A3B8;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      border-color: #CBD5E1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
 
     .color-card.selected {
       border: 2px solid var(--teal, #1b4d4f);
-      background-color: #F8FAFC;
-      box-shadow: 0 6px 18px rgba(27,77,79,0.15);
+      box-shadow: 0 4px 14px rgba(27,77,79,0.12);
     }
 
     .color-card input[type="radio"] {
@@ -633,6 +633,98 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       transform: scale(1);
     }
 
+    /* ELECTROPLATE CARDS (Metallic Shine Gradient) */
+    .color-card.electroplate-card {
+      background: linear-gradient(
+        90deg,
+        #64748b 0%,
+        #94a3b8 14%,
+        #e2e8f0 32%,
+        #ffffff 50%,
+        #cbd5e1 68%,
+        #64748b 86%,
+        #475569 100%
+      );
+    }
+
+    .color-card.electroplate-card.electroplate-smoky {
+      background: linear-gradient(
+        90deg,
+        #1e293b 0%,
+        #475569 14%,
+        #64748b 32%,
+        #e2e8f0 50%,
+        #475569 68%,
+        #1e293b 86%,
+        #0f172a 100%
+      );
+    }
+
+    .color-card.electroplate-card.electroplate-gold {
+      background: linear-gradient(
+        90deg,
+        #854d0e 0%,
+        #ca8a04 14%,
+        #facc15 32%,
+        #ffffff 50%,
+        #facc15 68%,
+        #ca8a04 86%,
+        #713f12 100%
+      );
+    }
+
+    /* MATTE CARDS (Soft Non-Shiny Velvet Matte Backdrop) */
+    .color-card.matte-card {
+      background: #F8FAFC;
+    }
+
+    .color-card.matte-card.matte-black {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-color: #334155;
+    }
+
+    .color-card.matte-card.matte-black .color-name-label {
+      color: #F8FAFC;
+    }
+
+    .color-card.matte-card.matte-charcoal {
+      background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+      border-color: #475569;
+    }
+
+    .color-card.matte-card.matte-charcoal .color-name-label {
+      color: #F8FAFC;
+    }
+
+    .color-card.matte-card.matte-pink {
+      background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+      border-color: #fecdd3;
+    }
+
+    /* FROST CARDS (Soft Frosted Glass Pastel Fill) */
+    .color-card.frost-card {
+      background: #FFFFFF;
+    }
+
+    .color-card.frost-card.frost-white {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .color-card.frost-card.frost-mocha {
+      background: linear-gradient(135deg, #fdf8f6 0%, #f5e6e0 100%);
+      border-color: #e7d5cd;
+    }
+
+    .color-card.frost-card.frost-blue {
+      background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
+      border-color: #bae6fd;
+    }
+
+    .color-card.frost-card.frost-purple {
+      background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+      border-color: #e9d5ff;
+    }
+
     .color-swatch-dot {
       width: 34px;
       height: 34px;
@@ -647,140 +739,6 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .color-card:hover .color-swatch-dot {
       transform: scale(1.06);
-    }
-
-    /* Realistic Vertical Chrome Mirror Finish for Electroplate Cards */
-    .color-card.electroplate-card {
-      background: linear-gradient(
-        90deg,
-        #475569 0%,
-        #94a3b8 12%,
-        #e2e8f0 28%,
-        #ffffff 48%,
-        #ffffff 52%,
-        #cbd5e1 70%,
-        #64748b 88%,
-        #334155 100%
-      ) !important;
-      border: 1.5px solid #cbd5e1 !important;
-      box-shadow: 
-        inset 0 1px 2px rgba(255, 255, 255, 0.9),
-        inset 0 -1px 2px rgba(0, 0, 0, 0.3),
-        0 3px 10px rgba(0, 0, 0, 0.12) !important;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .color-card.electroplate-card::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 35%;
-      width: 30%;
-      height: 100%;
-      background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.6) 50%,
-        transparent 100%
-      );
-      pointer-events: none;
-    }
-
-    .color-card.electroplate-card:hover {
-      background: linear-gradient(
-        90deg,
-        #334155 0%,
-        #64748b 12%,
-        #cbd5e1 28%,
-        #ffffff 45%,
-        #ffffff 55%,
-        #e2e8f0 72%,
-        #475569 88%,
-        #1e293b 100%
-      ) !important;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
-    }
-
-    .color-card.electroplate-card.selected {
-      background: linear-gradient(
-        90deg,
-        #1e293b 0%,
-        #475569 10%,
-        #94a3b8 24%,
-        #ffffff 45%,
-        #ffffff 55%,
-        #cbd5e1 72%,
-        #475569 88%,
-        #0f172a 100%
-      ) !important;
-      border: 2px solid #0f172a !important;
-      box-shadow: 0 6px 22px rgba(15, 23, 42, 0.3) !important;
-    }
-
-    .color-card.electroplate-card .color-name-label {
-      font-weight: 700;
-      color: #0f172a;
-      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-      position: relative;
-      z-index: 2;
-    }
-
-    /* Smoky Grey Electroplate Card */
-    .color-card.electroplate-card.electroplate-smoky {
-      background: linear-gradient(
-        90deg,
-        #0f172a 0%,
-        #334155 14%,
-        #64748b 30%,
-        #e2e8f0 48%,
-        #e2e8f0 52%,
-        #475569 72%,
-        #1e293b 88%,
-        #020617 100%
-      ) !important;
-    }
-    .color-card.electroplate-card.electroplate-smoky.selected {
-      background: linear-gradient(
-        90deg,
-        #020617 0%,
-        #1e293b 14%,
-        #475569 30%,
-        #cbd5e1 48%,
-        #cbd5e1 52%,
-        #334155 72%,
-        #0f172a 88%,
-        #000000 100%
-      ) !important;
-    }
-
-    /* Gold Electroplate Card */
-    .color-card.electroplate-card.electroplate-gold {
-      background: linear-gradient(
-        90deg,
-        #713f12 0%,
-        #a16207 14%,
-        #eab308 30%,
-        #fef08a 48%,
-        #ffffff 52%,
-        #facc15 72%,
-        #854d0e 88%,
-        #451a03 100%
-      ) !important;
-    }
-    .color-card.electroplate-card.electroplate-gold.selected {
-      background: linear-gradient(
-        90deg,
-        #451a03 0%,
-        #713f12 14%,
-        #ca8a04 30%,
-        #fefce8 48%,
-        #ffffff 52%,
-        #eab308 72%,
-        #713f12 88%,
-        #290e02 100%
-      ) !important;
-      border-color: #713f12 !important;
     }
 
     .color-name-label {
@@ -2235,6 +2193,43 @@ function showStep(n, skipSync, isPush = false) {
 
 const dbColorsData = <?= json_encode($dbColors ?? []); ?>;
 
+function getColorCardClasses(color) {
+  const name = (color.name || '').toLowerCase();
+  const type = (color.type || '').toLowerCase();
+  let cardClasses = 'color-card';
+
+  if (type === 'electroplate' || name.includes('electroplate') || name.includes('chrome') || name.includes('mirror')) {
+    cardClasses += ' electroplate-card';
+    if (name.includes('smoky') || name.includes('dark') || name.includes('grey') || name.includes('gray')) {
+      cardClasses += ' electroplate-smoky';
+    } else if (name.includes('gold')) {
+      cardClasses += ' electroplate-gold';
+    }
+  } else if (type === 'matte' || name.includes('matte') || name.includes('pink')) {
+    cardClasses += ' matte-card';
+    if (name.includes('black')) {
+      cardClasses += ' matte-black';
+    } else if (name.includes('charcoal') || name.includes('grey') || name.includes('gray')) {
+      cardClasses += ' matte-charcoal';
+    } else if (name.includes('blush') || name.includes('pink')) {
+      cardClasses += ' matte-pink';
+    }
+  } else if (type === 'frost' || name.includes('frost')) {
+    cardClasses += ' frost-card';
+    if (name.includes('white')) {
+      cardClasses += ' frost-white';
+    } else if (name.includes('mocha')) {
+      cardClasses += ' frost-mocha';
+    } else if (name.includes('blue')) {
+      cardClasses += ' frost-blue';
+    } else if (name.includes('purple')) {
+      cardClasses += ' frost-purple';
+    }
+  }
+
+  return cardClasses;
+}
+
 // ─── RENDER COLOR CARDS ──────────────────────────────────────────────────────
 function renderColorCards(vessel) {
   const grid = document.getElementById('colorGrid');
@@ -2256,7 +2251,7 @@ function renderColorCards(vessel) {
 
   colorsToRender.forEach(color => {
     const card = document.createElement('label');
-    card.className = 'color-card';
+    card.className = getColorCardClasses(color);
     card.dataset.color = color.name;
     card.dataset.code = color.code || ('0' + (color.id || 1));
     const hexColor = color.hex || '#687382';
@@ -2267,18 +2262,6 @@ function renderColorCards(vessel) {
       imgSrc = color.images[vessel] || color.images.C || '';
     }
     card.dataset.image = imgSrc;
-
-    const isElectro = /electroplate|mirror|chrome|metallic/i.test(color.name || '') || (color.type === 'ELECTROPLATE');
-    let cardClasses = 'color-card';
-    if (isElectro) {
-      cardClasses += ' electroplate-card';
-      if (/smoky|dark|black/i.test(color.name || '')) {
-        cardClasses += ' electroplate-smoky';
-      } else if (/gold|yellow/i.test(color.name || '')) {
-        cardClasses += ' electroplate-gold';
-      }
-    }
-    card.className = cardClasses;
 
     card.innerHTML = `
       <input type="radio" name="builder_vessel_color" value="${color.name}">
@@ -2612,17 +2595,7 @@ function renderColorCards(vessel) {
     const hexColor = color.hex || '#687382';
     card.dataset.hex = hexColor;
 
-    const isElectro = /electroplate|mirror|chrome|metallic/i.test(color.name || '') || (color.type === 'ELECTROPLATE');
-    let cardClasses = 'color-card';
-    if (isElectro) {
-      cardClasses += ' electroplate-card';
-      if (/smoky|dark|black/i.test(color.name || '')) {
-        cardClasses += ' electroplate-smoky';
-      } else if (/gold|yellow/i.test(color.name || '')) {
-        cardClasses += ' electroplate-gold';
-      }
-    }
-    card.className = cardClasses;
+    card.className = getColorCardClasses(color);
 
     card.innerHTML = `
       <input type="radio" name="builder_vessel_color" value="${color.name}">
