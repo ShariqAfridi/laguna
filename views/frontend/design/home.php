@@ -614,20 +614,21 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       display: none;
     }
 
-    /* ELECTROPLATE CARDS (High-Contrast Metallic Mirror Finish) */
+    /* ELECTROPLATE CARDS (Pure Silver Chrome Metallic Finish) */
     .color-card.electroplate-card {
-      background: url('<?= base_url('/public/assets/img/silver_electroplate_bg.png'); ?>') center/cover no-repeat,
-                  linear-gradient(
-                    to right,
-                    #b8bac0 0%,
-                    #e8eaef 14%,
-                    #ffffff 32%,
-                    #d0d3d9 52%,
-                    #5c5e64 76%,
-                    #e8eaef 90%,
-                    #9aa0a8 100%
-                  ) !important;
-      border: 1px solid #B0B5BD !important;
+      background: linear-gradient(
+        95deg,
+        #969aa3 0%,
+        #c4c8d0 12%,
+        #e9ecf2 25%,
+        #ffffff 38%,
+        #f2f4f8 48%,
+        #8b8e96 70%,
+        #53565e 79%,
+        #c9cbd2 90%,
+        #9aa0a8 100%
+      ) !important;
+      border: 1px solid #A3A8B0 !important;
       box-shadow: inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -1px 2px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.06);
     }
 
@@ -2690,10 +2691,20 @@ function selectColor(el, skipSync) {
 
       const isSilverElectroplate = (el.dataset.code === '15' || (el.dataset.color && el.dataset.color.toLowerCase().includes('silver electroplate')));
       if (isSilverElectroplate) {
-        previewPanel.style.backgroundImage = `url('<?= base_url('/public/assets/img/silver_preview_bg.png'); ?>'), linear-gradient(to right, #b8bac0 0%, #ffffff 32%, #5c5e64 76%, #e8eaef 90%, #9aa0a8 100%)`;
+        previewPanel.style.backgroundImage = `linear-gradient(
+          95deg,
+          #969aa3 0%,
+          #c4c8d0 12%,
+          #e9ecf2 25%,
+          #ffffff 38%,
+          #f2f4f8 48%,
+          #8b8e96 70%,
+          #53565e 79%,
+          #c9cbd2 90%,
+          #9aa0a8 100%
+        )`;
         previewPanel.style.backgroundSize = 'cover';
-        previewPanel.style.backgroundPosition = 'center';
-        previewPanel.style.backgroundColor = '#d0d3d9';
+        previewPanel.style.backgroundColor = '#c4c8d0';
       } else if (cardBgImage && cardBgImage !== 'none') {
         previewPanel.style.backgroundImage = cardBgImage;
         previewPanel.style.backgroundColor = cardBgColor;
