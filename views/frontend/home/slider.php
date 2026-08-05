@@ -180,25 +180,42 @@
             transform: scale(1.02);
         }
         
-        /* ---------- INFINITE SCROLLING MARQUEE (right to left, seamless loop) ---------- */
+        /* ---------- INFINITE SCROLLING MARQUEE (HOME PAGE CANDLES STRIP CONCEPT) ---------- */
         .lvh-marquee-section {
-            padding-top: 0;
-            padding-bottom: 0;
+            padding: 40px 0 50px 0;
             margin-top: 0;
             z-index: 15;
-            pointer-events: none;
+            background: #ffffff;
+            position: relative;
+            width: 100%;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
         
-        /* Gradient fade at bottom (soft overlay) matching reference */
-        .lvh-bottom-gradient {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 130px;
-            background: linear-gradient(to top, rgba(6, 29, 43, 0.9), rgba(6, 29, 43, 0.3), transparent);
-            pointer-events: none;
-            z-index: 14;
+        .lvh-strip-header-container {
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto 36px auto;
+            padding: 0 20px;
+        }
+
+        .lvh-strip-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 20px;
+            line-height: 1.3;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #1a2b3c;
+            margin-bottom: 6px;
+        }
+
+        .lvh-strip-subtitle {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            font-size: 14px;
+            color: #5a6d7a;
+            letter-spacing: 0.5px;
         }
         
         .lvh-marquee-container {
@@ -206,25 +223,22 @@
             width: 100%;
             overflow: hidden;
             pointer-events: auto;
-            padding: 0;
+            padding: 10px 0;
             margin: 0;
         }
         
         .lvh-marquee-track {
             display: flex;
-            gap: 0 !important;
-            animation: scrollMarquee 35s linear infinite;
+            gap: 52px;
+            animation: scrollMarquee 40s linear infinite;
             align-items: flex-end;
             will-change: transform;
             width: max-content;
         }
         
-        /* Individual candle card (matching reference interactive style) */
         .lvh-marquee-item {
             flex: 0 0 auto;
-            width: clamp(140px, 16vw, 240px);
-            padding: 0 !important;
-            margin: 0 !important;
+            width: 160px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -234,44 +248,83 @@
         }
         
         .lvh-marquee-item:hover {
-            transform: translateY(-8px);
+            transform: translateY(-6px);
+        }
+
+        .lvh-candle-img-wrapper {
+            width: 100%;
+            height: 220px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
         }
 
         .lvh-candle-img {
-            width: 100%;
-            height: clamp(180px, 22vw, 350px);
-            object-fit: cover;
+            max-width: 100%;
+            max-height: 220px;
+            object-fit: contain;
             display: block;
-            padding: 0 !important;
-            margin: 0 !important;
+            margin: 0 auto;
+        }
+
+        .lvh-candle-meta {
+            margin-top: 14px;
+            text-align: center;
+            min-height: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .lvh-candle-code {
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 13px;
+            color: #23313d;
+            letter-spacing: 0.5px;
+        }
+
+        .lvh-candle-status {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 10px;
+            color: #1a2b3c;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-top: 3px;
         }
      
-        /* Responsive sizing for larger screens */
         @media (min-width: 768px) {
             .lvh-marquee-item {
-                width: 170px;
+                width: 180px;
+            }
+            .lvh-candle-img-wrapper {
+                height: 240px;
             }
             .lvh-candle-img {
-                max-height: 270px;
+                max-height: 240px;
             }
             .lvh-marquee-track {
-                gap: 0 !important;
+                gap: 60px;
             }
         }
         
         @media (min-width: 1024px) {
             .lvh-marquee-item {
-                width: 210px;
+                width: 190px;
+            }
+            .lvh-candle-img-wrapper {
+                height: 250px;
             }
             .lvh-candle-img {
-                max-height: 310px;
+                max-height: 250px;
             }
             .lvh-marquee-track {
-                gap: 0 !important;
+                gap: 64px;
             }
         }
         
-        /* Keyframes for infinite right-to-left scroll */
         @keyframes scrollMarquee {
             0% {
                 transform: translate3d(0, 0, 0);
@@ -281,7 +334,6 @@
             }
         }
         
-        /* Fade-up animation for text */
         @keyframes lvh-fadeUp {
             0% {
                 opacity: 0;
@@ -293,7 +345,6 @@
             }
         }
         
-        /* Responsive adjustments */
         @media (max-width: 640px) {
             .laguna-vibe-marquee-hero {
                 min-height: 100vh;
@@ -314,15 +365,18 @@
                 height: 42px;
                 font-size: 11px;
             }
-            .lvh-marquee-section {
-                padding-bottom: 0.8rem;
+            .lvh-strip-title {
+                font-size: 15px;
+                letter-spacing: 2px;
             }
-            .lvh-bottom-gradient {
-                height: 90px;
+            .lvh-strip-subtitle {
+                font-size: 12px;
+            }
+            .lvh-marquee-section {
+                padding: 30px 0 40px 0;
             }
         }
         
-        /* Pause animation on hover for better UX */
         .lvh-marquee-container:hover .lvh-marquee-track {
             animation-play-state: paused;
         }
@@ -351,47 +405,50 @@
             </div>
         </div>
         
-        <!-- Bottom Gradient (soft transition to marquee) -->
+        <!-- Bottom Gradient -->
         <div class="lvh-bottom-gradient"></div>
      
     </section>
        
-        <!-- INFINITE SCROLLING MARQUEE (hero-products folder, no padding on top & in between) -->
+        <!-- INFINITE SCROLLING MARQUEE (HOME PAGE CANDLES STRIP CONCEPT) -->
         <div class="lvh-marquee-section">
+            <div class="lvh-strip-header-container">
+                <h2 class="lvh-strip-title">PERSONALIZED ENGRAVING AVAILABLE</h2>
+                <p class="lvh-strip-subtitle">initials, names, dates, or a special message.</p>
+            </div>
+
             <div class="lvh-marquee-container">
                 <div class="lvh-marquee-track" id="marqueeTrack">
                     <?php
-                    $heroProductPaths = [];
-                    $heroFolder = __DIR__ . '/../../../public/uploads/hero-products/';
-                    if (is_dir($heroFolder)) {
-                        $found = glob($heroFolder . '*.{png,jpg,jpeg,webp,PNG,JPG,JPEG,WEBP}', GLOB_BRACE);
-                        if ($found) {
-                            foreach ($found as $f) {
-                                $heroProductPaths[] = 'public/uploads/hero-products/' . basename($f);
-                            }
-                        }
-                    }
-
-                    if (empty($heroProductPaths)) {
-                        $defaultImages = [
-                            '00_08_BLUR FROST.png', '00_09_PURPLE FROST.png', '00_17_01 GREEN FROST TEMPLET.png',
-                            '00_17_GREEN FROST TEMPLET.png', '00_18_RED FROST TEMPLET.png', 'C0206.png',
-                            'C0304.png', 'C0811.png', 'C1510.png', 'D0209.png', 'D0313.png', 'D1205.png',
-                            'D1604.png', 'E0208.png', 'E0314.png', 'H50-3 VESSEL INSIDE.png',
-                            'H50-4 VESSEL INSIDE.png', 'H50-5  VESSEL INSIDE.png', 'H50-6  VESSEL INSIDE.png'
-                        ];
-                        foreach ($defaultImages as $img) {
-                            $heroProductPaths[] = 'public/uploads/hero-products/' . $img;
-                        }
-                    }
+                    $heroCandlesSpec = [
+                        ['file' => '00-11.png', 'code' => '00-11', 'coming_soon' => false],
+                        ['file' => '00-12.png', 'code' => '00-12', 'coming_soon' => false],
+                        ['file' => '00-14.png', 'code' => '00-14', 'coming_soon' => false],
+                        ['file' => '00-06.png', 'code' => '00-06', 'coming_soon' => false],
+                        ['file' => '00-02.png', 'code' => '00-02', 'coming_soon' => true],
+                        ['file' => '00-09.png', 'code' => '00-09', 'coming_soon' => false],
+                        ['file' => '00-13.png', 'code' => '00-13', 'coming_soon' => false],
+                        ['file' => '00-07.png', 'code' => '00-07', 'coming_soon' => false],
+                        ['file' => '00-03.png', 'code' => '00-03', 'coming_soon' => false],
+                        ['file' => '00-15.png', 'code' => '00-15', 'coming_soon' => true],
+                    ];
 
                     for ($set = 0; $set < 2; $set++):
-                        foreach ($heroProductPaths as $relPath):
-                            $imgUrl = base_url('/' . rawurlencode($relPath));
+                        foreach ($heroCandlesSpec as $candle):
+                            $imgRel = 'public/uploads/hero-products/' . $candle['file'];
+                            $imgUrl = base_url('/' . rawurlencode($imgRel));
                             $imgUrl = str_replace('%2F', '/', $imgUrl);
                     ?>
                         <div class="lvh-marquee-item">
-                            <img class="lvh-candle-img" src="<?= htmlspecialchars($imgUrl); ?>" alt="Hero Product Candle" loading="lazy">
+                            <div class="lvh-candle-img-wrapper">
+                                <img class="lvh-candle-img" src="<?= htmlspecialchars($imgUrl); ?>" alt="Candle <?= htmlspecialchars($candle['code']); ?>" loading="lazy">
+                            </div>
+                            <div class="lvh-candle-meta">
+                                <span class="lvh-candle-code"><?= htmlspecialchars($candle['code']); ?></span>
+                                <?php if (!empty($candle['coming_soon'])): ?>
+                                    <span class="lvh-candle-status">COMING SOON</span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     <?php 
                         endforeach;
