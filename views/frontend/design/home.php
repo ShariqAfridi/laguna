@@ -634,22 +634,24 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .color-card.electroplate-card.electroplate-smoky {
       background: linear-gradient(
-        135deg,
-        #020617 0%,
-        #0f172a 16%,
-        #334155 32%,
-        #94a3b8 48%,
+        95deg,
+        #0b0f17 0%,
+        #1e2634 16%,
+        #3e495a 32%,
+        #dbe2ef 48%,
         #ffffff 52%,
-        #475569 68%,
-        #0f172a 84%,
-        #020617 100%
-      );
-      border-color: #334155;
+        #64748b 70%,
+        #141b26 82%,
+        #475569 92%,
+        #070a0f 100%
+      ) !important;
+      border: 1px solid #334155 !important;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 2px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
     }
 
     .color-card.electroplate-card.electroplate-smoky .color-name-label {
       color: #FFFFFF !important;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
     }
 
     .color-card.electroplate-card.electroplate-gold {
@@ -2690,6 +2692,8 @@ function selectColor(el, skipSync) {
       const cardBgColor = computedStyle.backgroundColor;
 
       const isSilverElectroplate = (el.dataset.code === '15' || (el.dataset.color && el.dataset.color.toLowerCase().includes('silver electroplate')));
+      const isSmokyGreyElectroplate = (el.dataset.code === '16' || (el.dataset.color && el.dataset.color.toLowerCase().includes('smoky grey electroplate')));
+
       if (isSilverElectroplate) {
         previewPanel.style.backgroundImage = `linear-gradient(
           95deg,
@@ -2705,6 +2709,21 @@ function selectColor(el, skipSync) {
         )`;
         previewPanel.style.backgroundSize = 'cover';
         previewPanel.style.backgroundColor = '#c4c8d0';
+      } else if (isSmokyGreyElectroplate) {
+        previewPanel.style.backgroundImage = `linear-gradient(
+          95deg,
+          #0b0f17 0%,
+          #1e2634 16%,
+          #3e495a 32%,
+          #dbe2ef 48%,
+          #ffffff 52%,
+          #64748b 70%,
+          #141b26 82%,
+          #475569 92%,
+          #070a0f 100%
+        )`;
+        previewPanel.style.backgroundSize = 'cover';
+        previewPanel.style.backgroundColor = '#0b0f17';
       } else if (cardBgImage && cardBgImage !== 'none') {
         previewPanel.style.backgroundImage = cardBgImage;
         previewPanel.style.backgroundColor = cardBgColor;
