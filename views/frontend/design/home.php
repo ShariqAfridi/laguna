@@ -559,11 +559,11 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       margin-bottom: 6px;
     }
 
-    /* ─── COLOR CARD BASE & FINISH VARIATIONS ─── */
+    /* ─── COLOR CARD STYLES ─── */
     .color-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 20px;
+      gap: 18px;
       margin-bottom: 48px;
       width: 100%;
     }
@@ -572,10 +572,10 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       background: #FFFFFF;
       border: 1.5px solid #E5E7EB;
       border-radius: 12px;
-      padding: 16px 24px;
+      padding: 14px 22px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       transition: all 0.25s ease;
       cursor: pointer;
       position: relative;
@@ -595,45 +595,14 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .color-card.selected {
       border: 2px solid var(--teal, #1b4d4f);
-      box-shadow: 0 4px 14px rgba(27,77,79,0.12);
+      box-shadow: 0 4px 14px rgba(27,77,79,0.14);
     }
 
     .color-card input[type="radio"] {
       display: none;
     }
 
-    .radio-indicator {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      border: 2px solid #CBD5E1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      flex-shrink: 0;
-      background: #FFFFFF;
-    }
-
-    .color-card.selected .radio-indicator {
-      border-color: var(--teal, #1b4d4f);
-    }
-
-    .radio-indicator::after {
-      content: '';
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--teal, #1b4d4f);
-      transform: scale(0);
-      transition: transform 0.2s ease;
-    }
-
-    .color-card.selected .radio-indicator::after {
-      transform: scale(1);
-    }
-
-    /* ELECTROPLATE CARDS (Metallic Shine Gradient) */
+    /* ELECTROPLATE CARDS */
     .color-card.electroplate-card {
       background: linear-gradient(
         90deg,
@@ -645,6 +614,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
         #64748b 86%,
         #475569 100%
       );
+      border-color: #cbd5e1;
     }
 
     .color-card.electroplate-card.electroplate-smoky {
@@ -658,6 +628,12 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
         #1e293b 86%,
         #0f172a 100%
       );
+      border-color: #475569;
+    }
+
+    .color-card.electroplate-card.electroplate-smoky .color-name-label {
+      color: #FFFFFF !important;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
     }
 
     .color-card.electroplate-card.electroplate-gold {
@@ -671,9 +647,10 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
         #ca8a04 86%,
         #713f12 100%
       );
+      border-color: #eab308;
     }
 
-    /* MATTE CARDS (Soft Non-Shiny Velvet Matte Backdrop) */
+    /* MATTE CARDS */
     .color-card.matte-card {
       background: #F8FAFC;
     }
@@ -684,7 +661,8 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-card.matte-card.matte-black .color-name-label {
-      color: #F8FAFC;
+      color: #FFFFFF !important;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
     }
 
     .color-card.matte-card.matte-charcoal {
@@ -693,7 +671,8 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-card.matte-card.matte-charcoal .color-name-label {
-      color: #F8FAFC;
+      color: #FFFFFF !important;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
     }
 
     .color-card.matte-card.matte-pink {
@@ -701,7 +680,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       border-color: #fecdd3;
     }
 
-    /* FROST CARDS (Soft Frosted Glass Pastel Fill) */
+    /* FROST CARDS */
     .color-card.frost-card {
       background: #FFFFFF;
     }
@@ -726,8 +705,8 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-swatch-dot {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 1.5px solid rgba(0,0,0,0.15);
       flex-shrink: 0;
@@ -743,11 +722,12 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .color-name-label {
       font-family: var(--sans);
-      font-size: 16px;
-      font-weight: 500;
+      font-size: 15px;
+      font-weight: 600;
       color: #0F172A;
       letter-spacing: 0.01em;
       white-space: nowrap;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
     }
 
     .fragrance-grid {
@@ -2265,7 +2245,6 @@ function renderColorCards(vessel) {
 
     card.innerHTML = `
       <input type="radio" name="builder_vessel_color" value="${color.name}">
-      <span class="radio-indicator"></span>
       <span class="color-swatch-dot" style="background:${hexColor};"></span>
       <span class="color-name-label">${color.name}</span>
     `;
@@ -2599,7 +2578,6 @@ function renderColorCards(vessel) {
 
     card.innerHTML = `
       <input type="radio" name="builder_vessel_color" value="${color.name}">
-      <span class="radio-indicator"></span>
       <span class="color-swatch-dot" style="background:${hexColor};"></span>
       <span class="color-name-label">${color.name}</span>
     `;
