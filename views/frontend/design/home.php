@@ -1987,9 +1987,28 @@ function updatePreviewPanelTypography() {
 
   const currentStep = typeof getCurrentStep === 'function' ? getCurrentStep() : 1;
 
-  if (currentStep === 1 || !previewPanel.style.backgroundColor || previewPanel.style.backgroundColor === '#E2F1F7' || previewPanel.style.backgroundColor === 'rgb(226, 241, 247)') {
+  if (currentStep === 1) {
     resetPreviewPanelStyle();
     return;
+  }
+
+  // Re-sync preview panel background image for step 2+ if a color card is selected
+  const selCard = document.querySelector('.color-card.selected');
+  if (selCard) {
+    const isSilver = (selCard.dataset.code === '15' || (selCard.dataset.color && selCard.dataset.color.toLowerCase().includes('silver electroplate')));
+    const isSmoky = (selCard.dataset.code === '16' || (selCard.dataset.color && selCard.dataset.color.toLowerCase().includes('smoky grey electroplate')));
+
+    if (isSilver) {
+      previewPanel.style.backgroundImage = `url('<?= base_url('/public/assets/img/silver_electroplate_bg.png'); ?>')`;
+      previewPanel.style.backgroundSize = 'cover';
+      previewPanel.style.backgroundPosition = 'center';
+      previewPanel.style.backgroundColor = '#d0d3d9';
+    } else if (isSmoky) {
+      previewPanel.style.backgroundImage = `url('<?= base_url('/public/assets/img/smoky_electroplate_bg.png'); ?>')`;
+      previewPanel.style.backgroundSize = 'cover';
+      previewPanel.style.backgroundPosition = 'center';
+      previewPanel.style.backgroundColor = '#0b0f17';
+    }
   }
 
   const contrastColor = previewPanel.style.color || '#FFFFFF';
@@ -2054,6 +2073,7 @@ function setSpec(id, val) {
 function resetPreviewPanelStyle() {
   const previewPanel = document.querySelector('.preview-panel');
   if (previewPanel) {
+    previewPanel.style.backgroundImage = 'none';
     previewPanel.style.backgroundColor = '#E2F1F7';
     previewPanel.style.color = 'inherit';
 
