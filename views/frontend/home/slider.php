@@ -268,36 +268,42 @@
         }
 
         .lvh-candle-meta {
-            margin-top: 14px;
+            margin-top: 10px;
             text-align: center;
-            min-height: 40px;
+            min-height: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
         }
 
-        .lvh-candle-code {
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            font-size: 13px;
-            color: #23313d;
-            letter-spacing: 0.5px;
-        }
-
         .lvh-candle-status {
             font-family: 'Inter', sans-serif;
             font-weight: 700;
-            font-size: 10px;
+            font-size: 11px;
             color: #1a2b3c;
-            letter-spacing: 1.2px;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
-            margin-top: 3px;
         }
      
         @media (min-width: 768px) {
             .lvh-marquee-item {
                 width: 180px;
+            }
+            .lvh-candle-img-wrapper {
+                height: 220px;
+            }
+            .lvh-candle-img {
+                max-height: 220px;
+            }
+            .lvh-marquee-track {
+                gap: 52px;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .lvh-marquee-item {
+                width: 200px;
             }
             .lvh-candle-img-wrapper {
                 height: 240px;
@@ -306,22 +312,7 @@
                 max-height: 240px;
             }
             .lvh-marquee-track {
-                gap: 60px;
-            }
-        }
-        
-        @media (min-width: 1024px) {
-            .lvh-marquee-item {
-                width: 190px;
-            }
-            .lvh-candle-img-wrapper {
-                height: 250px;
-            }
-            .lvh-candle-img {
-                max-height: 250px;
-            }
-            .lvh-marquee-track {
-                gap: 64px;
+                gap: 56px;
             }
         }
         
@@ -444,7 +435,6 @@
                                 <img class="lvh-candle-img" src="<?= htmlspecialchars($imgUrl); ?>" alt="Candle <?= htmlspecialchars($candle['code']); ?>" loading="lazy">
                             </div>
                             <div class="lvh-candle-meta">
-                                <span class="lvh-candle-code"><?= htmlspecialchars($candle['code']); ?></span>
                                 <?php if (!empty($candle['coming_soon'])): ?>
                                     <span class="lvh-candle-status">COMING SOON</span>
                                 <?php endif; ?>
