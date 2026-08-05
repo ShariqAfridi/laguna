@@ -888,8 +888,8 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 24px;
-      border-top: 1px solid var(--border);
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
       width: 100%;
       max-width: 100%;
       margin-top: 48px;
