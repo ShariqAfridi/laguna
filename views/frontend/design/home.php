@@ -614,20 +614,21 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       display: none;
     }
 
-    /* ELECTROPLATE CARDS (High-Contrast 135deg Metallic Mirror Finish) */
+    /* ELECTROPLATE CARDS (High-Contrast Metallic Mirror Finish) */
     .color-card.electroplate-card {
-      background: linear-gradient(
-        135deg,
-        #1e293b 0%,
-        #475569 16%,
-        #cbd5e1 32%,
-        #ffffff 48%,
-        #ffffff 52%,
-        #94a3b8 68%,
-        #334155 84%,
-        #0f172a 100%
-      );
-      border-color: #cbd5e1;
+      background: url('<?= base_url('/public/assets/img/silver_electroplate_bg.png'); ?>') center/cover no-repeat,
+                  linear-gradient(
+                    to right,
+                    #b8bac0 0%,
+                    #e8eaef 14%,
+                    #ffffff 32%,
+                    #d0d3d9 52%,
+                    #5c5e64 76%,
+                    #e8eaef 90%,
+                    #9aa0a8 100%
+                  ) !important;
+      border: 1px solid #B0B5BD !important;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -1px 2px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.06);
     }
 
     .color-card.electroplate-card.electroplate-smoky {
@@ -2687,7 +2688,13 @@ function selectColor(el, skipSync) {
       const cardBgImage = computedStyle.backgroundImage;
       const cardBgColor = computedStyle.backgroundColor;
 
-      if (cardBgImage && cardBgImage !== 'none') {
+      const isSilverElectroplate = (el.dataset.code === '15' || (el.dataset.color && el.dataset.color.toLowerCase().includes('silver electroplate')));
+      if (isSilverElectroplate) {
+        previewPanel.style.backgroundImage = `url('<?= base_url('/public/assets/img/silver_preview_bg.png'); ?>'), linear-gradient(to right, #b8bac0 0%, #ffffff 32%, #5c5e64 76%, #e8eaef 90%, #9aa0a8 100%)`;
+        previewPanel.style.backgroundSize = 'cover';
+        previewPanel.style.backgroundPosition = 'center';
+        previewPanel.style.backgroundColor = '#d0d3d9';
+      } else if (cardBgImage && cardBgImage !== 'none') {
         previewPanel.style.backgroundImage = cardBgImage;
         previewPanel.style.backgroundColor = cardBgColor;
       } else {
