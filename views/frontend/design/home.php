@@ -172,7 +172,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       line-height: 1.7;
       color: #555;
       max-width: 100%;
-      margin-bottom: 48px;
+      margin-bottom: 24px;
     }
 
     .preview-panel {
@@ -888,10 +888,11 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 24px;
-      border-top: 1px solid var(--border);
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
       width: 100%;
       max-width: 100%;
+      margin-bottom: 32px;
     }
 
     .btn-back {
@@ -1211,6 +1212,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       <p class="step-label">STEP 01</p>
       <h1 class="step-title">Choose your vessel.</h1>
       <p class="step-desc">The silhouette and size of your candle. All vessels include a black bamboo lid.</p>
+      <div class="step-nav"><span></span><button class="btn-next" onclick="goNext(2)">CONTINUE</button></div>
       <div class="vessel-grid" id="vesselGrid">
         <?php if (!empty($categoriesList)): ?>
           <?php
@@ -1259,7 +1261,6 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
           <p style="color:#6b7280; font-size:14px; grid-column:1/-1;">No active vessel categories available right now.</p>
         <?php endif; ?>
       </div>
-      <div class="step-nav"><span></span><button class="btn-next" onclick="goNext(2)">CONTINUE</button></div>
     </div>
 
     <!-- STEP 2: COLOR -->
@@ -1267,14 +1268,14 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       <p class="step-label">STEP 02</p>
       <h1 class="step-title">Choose your color.</h1>
       <p class="step-desc" id="colorDesc">Select a finish for your vessel. Available colors vary by vessel.</p>
-      <div class="color-grid" id="colorGrid">
-        <!-- Color cards will be dynamically rendered by JavaScript -->
-      </div>
       <div class="step-nav">
         <button class="btn-back" onclick="goBack(1)">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5"/></svg> BACK
         </button>
         <button class="btn-next" onclick="goNext(3)">CONTINUE</button>
+      </div>
+      <div class="color-grid" id="colorGrid">
+        <!-- Color cards will be dynamically rendered by JavaScript -->
       </div>
     </div>
 
@@ -1283,6 +1284,12 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       <p class="step-label">STEP 03</p>
       <h1 class="step-title">Choose your fragrance.</h1>
       <p class="step-desc">Tap any scent to select and read its full description and notes.</p>
+      <div class="step-nav">
+        <button class="btn-back" onclick="goBack(2)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5"/></svg> BACK
+        </button>
+        <button class="btn-next" id="fragNextBtn" onclick="handleFragranceNext()">CONTINUE</button>
+      </div>
       <div class="fragrance-grid" id="fragranceGrid">
         <!-- Dynamic Fragrance Cards Rendered via JS -->
       </div>
@@ -1294,12 +1301,6 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
         </div>
         <div id="selectedFragDetailDesc" style="font-size:13px; color:#475569; line-height:1.6; white-space:pre-line;"></div>
       </div>
-      <div class="step-nav">
-        <button class="btn-back" onclick="goBack(2)">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5"/></svg> BACK
-        </button>
-        <button class="btn-next" id="fragNextBtn" onclick="handleFragranceNext()">CONTINUE</button>
-      </div>
     </div>
 
     <!-- STEP 4: BOX (OPTIONAL) - hidden for Vessel E -->
@@ -1307,9 +1308,6 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       <p class="step-label">STEP 04</p>
       <h1 class="step-title">Add a keepsake box.</h1>
       <p class="step-desc">Optional — choose a cubic box in white or black. The box matches the wick count of your vessel. You can also skip this step.</p>
-      <div class="box-grid" id="boxGrid">
-        <!-- Box cards are dynamically rendered by JavaScript -->
-      </div>
       <div class="step-nav">
         <button class="btn-back" onclick="goBack(3)">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5"/></svg> BACK
@@ -1318,6 +1316,9 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
           <button class="btn-skip-box" onclick="checkoutWithoutPackaging()">CHECKOUT WITHOUT PACKAGING</button>
           <button class="btn-next" onclick="openReview()">REVIEW ORDER</button>
         </div>
+      </div>
+      <div class="box-grid" id="boxGrid">
+        <!-- Box cards are dynamically rendered by JavaScript -->
       </div>
     </div>
 
