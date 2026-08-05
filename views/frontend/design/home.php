@@ -583,7 +583,8 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       background: #FFFFFF;
       border: 1.5px solid #E5E7EB;
       border-radius: 12px;
-      padding: 12px 14px;
+      padding: 16px 14px;
+      min-height: 56px;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -2639,27 +2640,14 @@ function getContrastYIQ(hexcolor) {
 function selectColor(el, skipSync) {
   if (!el) return;
 
-  // Reset all color cards back to default white background and dark text
+  // Reset all color cards selected state
   document.querySelectorAll('.color-card').forEach(c => {
     c.classList.remove('selected');
-    c.style.backgroundColor = '#FFFFFF';
-    c.style.borderColor = '#E5E7EB';
-    c.style.color = '#1E293B';
-    const label = c.querySelector('.color-name-label');
-    if (label) {
-      label.style.color = '#1E293B';
-      label.style.fontWeight = 'normal';
-    }
-    const radInd = c.querySelector('.radio-indicator');
-    if (radInd) {
-      radInd.style.borderColor = '#CBD5E1';
-      radInd.style.backgroundColor = '#FFFFFF';
-    }
     const radInput = c.querySelector('input[type="radio"]');
     if (radInput) radInput.checked = false;
   });
 
-  // Apply selected class and radio input state
+  // Apply selected class to chosen card
   el.classList.add('selected');
   const activeRadInput = el.querySelector('input[type="radio"]');
   if (activeRadInput) activeRadInput.checked = true;
@@ -2670,64 +2658,58 @@ function selectColor(el, skipSync) {
   state.colorHex = hexColor;
   setSpec('specColor', state.color);
 
-  // Apply background of selected color to option card container and calculate high contrast text
-  const contrastColor = getContrastYIQ(hexColor);
-  el.style.backgroundColor = hexColor;
-  el.style.borderColor = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.85)' : 'var(--teal, #1b4d4f)';
-  el.style.color = contrastColor;
-
-  const activeLabel = el.querySelector('.color-name-label');
-  if (activeLabel) {
-    activeLabel.style.color = contrastColor;
-    activeLabel.style.fontWeight = '600';
-  }
-
-  const activeRadInd = el.querySelector('.radio-indicator');
-  if (activeRadInd) {
-    activeRadInd.style.borderColor = contrastColor;
-    activeRadInd.style.backgroundColor = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.1)';
-  }
-
-  // Update the whole right-side preview-panel background color and text contrast ONLY if on Step 2 or above
+  // Update right-side preview-panel background effect matching selected card
   if (typeof getCurrentStep === 'function' && getCurrentStep() > 1) {
     const previewPanel = document.querySelector('.preview-panel');
     if (previewPanel) {
-      previewPanel.style.backgroundColor = hexColor;
+      const computedStyle = window.getComputedStyle(el);
+      const cardBgImage = computedStyle.backgroundImage;
+      const cardBgColor = computedStyle.backgroundColor;
+
+      if (cardBgImage && cardBgImage !== 'none') {
+        previewPanel.style.backgroundImage = cardBgImage;
+        previewPanel.style.backgroundColor = cardBgColor;
+      } else {
+        previewPanel.style.backgroundImage = 'none';
+        previewPanel.style.backgroundColor = cardBgColor || hexColor;
+      }
+
+      // Determine text contrast based on card finish
+      const isDarkBg = el.classList.contains('electroplate-smoky') || 
+                       el.classList.contains('matte-black') || 
+                       el.classList.contains('matte-charcoal') || 
+                       getContrastYIQ(hexColor) === '#FFFFFF';
+
+      const contrastColor = isDarkBg ? '#FFFFFF' : '#0F172A';
+      const mutedColor = isDarkBg ? 'rgba(255,255,255,0.75)' : '#64748b';
+
       previewPanel.style.color = contrastColor;
 
       const previewLabel = previewPanel.querySelector('.preview-label');
-      if (previewLabel) {
-        previewLabel.style.color = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)';
-      }
+      if (previewLabel) previewLabel.style.color = mutedColor;
 
       const specRows = previewPanel.querySelectorAll('.spec-row');
       specRows.forEach(row => {
         const key = row.querySelector('.spec-key');
         const val = row.querySelector('.spec-val');
-        if (key) {
-          key.style.color = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.85)' : 'var(--text-muted)';
-        }
+        if (key) key.style.color = mutedColor;
         if (val) {
-          if (!val.classList.contains('empty')) {
-            val.style.color = contrastColor;
-          } else {
-            val.style.color = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.4)' : '#ccc';
-          }
+          val.style.color = !val.classList.contains('empty') ? contrastColor : (isDarkBg ? 'rgba(255,255,255,0.4)' : '#ccc');
         }
       });
 
       const priceLabel = previewPanel.querySelector('.preview-price-label');
       const priceVal = previewPanel.querySelector('.preview-price-val');
-      if (priceLabel) priceLabel.style.color = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.75)' : '#777777';
+      if (priceLabel) priceLabel.style.color = mutedColor;
       if (priceVal) priceVal.style.color = contrastColor;
 
       const specsBox = previewPanel.querySelector('.preview-specs');
       if (specsBox) {
-        specsBox.style.borderColor = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+        specsBox.style.borderColor = isDarkBg ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
       }
       const priceRow = previewPanel.querySelector('.preview-price-row');
       if (priceRow) {
-        priceRow.style.borderColor = (contrastColor === '#FFFFFF') ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+        priceRow.style.borderColor = isDarkBg ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
       }
     }
   } else {
