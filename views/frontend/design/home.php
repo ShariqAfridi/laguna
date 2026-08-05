@@ -614,18 +614,18 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       display: none;
     }
 
-    /* ELECTROPLATE CARDS (Diagonal Gloss Effect Top-Left to Bottom-Right) */
+    /* ELECTROPLATE CARDS (High-Contrast 135deg Metallic Mirror Finish) */
     .color-card.electroplate-card {
       background: linear-gradient(
         135deg,
-        #475569 0%,
-        #64748b 15%,
-        #94a3b8 30%,
+        #1e293b 0%,
+        #475569 16%,
+        #cbd5e1 32%,
         #ffffff 48%,
         #ffffff 52%,
-        #cbd5e1 70%,
-        #64748b 85%,
-        #334155 100%
+        #94a3b8 68%,
+        #334155 84%,
+        #0f172a 100%
       );
       border-color: #cbd5e1;
     }
@@ -633,16 +633,16 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     .color-card.electroplate-card.electroplate-smoky {
       background: linear-gradient(
         135deg,
-        #0f172a 0%,
-        #1e293b 15%,
-        #475569 32%,
-        #e2e8f0 48%,
-        #e2e8f0 52%,
-        #64748b 70%,
-        #1e293b 85%,
+        #020617 0%,
+        #0f172a 16%,
+        #334155 32%,
+        #94a3b8 48%,
+        #ffffff 52%,
+        #475569 68%,
+        #0f172a 84%,
         #020617 100%
       );
-      border-color: #475569;
+      border-color: #334155;
     }
 
     .color-card.electroplate-card.electroplate-smoky .color-name-label {
@@ -653,25 +653,25 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     .color-card.electroplate-card.electroplate-gold {
       background: linear-gradient(
         135deg,
-        #713f12 0%,
-        #854d0e 15%,
+        #451a03 0%,
+        #713f12 16%,
         #ca8a04 32%,
         #ffffff 48%,
         #ffffff 52%,
-        #facc15 70%,
-        #ca8a04 85%,
-        #451a03 100%
+        #facc15 68%,
+        #854d0e 84%,
+        #290e02 100%
       );
       border-color: #eab308;
     }
 
-    /* MATTE CARDS */
+    /* MATTE CARDS (Soft Non-Shiny Velvet Matte Finish) */
     .color-card.matte-card {
       background: #F8FAFC;
     }
 
     .color-card.matte-card.matte-black {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      background: linear-gradient(135deg, #182030 0%, #0b0f19 100%);
       border-color: #334155;
     }
 
@@ -691,32 +691,53 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-card.matte-card.matte-pink {
-      background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
-      border-color: #fecdd3;
+      background: linear-gradient(135deg, #f09a8d 0%, #e58879 50%, #d87869 100%);
+      border-color: #e58879;
     }
 
-    /* FROST CARDS */
+    .color-card.matte-card.matte-pink .color-name-label {
+      color: #FFFFFF !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    /* FROST CARDS (Translucent Frosted Glass & Rich Tones) */
     .color-card.frost-card {
       background: #FFFFFF;
     }
 
     .color-card.frost-card.frost-white {
       background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border-color: #e2e8f0;
     }
 
     .color-card.frost-card.frost-mocha {
-      background: linear-gradient(135deg, #fdf8f6 0%, #f5e6e0 100%);
-      border-color: #e7d5cd;
+      background: linear-gradient(135deg, #6b4e41 0%, #543d32 100%);
+      border-color: #543d32;
+    }
+
+    .color-card.frost-card.frost-mocha .color-name-label {
+      color: #FFFFFF !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     }
 
     .color-card.frost-card.frost-blue {
-      background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
-      border-color: #bae6fd;
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      border-color: #1d4ed8;
+    }
+
+    .color-card.frost-card.frost-blue .color-name-label {
+      color: #FFFFFF !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     }
 
     .color-card.frost-card.frost-purple {
-      background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-      border-color: #e9d5ff;
+      background: linear-gradient(135deg, #7e57c2 0%, #5e35b1 100%);
+      border-color: #673ab7;
+    }
+
+    .color-card.frost-card.frost-purple .color-name-label {
+      color: #FFFFFF !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     }
 
     .color-swatch-dot {
