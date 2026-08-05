@@ -559,23 +559,34 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       margin-bottom: 6px;
     }
 
-    /* ─── COLOR CARD STYLES ─── */
+    /* ─── COLOR CARD STYLES (5 IN A ROW ON DESKTOP) ─── */
     .color-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 18px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
       margin-bottom: 48px;
       width: 100%;
+    }
+
+    @media (max-width: 1300px) {
+      .color-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    @media (max-width: 1050px) {
+      .color-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
 
     .color-card {
       background: #FFFFFF;
       border: 1.5px solid #E5E7EB;
       border-radius: 12px;
-      padding: 14px 22px;
+      padding: 12px 14px;
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 10px;
       transition: all 0.25s ease;
       cursor: pointer;
       position: relative;
@@ -602,31 +613,33 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       display: none;
     }
 
-    /* ELECTROPLATE CARDS */
+    /* ELECTROPLATE CARDS (Diagonal Gloss Effect Top-Left to Bottom-Right) */
     .color-card.electroplate-card {
       background: linear-gradient(
-        90deg,
-        #64748b 0%,
-        #94a3b8 14%,
-        #e2e8f0 32%,
-        #ffffff 50%,
-        #cbd5e1 68%,
-        #64748b 86%,
-        #475569 100%
+        135deg,
+        #475569 0%,
+        #64748b 15%,
+        #94a3b8 30%,
+        #ffffff 48%,
+        #ffffff 52%,
+        #cbd5e1 70%,
+        #64748b 85%,
+        #334155 100%
       );
       border-color: #cbd5e1;
     }
 
     .color-card.electroplate-card.electroplate-smoky {
       background: linear-gradient(
-        90deg,
-        #1e293b 0%,
-        #475569 14%,
-        #64748b 32%,
-        #e2e8f0 50%,
-        #475569 68%,
-        #1e293b 86%,
-        #0f172a 100%
+        135deg,
+        #0f172a 0%,
+        #1e293b 15%,
+        #475569 32%,
+        #e2e8f0 48%,
+        #e2e8f0 52%,
+        #64748b 70%,
+        #1e293b 85%,
+        #020617 100%
       );
       border-color: #475569;
     }
@@ -638,14 +651,15 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .color-card.electroplate-card.electroplate-gold {
       background: linear-gradient(
-        90deg,
-        #854d0e 0%,
-        #ca8a04 14%,
-        #facc15 32%,
-        #ffffff 50%,
-        #facc15 68%,
-        #ca8a04 86%,
-        #713f12 100%
+        135deg,
+        #713f12 0%,
+        #854d0e 15%,
+        #ca8a04 32%,
+        #ffffff 48%,
+        #ffffff 52%,
+        #facc15 70%,
+        #ca8a04 85%,
+        #451a03 100%
       );
       border-color: #eab308;
     }
@@ -705,8 +719,8 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-swatch-dot {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       border: 1.5px solid rgba(0,0,0,0.15);
       flex-shrink: 0;
@@ -722,11 +736,13 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .color-name-label {
       font-family: var(--sans);
-      font-size: 15px;
+      font-size: 13.5px;
       font-weight: 600;
       color: #0F172A;
       letter-spacing: 0.01em;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
     }
 
