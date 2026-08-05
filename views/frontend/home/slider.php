@@ -434,11 +434,6 @@
                             <div class="lvh-candle-img-wrapper">
                                 <img class="lvh-candle-img" src="<?= htmlspecialchars($imgUrl); ?>" alt="Candle <?= htmlspecialchars($candle['code']); ?>" loading="lazy">
                             </div>
-                            <div class="lvh-candle-meta">
-                                <?php if (!empty($candle['coming_soon'])): ?>
-                                    <span class="lvh-candle-status">COMING SOON</span>
-                                <?php endif; ?>
-                            </div>
                         </div>
                     <?php 
                         endforeach;
