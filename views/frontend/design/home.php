@@ -649,44 +649,138 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       transform: scale(1.06);
     }
 
-    /* Metallic Electroplate Card background styles */
+    /* Realistic Vertical Chrome Mirror Finish for Electroplate Cards */
     .color-card.electroplate-card {
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 45%, #cbd5e1 75%, #f1f5f9 100%);
-      border: 1.5px solid #cbd5e1;
+      background: linear-gradient(
+        90deg,
+        #475569 0%,
+        #94a3b8 12%,
+        #e2e8f0 28%,
+        #ffffff 48%,
+        #ffffff 52%,
+        #cbd5e1 70%,
+        #64748b 88%,
+        #334155 100%
+      ) !important;
+      border: 1.5px solid #cbd5e1 !important;
+      box-shadow: 
+        inset 0 1px 2px rgba(255, 255, 255, 0.9),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+        0 3px 10px rgba(0, 0, 0, 0.12) !important;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .color-card.electroplate-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 35%;
+      width: 30%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.6) 50%,
+        transparent 100%
+      );
+      pointer-events: none;
     }
 
     .color-card.electroplate-card:hover {
-      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 40%, #94a3b8 70%, #e2e8f0 100%);
-      border-color: #64748b;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+      background: linear-gradient(
+        90deg,
+        #334155 0%,
+        #64748b 12%,
+        #cbd5e1 28%,
+        #ffffff 45%,
+        #ffffff 55%,
+        #e2e8f0 72%,
+        #475569 88%,
+        #1e293b 100%
+      ) !important;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
     }
 
     .color-card.electroplate-card.selected {
-      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 45%, #94a3b8 80%, #f1f5f9 100%);
-      border: 2px solid #1e293b;
-      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.2);
+      background: linear-gradient(
+        90deg,
+        #1e293b 0%,
+        #475569 10%,
+        #94a3b8 24%,
+        #ffffff 45%,
+        #ffffff 55%,
+        #cbd5e1 72%,
+        #475569 88%,
+        #0f172a 100%
+      ) !important;
+      border: 2px solid #0f172a !important;
+      box-shadow: 0 6px 22px rgba(15, 23, 42, 0.3) !important;
     }
 
-    .color-card.electroplate-card.selected .color-name-label {
+    .color-card.electroplate-card .color-name-label {
       font-weight: 700;
       color: #0f172a;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+      position: relative;
+      z-index: 2;
     }
 
     /* Smoky Grey Electroplate Card */
     .color-card.electroplate-card.electroplate-smoky {
-      background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 40%, #475569 75%, #cbd5e1 100%);
+      background: linear-gradient(
+        90deg,
+        #0f172a 0%,
+        #334155 14%,
+        #64748b 30%,
+        #e2e8f0 48%,
+        #e2e8f0 52%,
+        #475569 72%,
+        #1e293b 88%,
+        #020617 100%
+      ) !important;
     }
     .color-card.electroplate-card.electroplate-smoky.selected {
-      background: linear-gradient(135deg, #cbd5e1 0%, #64748b 45%, #1e293b 80%, #94a3b8 100%);
+      background: linear-gradient(
+        90deg,
+        #020617 0%,
+        #1e293b 14%,
+        #475569 30%,
+        #cbd5e1 48%,
+        #cbd5e1 52%,
+        #334155 72%,
+        #0f172a 88%,
+        #000000 100%
+      ) !important;
     }
 
     /* Gold Electroplate Card */
     .color-card.electroplate-card.electroplate-gold {
-      background: linear-gradient(135deg, #fefce8 0%, #fef08a 40%, #eab308 75%, #fef9c3 100%);
+      background: linear-gradient(
+        90deg,
+        #713f12 0%,
+        #a16207 14%,
+        #eab308 30%,
+        #fef08a 48%,
+        #ffffff 52%,
+        #facc15 72%,
+        #854d0e 88%,
+        #451a03 100%
+      ) !important;
     }
     .color-card.electroplate-card.electroplate-gold.selected {
-      background: linear-gradient(135deg, #fef08a 0%, #eab308 45%, #ca8a04 80%, #fefce8 100%);
-      border-color: #854d0e;
+      background: linear-gradient(
+        90deg,
+        #451a03 0%,
+        #713f12 14%,
+        #ca8a04 30%,
+        #fefce8 48%,
+        #ffffff 52%,
+        #eab308 72%,
+        #713f12 88%,
+        #290e02 100%
+      ) !important;
+      border-color: #713f12 !important;
     }
 
     .color-name-label {
