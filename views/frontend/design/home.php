@@ -888,8 +888,6 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 24px;
-      border-bottom: 1px solid var(--border);
       width: 100%;
       max-width: 100%;
       margin-bottom: 32px;
@@ -1125,7 +1123,12 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
     .btn-cart:hover { background: var(--teal-light); }
 
-    .step-content { display: none; }
+    .step-content {
+      display: none;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 32px;
+      margin-bottom: 32px;
+    }
     .step-content.active { display: block; }
 
     .wick-badge {
