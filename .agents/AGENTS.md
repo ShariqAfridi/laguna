@@ -8,3 +8,4 @@
 1. **Never auto-push**: Do not execute `git push`, `git push origin`, or any remote push commands automatically.
 2. **Explicit Consent Required**: Always ask the user for permission and receive clear confirmation before running any git push operation.
 3. **Commit Restrictions**: Even when committing changes locally, do not push changes upstream unless instructed to do so.
+4. **No immediate push suggestions**: Commit the changes locally when work is completed, but do not ask to push immediately. Save all pushes for the end of the day or when explicitly requested by the user.
