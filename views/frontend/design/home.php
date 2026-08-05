@@ -671,7 +671,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-card.matte-card.matte-black {
-      background: linear-gradient(135deg, #182030 0%, #0b0f19 100%);
+      background: linear-gradient(135deg, #252e3d 0%, #1b222e 50%, #121720 100%);
       border-color: #334155;
     }
 
@@ -681,7 +681,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-card.matte-card.matte-charcoal {
-      background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+      background: linear-gradient(135deg, #47535c 0%, #3a444c 50%, #2b333a 100%);
       border-color: #475569;
     }
 
@@ -691,7 +691,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-card.matte-card.matte-pink {
-      background: linear-gradient(135deg, #f09a8d 0%, #e58879 50%, #d87869 100%);
+      background: linear-gradient(135deg, #f09a8d 0%, #e58879 50%, #cb7162 100%);
       border-color: #e58879;
     }
 
@@ -706,12 +706,12 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-card.frost-card.frost-white {
-      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      background: linear-gradient(135deg, #ffffff 0%, #f4f1ea 100%);
       border-color: #e2e8f0;
     }
 
     .color-card.frost-card.frost-mocha {
-      background: linear-gradient(135deg, #6b4e41 0%, #543d32 100%);
+      background: linear-gradient(135deg, #7c5c4e 0%, #6b4e41 50%, #543d32 100%);
       border-color: #543d32;
     }
 
@@ -721,8 +721,8 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-card.frost-card.frost-blue {
-      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-      border-color: #1d4ed8;
+      background: linear-gradient(135deg, #2b55b3 0%, #23499d 50%, #1a387a 100%);
+      border-color: #1a387a;
     }
 
     .color-card.frost-card.frost-blue .color-name-label {
@@ -731,8 +731,8 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-card.frost-card.frost-purple {
-      background: linear-gradient(135deg, #7e57c2 0%, #5e35b1 100%);
-      border-color: #673ab7;
+      background: linear-gradient(135deg, #bfa6c7 0%, #a68daf 50%, #8d7396 100%);
+      border-color: #8d7396;
     }
 
     .color-card.frost-card.frost-purple .color-name-label {
