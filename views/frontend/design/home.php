@@ -634,80 +634,59 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .color-swatch-dot {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
-      border: 1.5px solid rgba(0,0,0,0.18);
+      border: 1.5px solid rgba(0,0,0,0.15);
       flex-shrink: 0;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.12), 0 2px 5px rgba(0,0,0,0.06);
       position: relative;
       overflow: hidden;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.2s ease;
     }
 
     .color-card:hover .color-swatch-dot {
-      transform: scale(1.08);
+      transform: scale(1.06);
     }
 
-    /* Brighter, highly reflective mirror-like finish for Electroplate colors */
-    .color-swatch-dot.electroplate-dot {
-      background: linear-gradient(135deg, 
-        #ffffff 0%, 
-        #cbd5e1 18%, 
-        #64748b 38%, 
-        #ffffff 50%, 
-        #334155 68%, 
-        #94a3b8 85%, 
-        #ffffff 100%
-      ) !important;
-      border: 1.5px solid #ffffff !important;
-      box-shadow: 
-        inset 2px 2px 5px rgba(255, 255, 255, 0.95), 
-        inset -2px -2px 6px rgba(0, 0, 0, 0.5), 
-        0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    /* Metallic Electroplate Card background styles */
+    .color-card.electroplate-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 45%, #cbd5e1 75%, #f1f5f9 100%);
+      border: 1.5px solid #cbd5e1;
     }
 
-    .color-swatch-dot.electroplate-dot::before {
-      content: '';
-      position: absolute;
-      top: -30%;
-      left: -30%;
-      width: 160%;
-      height: 160%;
-      background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.85) 50%, transparent 60%);
-      pointer-events: none;
+    .color-card.electroplate-card:hover {
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 40%, #94a3b8 70%, #e2e8f0 100%);
+      border-color: #64748b;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
     }
 
-    .color-swatch-dot.electroplate-smoky {
-      background: linear-gradient(135deg, 
-        #94a3b8 0%, 
-        #475569 20%, 
-        #1e293b 40%, 
-        #ffffff 52%, 
-        #0f172a 72%, 
-        #64748b 100%
-      ) !important;
-      border: 1.5px solid rgba(255,255,255,0.7) !important;
-      box-shadow: 
-        inset 2px 2px 4px rgba(255, 255, 255, 0.85), 
-        inset -2px -2px 6px rgba(0, 0, 0, 0.7), 
-        0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    .color-card.electroplate-card.selected {
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 45%, #94a3b8 80%, #f1f5f9 100%);
+      border: 2px solid #1e293b;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.2);
     }
 
-    .color-swatch-dot.electroplate-gold {
-      background: linear-gradient(135deg, 
-        #ffffff 0%, 
-        #facc15 20%, 
-        #a16207 40%, 
-        #ffffff 52%, 
-        #713f12 72%, 
-        #fef08a 100%
-      ) !important;
-      border: 1.5px solid #ffffff !important;
-      box-shadow: 
-        inset 2px 2px 5px rgba(255, 255, 255, 0.95), 
-        inset -2px -2px 6px rgba(113, 63, 18, 0.6), 
-        0 4px 12px rgba(161, 98, 7, 0.3) !important;
+    .color-card.electroplate-card.selected .color-name-label {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Smoky Grey Electroplate Card */
+    .color-card.electroplate-card.electroplate-smoky {
+      background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 40%, #475569 75%, #cbd5e1 100%);
+    }
+    .color-card.electroplate-card.electroplate-smoky.selected {
+      background: linear-gradient(135deg, #cbd5e1 0%, #64748b 45%, #1e293b 80%, #94a3b8 100%);
+    }
+
+    /* Gold Electroplate Card */
+    .color-card.electroplate-card.electroplate-gold {
+      background: linear-gradient(135deg, #fefce8 0%, #fef08a 40%, #eab308 75%, #fef9c3 100%);
+    }
+    .color-card.electroplate-card.electroplate-gold.selected {
+      background: linear-gradient(135deg, #fef08a 0%, #eab308 45%, #ca8a04 80%, #fefce8 100%);
+      border-color: #854d0e;
     }
 
     .color-name-label {
@@ -2196,20 +2175,21 @@ function renderColorCards(vessel) {
     card.dataset.image = imgSrc;
 
     const isElectro = /electroplate|mirror|chrome|metallic/i.test(color.name || '') || (color.type === 'ELECTROPLATE');
-    let electroClass = '';
+    let cardClasses = 'color-card';
     if (isElectro) {
-      electroClass = ' electroplate-dot';
+      cardClasses += ' electroplate-card';
       if (/smoky|dark|black/i.test(color.name || '')) {
-        electroClass += ' electroplate-smoky';
+        cardClasses += ' electroplate-smoky';
       } else if (/gold|yellow/i.test(color.name || '')) {
-        electroClass += ' electroplate-gold';
+        cardClasses += ' electroplate-gold';
       }
     }
+    card.className = cardClasses;
 
     card.innerHTML = `
       <input type="radio" name="builder_vessel_color" value="${color.name}">
       <span class="radio-indicator"></span>
-      <span class="color-swatch-dot${electroClass}" style="background:${hexColor};"></span>
+      <span class="color-swatch-dot" style="background:${hexColor};"></span>
       <span class="color-name-label">${color.name}</span>
     `;
 
@@ -2539,20 +2519,21 @@ function renderColorCards(vessel) {
     card.dataset.hex = hexColor;
 
     const isElectro = /electroplate|mirror|chrome|metallic/i.test(color.name || '') || (color.type === 'ELECTROPLATE');
-    let electroClass = '';
+    let cardClasses = 'color-card';
     if (isElectro) {
-      electroClass = ' electroplate-dot';
+      cardClasses += ' electroplate-card';
       if (/smoky|dark|black/i.test(color.name || '')) {
-        electroClass += ' electroplate-smoky';
+        cardClasses += ' electroplate-smoky';
       } else if (/gold|yellow/i.test(color.name || '')) {
-        electroClass += ' electroplate-gold';
+        cardClasses += ' electroplate-gold';
       }
     }
+    card.className = cardClasses;
 
     card.innerHTML = `
       <input type="radio" name="builder_vessel_color" value="${color.name}">
       <span class="radio-indicator"></span>
-      <span class="color-swatch-dot${electroClass}" style="background:${hexColor};"></span>
+      <span class="color-swatch-dot" style="background:${hexColor};"></span>
       <span class="color-name-label">${color.name}</span>
     `;
 
