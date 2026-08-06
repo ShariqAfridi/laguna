@@ -35,33 +35,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status     = isset($_POST['status']) ? (int)$_POST['status'] : 1;
     $sort_order = (int)($_POST['sort_order'] ?? 0);
 
-    $color_image = $color['color_image'] ?? '';
-    if (!empty($_FILES['color_image']['tmp_name'])) {
-        $file = $_FILES['color_image'];
-        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $color_image        = $color['color_image'] ?? '';
+    $single_wick_image  = $color['single_wick_image'] ?? '';
+    $double_wick_image  = $color['double_wick_image'] ?? '';
+    $triple_wick_image  = $color['triple_wick_image'] ?? '';
 
-        if (in_array($ext, $allowed)) {
-            $upload_dir = __DIR__ . '/../../public/uploads/colors/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-            $filename = 'color_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-            $target_file = $upload_dir . $filename;
-
-            if (move_uploaded_file($file['tmp_name'], $target_file)) {
-                $color_image = 'public/uploads/colors/' . $filename;
-            } else {
-                $error_message = 'Failed to upload candle color image.';
-            }
-        } else {
-            $error_message = 'Invalid image format.';
-        }
+    $upload_dir = __DIR__ . '/../../public/uploads/colors/';
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0777, true);
     }
+    $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+    $upload_file = function($key, $prefix, $current) use ($upload_dir, $allowed, &$error_message) {
+        if (!empty($_FILES[$key]['tmp_name'])) {
+            $file = $_FILES[$key];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, $allowed)) {
+                $filename = $prefix . '_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+                $target_file = $upload_dir . $filename;
+                if (move_uploaded_file($file['tmp_name'], $target_file)) {
+                    return 'public/uploads/colors/' . $filename;
+                } else {
+                    $error_message = "Failed to upload {$prefix} image.";
+                }
+            } else {
+                $error_message = 'Invalid image format. Allowed: JPG, PNG, WEBP, GIF.';
+            }
+        }
+        return $current;
+    };
+
+    $single_wick_image  = $upload_file('single_wick_image', 'color_single', $single_wick_image);
+    $double_wick_image  = $upload_file('double_wick_image', 'color_double', $double_wick_image);
+    $triple_wick_image  = $upload_file('triple_wick_image', 'color_triple', $triple_wick_image);
 
     if (empty($error_message) && !empty($color_name)) {
-        $update_stmt = $conn->prepare("UPDATE colors SET sku=?, color_name=?, color_hex=?, color_image=?, status=?, sort_order=? WHERE color_id=?");
-        $update_stmt->bind_param("ssssiii", $sku, $color_name, $color_hex, $color_image, $status, $sort_order, $id);
+        $update_stmt = $conn->prepare("UPDATE colors SET sku=?, color_name=?, color_hex=?, color_image=?, single_wick_image=?, double_wick_image=?, triple_wick_image=?, status=?, sort_order=? WHERE color_id=?");
+        $update_stmt->bind_param("sssssssiii", $sku, $color_name, $color_hex, $color_image, $single_wick_image, $double_wick_image, $triple_wick_image, $status, $sort_order, $id);
 
         if ($update_stmt->execute()) {
             echo "<script>window.location.href='" . base_url('/admin/colors') . "';</script>";
@@ -80,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="admin-card">
         <h2 class="admin-title" style="margin-bottom:6px;">Edit Color Variant</h2>
-        <p class="admin-subtitle" style="margin-bottom:24px;">Update details for <?= htmlspecialchars($color['color_name']); ?>.</p>
+        <p class="admin-subtitle" style="margin-bottom:24px;">Update swatches and wick-specific images for Single Wick (Vessel C), Double Wick (Vessel D), and Triple Wick (Vessel E).</p>
 
         <?php if (!empty($error_message)): ?>
             <div style="background:#fde8e8; color:#9b1c1c; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-size:14px;">
@@ -122,11 +132,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div>
-                    <label class="admin-label">Candle Variant Image</label>
-                    <input type="file" name="color_image" accept="image/*" class="admin-input" style="padding:8px;">
-                    <?php if (!empty($color['color_image'])): ?>
+                    <label class="admin-label">Single Wick Image (Vessel C)</label>
+                    <input type="file" name="single_wick_image" accept="image/*" class="admin-input" style="padding:8px;">
+                    <?php if (!empty($color['single_wick_image'])): ?>
                         <div style="margin-top:8px;">
-                            <img src="<?= htmlspecialchars(base_url('/' . ltrim($color['color_image'], '/'))); ?>" alt="Current Image" class="admin-thumb">
+                            <img src="<?= htmlspecialchars(base_url('/' . ltrim($color['single_wick_image'], '/'))); ?>" alt="Single Wick Image" class="admin-thumb">
+                        </div>
+                    <?php else: ?>
+                        <div style="margin-top:8px;">
+                            <div class="admin-no-thumb">No<br>Image</div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div>
+                    <label class="admin-label">Double Wick Image (Vessel D)</label>
+                    <input type="file" name="double_wick_image" accept="image/*" class="admin-input" style="padding:8px;">
+                    <?php if (!empty($color['double_wick_image'])): ?>
+                        <div style="margin-top:8px;">
+                            <img src="<?= htmlspecialchars(base_url('/' . ltrim($color['double_wick_image'], '/'))); ?>" alt="Double Wick Image" class="admin-thumb">
+                        </div>
+                    <?php else: ?>
+                        <div style="margin-top:8px;">
+                            <div class="admin-no-thumb">No<br>Image</div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div>
+                    <label class="admin-label">Triple Wick Image (Vessel E)</label>
+                    <input type="file" name="triple_wick_image" accept="image/*" class="admin-input" style="padding:8px;">
+                    <?php if (!empty($color['triple_wick_image'])): ?>
+                        <div style="margin-top:8px;">
+                            <img src="<?= htmlspecialchars(base_url('/' . ltrim($color['triple_wick_image'], '/'))); ?>" alt="Triple Wick Image" class="admin-thumb">
                         </div>
                     <?php else: ?>
                         <div style="margin-top:8px;">

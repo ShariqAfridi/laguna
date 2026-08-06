@@ -174,10 +174,13 @@
   // Load cart from localStorage and sessionStorage
   function loadCartFromStorage() {
     try {
-      var saved = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
-      if (saved) {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === null) {
+        saved = sessionStorage.getItem(STORAGE_KEY);
+      }
+      if (saved !== null && saved !== undefined) {
         var parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           items = parsed;
         }
       }
@@ -187,11 +190,23 @@
     }
   }
 
+  function syncServerCart(currentItems) {
+    try {
+      var base = (typeof window.basePath !== 'undefined') ? window.basePath : (window.location.pathname.startsWith('/laguna') ? '/laguna' : '');
+      fetch(base + '/logic/sync_cart.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cart: currentItems })
+      }).catch(function(e) { console.warn('Cart sync failed:', e); });
+    } catch(e) {}
+  }
+
   // Save cart to both localStorage & sessionStorage
   function saveCartToStorage() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      syncServerCart(items);
     } catch (e) {
       console.warn('Failed to save cart to storage:', e);
     }
@@ -298,13 +313,24 @@
   /* ── 6. ITEM ACTIONS ── */
   function addItem(item) {
     // Validate required fields
-    if (!item || !item.id || !item.name || item.price === undefined || item.price === null || isNaN(item.price)) {
+    if (!item || !item.name || item.price === undefined || item.price === null || isNaN(item.price)) {
       console.warn('Invalid cart item:', item);
       return;
     }
 
-    // Ensure SKU is stored (use id as fallback if SKU not provided)
-    if (!item.sku && item.id) {
+    if (!item.id) {
+      if (item.product_id) {
+        item.id = 'prod_' + item.product_id + (item.size_id ? '_size' + item.size_id : '') + (item.box_id ? '_box' + item.box_id : '') + (item.sku ? '_' + item.sku : '');
+      } else if (item.accessory_id) {
+        item.id = 'acc_' + item.accessory_id + (item.sku ? '_' + item.sku : '');
+      } else if (item.sku) {
+        item.id = item.sku;
+      } else {
+        item.id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+      }
+    }
+
+    if (!item.sku) {
       item.sku = item.id;
     }
 
@@ -315,7 +341,6 @@
     
     if (existing) {
       existing.qty += (item.qty || 1);
-      // Update SKU if provided and not already set
       if (item.sku && !existing.sku) {
         existing.sku = item.sku;
       }
@@ -326,18 +351,20 @@
         sku: item.sku || item.id,
         scent: item.scent || '', 
         id: item.id, 
+        product_id: item.product_id || null,
+        accessory_id: item.accessory_id || null,
         name: item.name,
-        price: item.price,
-        size_id: item.size_id,
-        size_name: item.size_name,
-        box_id: item.box_id,
-        box_name: item.box_name,
-        fragrance_id: item.fragrance_id,
-        fragrance_name: item.fragrance_name,
-        color_name: item.color_name,
-        color_code: item.color_code,
-        vessel: item.vessel,
-        wick_type: item.wick_type
+        price: parseFloat(item.price),
+        size_id: item.size_id || null,
+        size_name: item.size_name || null,
+        box_id: item.box_id || null,
+        box_name: item.box_name || null,
+        fragrance_id: item.fragrance_id || null,
+        fragrance_name: item.fragrance_name || null,
+        color_name: item.color_name || null,
+        color_code: item.color_code || null,
+        vessel: item.vessel || null,
+        wick_type: item.wick_type || null
       });
     }
     
@@ -457,6 +484,19 @@
     saveCartToStorage();
   });
 
+  // Listen for storage or custom cart update events to keep drawer in sync
+  window.addEventListener('storage', function(e) {
+    if (!e.key || e.key === STORAGE_KEY) {
+      loadCartFromStorage();
+      render();
+    }
+  });
+
+  window.addEventListener('lvb_cart_updated', function() {
+    loadCartFromStorage();
+    render();
+  });
+
   /* ── 8. PUBLIC API ── */
   window.LVBCart = {
     open:       openCart,
@@ -468,7 +508,9 @@
     clear:      clearCart,
     getItems:   getCartItems,
     getTotal:   getCartTotal,
-    getCount:   getCartCount
+    getCount:   getCartCount,
+    render:     render,
+    reload:     function() { loadCartFromStorage(); render(); }
   };
 
   /* ── 9. INITIALIZE ── */

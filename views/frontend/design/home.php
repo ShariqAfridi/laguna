@@ -36,6 +36,9 @@ if ($colorsResult && $colorsResult->num_rows > 0) {
       'name' => $row['color_name'],
       'hex' => strtoupper($fmtHex),
       'image' => !empty($row['color_image']) ? base_url('/' . ltrim($row['color_image'], '/')) : '',
+      'single_wick_image' => !empty($row['single_wick_image']) ? base_url('/' . ltrim($row['single_wick_image'], '/')) : '',
+      'double_wick_image' => !empty($row['double_wick_image']) ? base_url('/' . ltrim($row['double_wick_image'], '/')) : '',
+      'triple_wick_image' => !empty($row['triple_wick_image']) ? base_url('/' . ltrim($row['triple_wick_image'], '/')) : '',
       'code' => !empty($row['sku']) ? $row['sku'] : sprintf('%02d', $row['color_id'])
     ];
   }
@@ -176,7 +179,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     }
 
     .preview-panel {
-      background: #E2F1F7;
+      background: #F8FAFC;
       position: sticky;
       top: 85px;
       align-self: start;
@@ -198,7 +201,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       letter-spacing: 0.2em;
       color: var(--text-muted);
       font-weight: 500;
-      margin-bottom: 40px;
+      margin-bottom: 24px;
     }
 
     .preview-candle {
@@ -206,15 +209,15 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      margin-bottom: 14px;
-      padding-top: 10px;
+      margin-bottom: 18px;
+      padding-top: 48px;
       position: relative;
       width: 100%;
     }
 
     .candle-visual {
-      width: 270px;
-      height: 300px;
+      width: 250px;
+      height: 250px;
       position: relative;
       display: flex;
       align-items: center;
@@ -223,9 +226,9 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .candle-card {
       width: 250px;
-      height: 280px;
+      height: 250px;
       background: var(--cream);
-      border-radius: 6px;
+      border-radius: 12px;
       position: relative;
       display: flex;
       flex-direction: column;
@@ -247,7 +250,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .candle-flame {
       position: absolute;
-      top: -32px;
+      top: -46px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
@@ -326,8 +329,8 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .candle-img-wrap {
       width: 250px;
-      height: 280px;
-      border-radius: 6px;
+      height: 250px;
+      border-radius: 12px;
       overflow: hidden;
       display: none;
       box-shadow: 0 8px 25px rgba(0,0,0,0.14);
@@ -338,8 +341,10 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     .candle-img-wrap img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      border-radius: 6px;
+      object-fit: contain;
+      object-position: center;
+      border-radius: 12px;
+      display: block;
     }
 
     .preview-frag-badge {
@@ -2000,12 +2005,12 @@ function updatePreviewPanelTypography() {
 
     if (isSilver) {
       previewPanel.style.backgroundImage = `url('<?= base_url('/public/assets/img/silver_electroplate_bg.png'); ?>')`;
-      previewPanel.style.backgroundSize = 'cover';
+      previewPanel.style.backgroundSize = '100% 100%';
       previewPanel.style.backgroundPosition = 'center';
       previewPanel.style.backgroundColor = '#d0d3d9';
     } else if (isSmoky) {
       previewPanel.style.backgroundImage = `url('<?= base_url('/public/assets/img/smoky_electroplate_bg.png'); ?>')`;
-      previewPanel.style.backgroundSize = 'cover';
+      previewPanel.style.backgroundSize = '100% 100%';
       previewPanel.style.backgroundPosition = 'center';
       previewPanel.style.backgroundColor = '#0b0f17';
     }
@@ -2074,7 +2079,7 @@ function resetPreviewPanelStyle() {
   const previewPanel = document.querySelector('.preview-panel');
   if (previewPanel) {
     previewPanel.style.backgroundImage = 'none';
-    previewPanel.style.backgroundColor = '#E2F1F7';
+    previewPanel.style.backgroundColor = '#F8FAFC';
     previewPanel.style.color = 'inherit';
 
     const previewLabel = previewPanel.querySelector('.preview-label');
@@ -2313,16 +2318,25 @@ function renderColorCards(vessel) {
     const colorCode = color.code || color.sku || ('0' + (color.id || 1));
     card.dataset.code = colorCode;
 
-    let imgSrc = color.image || '';
+    let imgSrc = '';
+
+    // Resolve wick-specific image for selected vessel (C = Single Wick, D = Double Wick, E = Triple Wick)
+    if (vKey === 'C' && color.single_wick_image) imgSrc = color.single_wick_image;
+    else if (vKey === 'D' && color.double_wick_image) imgSrc = color.double_wick_image;
+    else if (vKey === 'E' && color.triple_wick_image) imgSrc = color.triple_wick_image;
+
     if (!imgSrc || imgSrc.trim() === '' || imgSrc.endsWith('/')) {
       if (color.images) {
         imgSrc = color.images[vKey] || color.images.C || '';
       }
       if (!imgSrc || imgSrc.trim() === '' || imgSrc.endsWith('/')) {
-        imgSrc = defaultColorImageMap[color.sku] || defaultColorImageMap[colorCode] || defaultColorImageMap[color.name] || '';
+        imgSrc = color.image || defaultColorImageMap[color.sku] || defaultColorImageMap[colorCode] || defaultColorImageMap[color.name] || '';
       }
     }
     card.dataset.image = imgSrc;
+    card.dataset.singleWickImg = color.single_wick_image || '';
+    card.dataset.doubleWickImg = color.double_wick_image || '';
+    card.dataset.tripleWickImg = color.triple_wick_image || '';
 
     const hexColor = color.hex || '#687382';
     card.dataset.hex = hexColor;
@@ -2665,12 +2679,12 @@ function selectColor(el, skipSync) {
 
       if (isSilverElectroplate) {
         previewPanel.style.backgroundImage = `url('<?= base_url('/public/assets/img/silver_electroplate_bg.png'); ?>')`;
-        previewPanel.style.backgroundSize = 'cover';
+        previewPanel.style.backgroundSize = '100% 100%';
         previewPanel.style.backgroundPosition = 'center';
         previewPanel.style.backgroundColor = '#d0d3d9';
       } else if (isSmokyGreyElectroplate) {
         previewPanel.style.backgroundImage = `url('<?= base_url('/public/assets/img/smoky_electroplate_bg.png'); ?>')`;
-        previewPanel.style.backgroundSize = 'cover';
+        previewPanel.style.backgroundSize = '100% 100%';
         previewPanel.style.backgroundPosition = 'center';
         previewPanel.style.backgroundColor = '#0b0f17';
       } else if (cardBgImage && cardBgImage !== 'none') {

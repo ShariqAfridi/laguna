@@ -1081,10 +1081,12 @@ document.getElementById('addToCartAction').onclick = function() {
     let productDisplayName = currentProduct.product_name;
     if (boxName) productDisplayName += ' + ' + boxName;
 
+    const uniqueItemId = 'prod_' + (currentProduct.product_id || 'item') + '_size' + currentSizeId + (selectedBoxId ? '_box' + selectedBoxId : '') + '_' + sku;
+
     waitForLVBCart(function() {
         if (typeof LVBCart !== 'undefined' && LVBCart.addItem) {
             LVBCart.addItem({
-                id: sku,
+                id: uniqueItemId,
                 sku: sku,
                 name: productDisplayName,
                 scent: selectedSizeName,

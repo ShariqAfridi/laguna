@@ -315,7 +315,8 @@ document.addEventListener('click', function(e) {
 
     if (window.LVBCart) {
         LVBCart.addItem({
-            id: sku,
+            id: 'acc_' + accessoryId + '_' + (sku || 'item'),
+            sku: sku || ('ACC-' + accessoryId),
             name: name,
             scent: 'Accessory',
             price: price,

@@ -19,33 +19,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status     = isset($_POST['status']) ? (int)$_POST['status'] : 1;
     $sort_order = (int)($_POST['sort_order'] ?? 0);
 
-    $color_image = '';
-    if (!empty($_FILES['color_image']['tmp_name'])) {
-        $file = $_FILES['color_image'];
-        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-        if (in_array($ext, $allowed)) {
-            $upload_dir = __DIR__ . '/../../public/uploads/colors/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-            $filename = 'color_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-            $target_file = $upload_dir . $filename;
-
-            if (move_uploaded_file($file['tmp_name'], $target_file)) {
-                $color_image = 'public/uploads/colors/' . $filename;
-            } else {
-                $error_message = 'Failed to upload candle color image.';
-            }
-        } else {
-            $error_message = 'Invalid image format. Allowed: JPG, PNG, WEBP, GIF.';
-        }
+    $upload_dir = __DIR__ . '/../../public/uploads/colors/';
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0777, true);
     }
+    $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+    // Helper for file upload
+    $upload_file = function($key, $prefix) use ($upload_dir, $allowed, &$error_message) {
+        if (!empty($_FILES[$key]['tmp_name'])) {
+            $file = $_FILES[$key];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, $allowed)) {
+                $filename = $prefix . '_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+                $target_file = $upload_dir . $filename;
+                if (move_uploaded_file($file['tmp_name'], $target_file)) {
+                    return 'public/uploads/colors/' . $filename;
+                } else {
+                    $error_message = "Failed to upload {$prefix} image.";
+                }
+            } else {
+                $error_message = 'Invalid image format. Allowed: JPG, PNG, WEBP, GIF.';
+            }
+        }
+        return '';
+    };
+
+    $color_image        = '';
+    $single_wick_image  = $upload_file('single_wick_image', 'color_single');
+    $double_wick_image  = $upload_file('double_wick_image', 'color_double');
+    $triple_wick_image  = $upload_file('triple_wick_image', 'color_triple');
 
     if (empty($error_message) && !empty($color_name)) {
-        $stmt = $conn->prepare("INSERT INTO colors (sku, color_name, color_hex, color_image, status, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssii", $sku, $color_name, $color_hex, $color_image, $status, $sort_order);
+        $stmt = $conn->prepare("INSERT INTO colors (sku, color_name, color_hex, color_image, single_wick_image, double_wick_image, triple_wick_image, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssssii", $sku, $color_name, $color_hex, $color_image, $single_wick_image, $double_wick_image, $triple_wick_image, $status, $sort_order);
 
         if ($stmt->execute()) {
             echo "<script>window.location.href='" . base_url('/admin/colors') . "';</script>";
@@ -64,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="admin-card">
         <h2 class="admin-title" style="margin-bottom:6px;">Add New Color Variant</h2>
-        <p class="admin-subtitle" style="margin-bottom:24px;">Define a color swatch, hex code, and upload a candle image for this variant.</p>
+        <p class="admin-subtitle" style="margin-bottom:24px;">Define color swatches and upload wick-specific images for Single Wick (Vessel C), Double Wick (Vessel D), and Triple Wick (Vessel E).</p>
 
         <?php if (!empty($error_message)): ?>
             <div style="background:#fde8e8; color:#9b1c1c; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-size:14px;">
@@ -94,8 +101,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div>
-                    <label class="admin-label">Candle Variant Image</label>
-                    <input type="file" name="color_image" accept="image/*" class="admin-input" style="padding:8px;">
+                    <label class="admin-label">Single Wick Image (Vessel C)</label>
+                    <input type="file" name="single_wick_image" accept="image/*" class="admin-input" style="padding:8px;">
+                </div>
+
+                <div>
+                    <label class="admin-label">Double Wick Image (Vessel D)</label>
+                    <input type="file" name="double_wick_image" accept="image/*" class="admin-input" style="padding:8px;">
+                </div>
+
+                <div>
+                    <label class="admin-label">Triple Wick Image (Vessel E)</label>
+                    <input type="file" name="triple_wick_image" accept="image/*" class="admin-input" style="padding:8px;">
                 </div>
 
                 <div>

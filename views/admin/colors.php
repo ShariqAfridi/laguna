@@ -69,7 +69,9 @@ $result = $conn->query("SELECT * FROM colors $whereSql ORDER BY sort_order ASC, 
             <thead>
                 <tr>
                     <th>Swatch</th>
-                    <th>Candle Image</th>
+                    <th>Single Wick (C)</th>
+                    <th>Double Wick (D)</th>
+                    <th>Triple Wick (E)</th>
                     <th>SKU</th>
                     <th>Color Name</th>
                     <th>HEX Code</th>
@@ -96,10 +98,24 @@ $result = $conn->query("SELECT * FROM colors $whereSql ORDER BY sort_order ASC, 
                             <div style="width:40px; height:24px; border-radius:6px; background:<?= htmlspecialchars($formattedHex); ?>; border:1px solid rgba(0,0,0,0.15);" title="<?= htmlspecialchars($formattedHex); ?>"></div>
                         </td>
                         <td>
-                            <?php if (!empty($row['color_image'])): ?>
-                                <img src="<?= htmlspecialchars(base_url('/' . ltrim($row['color_image'], '/'))); ?>" alt="Candle Variant" class="admin-thumb">
+                            <?php if (!empty($row['single_wick_image'])): ?>
+                                <img src="<?= htmlspecialchars(base_url('/' . ltrim($row['single_wick_image'], '/'))); ?>" alt="Single Wick Image" class="admin-thumb">
                             <?php else: ?>
-                                <div class="admin-no-thumb">No<br>Image</div>
+                                <div class="admin-no-thumb">—</div>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if (!empty($row['double_wick_image'])): ?>
+                                <img src="<?= htmlspecialchars(base_url('/' . ltrim($row['double_wick_image'], '/'))); ?>" alt="Double Wick Image" class="admin-thumb">
+                            <?php else: ?>
+                                <div class="admin-no-thumb">—</div>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if (!empty($row['triple_wick_image'])): ?>
+                                <img src="<?= htmlspecialchars(base_url('/' . ltrim($row['triple_wick_image'], '/'))); ?>" alt="Triple Wick Image" class="admin-thumb">
+                            <?php else: ?>
+                                <div class="admin-no-thumb">—</div>
                             <?php endif; ?>
                         </td>
                         <td><code style="background:#eef2ff; padding:3px 8px; border-radius:6px; font-weight:700; color:#4338ca; font-size:13px; font-family:monospace;"><?= htmlspecialchars($row['sku'] ?? '—'); ?></code></td>
@@ -125,7 +141,7 @@ $result = $conn->query("SELECT * FROM colors $whereSql ORDER BY sort_order ASC, 
                 <?php endwhile; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:40px; color:#9ca3af;">No candle color variants created yet. Click "Add New Color Variant" above.</td>
+                    <td colspan="9" style="text-align:center; padding:40px; color:#9ca3af;">No candle color variants created yet. Click "Add New Color Variant" above.</td>
                 </tr>
             <?php endif; ?>
             </tbody>

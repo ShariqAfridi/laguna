@@ -567,6 +567,26 @@ textarea { resize: vertical; min-height: 80px; }
 .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
 .qty-val { font-size: 13px; font-weight: 600; min-width: 20px; text-align: center; }
 
+.remove-item-btn {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-left: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+.remove-item-btn:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
 .item-price {
     font-weight: 700;
     font-size: 14px;
@@ -1018,8 +1038,8 @@ textarea { resize: vertical; min-height: 80px; }
             <!-- Cart Items -->
             <div id="cartItemsContainer">
                 <?php if (!empty($cart)): ?>
-                    <?php foreach ($cart as $item): ?>
-                        <div class="cart-item">
+                    <?php foreach ($cart as $index => $item): ?>
+                        <div class="cart-item" data-index="<?php echo $index; ?>" data-price="<?php echo floatval($item['price'] ?? 0); ?>">
                             <?php 
                                 $imgSrc = !empty($item['image']) ? $item['image'] : '/img/placeholder.jpg';
                                 if (strpos($imgSrc, 'http') !== 0 && strpos($imgSrc, $base) !== 0) {
@@ -1034,6 +1054,9 @@ textarea { resize: vertical; min-height: 80px; }
                                     <button type="button" class="qty-btn" onclick="changeQty(this, -1)">−</button>
                                     <span class="qty-val"><?php echo intval($item['qty'] ?? 1); ?></span>
                                     <button type="button" class="qty-btn" onclick="changeQty(this, 1)">+</button>
+                                    <button type="button" class="remove-item-btn" onclick="removeCheckoutItem(this)" title="Remove Product">
+                                        <i class="fas fa-trash-alt"></i> Remove
+                                    </button>
                                 </div>
                             </div>
                             <div class="item-price">$<?php echo number_format(floatval($item['price'] ?? 0) * intval($item['qty'] ?? 1), 2); ?></div>
@@ -1148,26 +1171,21 @@ textarea { resize: vertical; min-height: 80px; }
     // ── Cart Load ──
     function loadCart() {
         const saved = sessionStorage.getItem('lvb_cart');
-        if (saved) {
+        if (saved !== null) {
             try {
-                cart = JSON.parse(saved);
-                if (cart && cart.length > 0) {
-                    renderCart();
-                    // Sync with server
-                    if (!sessionStorage.getItem('cart_synced')) {
-                        sessionStorage.setItem('cart_synced', '1');
-                        syncServer(cart);
-                    }
-                    return;
+                cart = JSON.parse(saved) || [];
+                renderCart();
+                if (cart.length > 0 && !sessionStorage.getItem('cart_synced')) {
+                    sessionStorage.setItem('cart_synced', '1');
+                    syncServer(cart);
                 }
+                return;
             } catch(e) {}
         }
         // Fall through to PHP-rendered items
         const phpCart = <?php echo json_encode(!empty($cart) ? array_values($cart) : []); ?>;
-        if (phpCart && phpCart.length > 0) {
-            cart = phpCart;
-            updateTotals();
-        }
+        cart = phpCart || [];
+        renderCart();
     }
 
     function syncServer(items) {
@@ -1179,17 +1197,35 @@ textarea { resize: vertical; min-height: 80px; }
         }).catch(e => console.warn('Sync failed:', e));
     }
 
+    function broadcastCartChange() {
+        try {
+            sessionStorage.setItem('lvb_cart', JSON.stringify(cart));
+            localStorage.setItem('lvb_cart', JSON.stringify(cart));
+        } catch(e){}
+
+        if (window.LVBCart && typeof window.LVBCart.reload === 'function') {
+            window.LVBCart.reload();
+        } else if (window.LVBCart && typeof window.LVBCart.render === 'function') {
+            window.LVBCart.render();
+        }
+
+        window.dispatchEvent(new CustomEvent('lvb_cart_updated'));
+    }
+
     // ── Render Cart ──
     function renderCart() {
         const container = document.getElementById('cartItemsContainer');
         if (!cart || cart.length === 0) {
+            cart = [];
             container.innerHTML = `
                 <div class="empty-cart">
                     <i class="fas fa-shopping-bag" style="font-size:32px;opacity:0.3;"></i>
                     <p style="margin-top:12px;">Your cart is empty.</p>
                     <a href="/shop.php">Continue Shopping →</a>
                 </div>`;
-            document.getElementById('ctaButton').disabled = true;
+            const ctaBtn = document.getElementById('ctaButton');
+            if (ctaBtn) ctaBtn.disabled = true;
+            updateTotals();
             return;
         }
 
@@ -1203,6 +1239,9 @@ textarea { resize: vertical; min-height: 80px; }
                         <button type="button" class="qty-btn" onclick="changeQty(this, -1)">−</button>
                         <span class="qty-val">${parseInt(item.qty)||1}</span>
                         <button type="button" class="qty-btn" onclick="changeQty(this, 1)">+</button>
+                        <button type="button" class="remove-item-btn" onclick="removeCheckoutItem(this)" title="Remove Product">
+                            <i class="fas fa-trash-alt"></i> Remove
+                        </button>
                     </div>
                 </div>
                 <div class="item-price">$${((parseFloat(item.price)||0) * (parseInt(item.qty)||1)).toFixed(2)}</div>
@@ -1212,20 +1251,45 @@ textarea { resize: vertical; min-height: 80px; }
         updateTotals();
     }
 
+    // ── Remove Product from Checkout ──
+    window.removeCheckoutItem = function(btn) {
+        const itemEl = btn.closest('.cart-item');
+        const index = parseInt(itemEl.dataset.index);
+
+        if (!isNaN(index) && cart[index]) {
+            cart.splice(index, 1);
+        } else {
+            const itemImg = itemEl.querySelector('.item-img')?.src || '';
+            const itemName = itemEl.querySelector('.item-name')?.textContent || '';
+            cart = cart.filter(i => (i.image && itemImg.includes(i.image)) || i.name !== itemName);
+        }
+
+        broadcastCartChange();
+        syncServer(cart);
+        renderCart();
+    };
+
     // ── Qty Change (global so onclick works) ──
     window.changeQty = function(btn, delta) {
         const item = btn.closest('.cart-item');
         const qtyEl = item.querySelector('.qty-val');
         let qty = parseInt(qtyEl.textContent) + delta;
-        if (qty < 1) qty = 1;
+
+        if (qty <= 0) {
+            removeCheckoutItem(btn);
+            return;
+        }
+
         qtyEl.textContent = qty;
 
         // Update cart array
         const index = item.dataset.index;
         if (index !== undefined && cart[index]) {
             cart[index].qty = qty;
-            sessionStorage.setItem('lvb_cart', JSON.stringify(cart));
         }
+
+        broadcastCartChange();
+        syncServer(cart);
 
         const price = parseFloat(item.dataset.price) || 0;
         item.querySelector('.item-price').textContent = '$' + (price * qty).toFixed(2);
@@ -1237,63 +1301,88 @@ textarea { resize: vertical; min-height: 80px; }
         let subtotal = 0;
         let count = 0;
 
-        // Read from DOM items
-        document.querySelectorAll('.cart-item').forEach(item => {
-            const price = parseFloat(item.dataset.price) || 0;
-            const qty = parseInt(item.querySelector('.qty-val')?.textContent) || 1;
-            subtotal += price * qty;
-            count += qty;
-        });
-
-        // If cart array exists use it
-        if (cart.length > 0) {
+        if (cart && cart.length > 0) {
             subtotal = 0;
             count = 0;
             cart.forEach(item => {
-                // Get live qty from DOM
-                const domItem = document.querySelector(`[data-index]`);
                 const price = parseFloat(item.price) || 0;
                 const qty = parseInt(item.qty) || 1;
                 subtotal += price * qty;
                 count += qty;
             });
+        } else {
+            subtotal = 0;
+            count = 0;
+            document.querySelectorAll('.cart-item').forEach(item => {
+                const price = parseFloat(item.dataset.price) || 0;
+                const qty = parseInt(item.querySelector('.qty-val')?.textContent) || 1;
+                subtotal += price * qty;
+                count += qty;
+            });
         }
 
-        const baseShipping = expressShipping ? 18.00 : (subtotal >= 50 ? 0 : 0.00);
-        const tax = subtotal * 0.08;
-        const total = subtotal + baseShipping + tax - discountAmount;
+        if (count === 0 || subtotal === 0) {
+            discountAmount = 0;
+            const discountLine = document.getElementById('discountLine');
+            if (discountLine) discountLine.style.display = 'none';
+        }
+
+        const baseShipping = (count === 0) ? 0 : (expressShipping ? 18.00 : (subtotal >= 50 ? 0 : 0.00));
+        const tax = (count === 0) ? 0 : subtotal * 0.08;
+        const total = (count === 0) ? 0 : Math.max(0, subtotal + baseShipping + tax - discountAmount);
 
         // Update DOM
-        document.getElementById('itemCountLabel').textContent = `(${count} ${count === 1 ? 'item' : 'items'})`;
-        document.getElementById('subtotalDisplay').textContent = '$' + subtotal.toFixed(2);
-        document.getElementById('taxDisplay').textContent = '$' + tax.toFixed(2);
+        const countLabel = document.getElementById('itemCountLabel');
+        if (countLabel) countLabel.textContent = `(${count} ${count === 1 ? 'item' : 'items'})`;
+
+        const subtotalEl = document.getElementById('subtotalDisplay');
+        if (subtotalEl) subtotalEl.textContent = '$' + subtotal.toFixed(2);
+
+        const taxEl = document.getElementById('taxDisplay');
+        if (taxEl) taxEl.textContent = '$' + tax.toFixed(2);
         
         const shippingEl = document.getElementById('shippingDisplay');
-        if (baseShipping === 0) {
-            shippingEl.textContent = 'FREE';
-            shippingEl.classList.add('free');
-        } else {
-            shippingEl.textContent = '$' + baseShipping.toFixed(2);
-            shippingEl.classList.remove('free');
+        if (shippingEl) {
+            if (count === 0) {
+                shippingEl.textContent = '$0.00';
+                shippingEl.classList.remove('free');
+            } else if (baseShipping === 0) {
+                shippingEl.textContent = 'FREE';
+                shippingEl.classList.add('free');
+            } else {
+                shippingEl.textContent = '$' + baseShipping.toFixed(2);
+                shippingEl.classList.remove('free');
+            }
         }
 
-        document.getElementById('grandTotalDisplay').textContent = '$' + total.toFixed(2);
-        document.getElementById('ctaAmount').textContent = '$' + total.toFixed(2);
+        const grandTotalEl = document.getElementById('grandTotalDisplay');
+        if (grandTotalEl) grandTotalEl.textContent = '$' + total.toFixed(2);
+
+        const ctaAmountEl = document.getElementById('ctaAmount');
+        if (ctaAmountEl) ctaAmountEl.textContent = '$' + total.toFixed(2);
+
+        const ctaBtn = document.getElementById('ctaButton');
+        if (ctaBtn) ctaBtn.disabled = (count === 0);
 
         // Shipping progress
         const progress = document.getElementById('shippingProgress');
-        if (subtotal >= 50 || expressShipping) {
-            progress.style.display = 'none';
-        } else {
-            progress.style.display = 'block';
-            const pct = Math.min(100, (subtotal / 50) * 100);
-            document.getElementById('shippingFill').style.width = pct + '%';
-            document.getElementById('shippingProgressText').textContent = 
-                'Add $' + (50 - subtotal).toFixed(2) + ' more for free shipping';
+        if (progress) {
+            if (count === 0 || subtotal >= 50 || expressShipping) {
+                progress.style.display = 'none';
+            } else {
+                progress.style.display = 'block';
+                const pct = Math.min(100, (subtotal / 50) * 100);
+                const fillEl = document.getElementById('shippingFill');
+                if (fillEl) fillEl.style.width = pct + '%';
+                const progText = document.getElementById('shippingProgressText');
+                if (progText) progText.textContent = 
+                    'Add $' + (50 - subtotal).toFixed(2) + ' more for free shipping';
+            }
         }
 
         // Update cart data hidden input
-        document.getElementById('cartData').value = JSON.stringify(cart);
+        const cartInput = document.getElementById('cartData');
+        if (cartInput) cartInput.value = JSON.stringify(cart || []);
     }
 
     // ── Delivery Options ──
