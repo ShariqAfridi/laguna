@@ -2250,22 +2250,59 @@ function getColorCardClasses(color) {
   return cardClasses;
 }
 
+// ─── VESSEL COLOR MATRIX ───────────────────────────────────────────────────
+const vesselAvailableColors = {
+  'C': [
+    'White Frost',
+    'Black Matte',
+    'Mocha Frost',
+    'Blue Frost',
+    'Purple Frost',
+    'Blush Pink',
+    'Charcoal Grey Matte',
+    'Charcoal Gray Matte',
+    'Silver Electroplate',
+    'Smoky Grey Electroplate',
+    'Smokey Gray Electroplate'
+  ],
+  'D': [
+    'White Frost',
+    'Black Matte',
+    'Blush Pink',
+    'Charcoal Grey Matte',
+    'Charcoal Gray Matte',
+    'Silver Electroplate',
+    'Smoky Grey Electroplate',
+    'Smokey Gray Electroplate'
+  ],
+  'E': [
+    'White Frost',
+    'Black Matte'
+  ]
+};
+
 // ─── RENDER COLOR CARDS ──────────────────────────────────────────────────────
 function renderColorCards(vessel) {
   const grid = document.getElementById('colorGrid');
   if (!grid) return;
 
-  vessel = vessel || state.vessel || 'C';
+  const vKey = (vessel || state.vessel || 'C').trim().toUpperCase();
   if (!state.vessel) {
-    state.vessel = vessel;
+    state.vessel = vKey;
   }
 
   grid.innerHTML = '';
 
-  const colorsToRender = (dbColorsData && dbColorsData.length > 0) ? dbColorsData : colorData;
+  const rawColors = (dbColorsData && dbColorsData.length > 0) ? dbColorsData : colorData;
+  const allowedList = vesselAvailableColors[vKey] || vesselAvailableColors['C'];
+
+  const colorsToRender = rawColors.filter(color => {
+    const cName = (color.name || color.color_name || '').trim().toLowerCase();
+    return allowedList.some(allowed => allowed.toLowerCase() === cName);
+  });
 
   if (!colorsToRender || colorsToRender.length === 0) {
-    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#999;">No colors available right now.</p>';
+    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#999;">No colors available for this vessel.</p>';
     return;
   }
 
@@ -2273,15 +2310,22 @@ function renderColorCards(vessel) {
     const card = document.createElement('label');
     card.className = getColorCardClasses(color);
     card.dataset.color = color.name;
-    card.dataset.code = color.code || ('0' + (color.id || 1));
-    const hexColor = color.hex || '#687382';
-    card.dataset.hex = hexColor;
+    const colorCode = color.code || color.sku || ('0' + (color.id || 1));
+    card.dataset.code = colorCode;
 
     let imgSrc = color.image || '';
-    if (!imgSrc && color.images) {
-      imgSrc = color.images[vessel] || color.images.C || '';
+    if (!imgSrc || imgSrc.trim() === '' || imgSrc.endsWith('/')) {
+      if (color.images) {
+        imgSrc = color.images[vKey] || color.images.C || '';
+      }
+      if (!imgSrc || imgSrc.trim() === '' || imgSrc.endsWith('/')) {
+        imgSrc = defaultColorImageMap[color.sku] || defaultColorImageMap[colorCode] || defaultColorImageMap[color.name] || '';
+      }
     }
     card.dataset.image = imgSrc;
+
+    const hexColor = color.hex || '#687382';
+    card.dataset.hex = hexColor;
 
     card.innerHTML = `
       <input type="radio" name="builder_vessel_color" value="${color.name}">
@@ -2293,21 +2337,16 @@ function renderColorCards(vessel) {
     grid.appendChild(card);
   });
 
-  // Highlight matching color card if previously selected by user, or auto-select first color card
+  // Highlight matching color card if previously selected by user, or auto-select first available color card
+  const allCards = Array.from(grid.querySelectorAll('.color-card'));
+  let matchingCard = null;
   if (state.color) {
-    const allCards = Array.from(grid.querySelectorAll('.color-card'));
-    const matchingCard = allCards.find(c => c.dataset.color === state.color || c.dataset.code === state.colorCode);
-    if (matchingCard) {
-      selectColor(matchingCard, true);
-    } else {
-      const firstCard = grid.querySelector('.color-card');
-      if (firstCard) selectColor(firstCard, true);
-    }
-  } else {
-    const firstCard = grid.querySelector('.color-card');
-    if (firstCard) {
-      selectColor(firstCard, true);
-    }
+    matchingCard = allCards.find(c => (c.dataset.color || '').trim().toLowerCase() === (state.color || '').trim().toLowerCase() || c.dataset.code === state.colorCode);
+  }
+  if (matchingCard) {
+    selectColor(matchingCard, true);
+  } else if (allCards.length > 0) {
+    selectColor(allCards[0], true);
   }
 }
 
@@ -2574,75 +2613,7 @@ const defaultColorImageMap = {
   'Red Frost': '<?= base_url('/public/assets/img/color3.webp'); ?>'
 };
 
-// ─── RENDER COLOR CARDS ──────────────────────────────────────────────────────
-function renderColorCards(vessel) {
-  const grid = document.getElementById('colorGrid');
-  if (!grid) return;
-
-  vessel = vessel || state.vessel || 'C';
-  if (!state.vessel) {
-    state.vessel = vessel;
-  }
-
-  grid.innerHTML = '';
-
-  const colorsToRender = (dbColorsData && dbColorsData.length > 0) ? dbColorsData : colorData;
-
-  if (!colorsToRender || colorsToRender.length === 0) {
-    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#999;">No colors available right now.</p>';
-    return;
-  }
-
-  colorsToRender.forEach(color => {
-    const card = document.createElement('label');
-    card.className = 'color-card';
-    card.dataset.color = color.name;
-    const colorCode = color.code || color.sku || ('0' + (color.id || 1));
-    card.dataset.code = colorCode;
-
-    let imgSrc = color.image || '';
-    if (!imgSrc || imgSrc.trim() === '' || imgSrc.endsWith('/')) {
-      if (color.images) {
-        imgSrc = color.images[vessel] || color.images.C || '';
-      }
-      if (!imgSrc || imgSrc.trim() === '' || imgSrc.endsWith('/')) {
-        imgSrc = defaultColorImageMap[color.sku] || defaultColorImageMap[colorCode] || defaultColorImageMap[color.name] || '';
-      }
-    }
-    card.dataset.image = imgSrc;
-
-    const hexColor = color.hex || '#687382';
-    card.dataset.hex = hexColor;
-
-    card.className = getColorCardClasses(color);
-
-    card.innerHTML = `
-      <input type="radio" name="builder_vessel_color" value="${color.name}">
-      <span class="color-swatch-dot" style="background:${hexColor};"></span>
-      <span class="color-name-label">${color.name}</span>
-    `;
-
-    card.onclick = function() { selectColor(this); };
-    grid.appendChild(card);
-  });
-
-  // Highlight matching color card if previously selected by user, or auto-select first color card
-  if (state.color) {
-    const allCards = Array.from(grid.querySelectorAll('.color-card'));
-    const matchingCard = allCards.find(c => c.dataset.color === state.color || c.dataset.code === state.colorCode);
-    if (matchingCard) {
-      selectColor(matchingCard, true);
-    } else {
-      const firstCard = grid.querySelector('.color-card');
-      if (firstCard) selectColor(firstCard, true);
-    }
-  } else {
-    const firstCard = grid.querySelector('.color-card');
-    if (firstCard) {
-      selectColor(firstCard, true);
-    }
-  }
-}
+// Color cards rendering managed by renderColorCards(vessel) above
 
 // ─── LUMINANCE / CONTRAST HELPER ─────────────────────────────────────────────
 function getContrastYIQ(hexcolor) {
