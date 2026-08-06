@@ -17,6 +17,18 @@ function get_db_connection()
             die('Database connection error. Please try again later.');
         }
         $conn->set_charset('utf8mb4');
+
+        // Ensure colors table has single/double/triple wick image columns across environments
+        static $schemaChecked = false;
+        if (!$schemaChecked) {
+            $schemaChecked = true;
+            $res = $conn->query("SHOW COLUMNS FROM colors LIKE 'single_wick_image'");
+            if ($res && $res->num_rows === 0) {
+                @$conn->query("ALTER TABLE colors ADD COLUMN single_wick_image VARCHAR(255) DEFAULT NULL");
+                @$conn->query("ALTER TABLE colors ADD COLUMN double_wick_image VARCHAR(255) DEFAULT NULL");
+                @$conn->query("ALTER TABLE colors ADD COLUMN triple_wick_image VARCHAR(255) DEFAULT NULL");
+            }
+        }
     }
     return $conn;
 }
