@@ -3,8 +3,6 @@ error_log
 *.log
 
 # Ignore large media files
-*.mp4
-*.webm
 *.avi
 *.mov
 *.zip
