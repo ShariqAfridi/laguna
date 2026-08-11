@@ -105,10 +105,16 @@ $wickFilter = isset($_GET['wick']) ? trim($_GET['wick']) : '';
 $fragranceFilter = isset($_GET['fragrance']) ? (int)$_GET['fragrance'] : 0;
 $colorFilter = isset($_GET['color']) ? (int)$_GET['color'] : 0;
 $categoryFilter = isset($_GET['category']) ? (int)$_GET['category'] : 0;
+$sortOption = isset($_GET['sort']) ? trim($_GET['sort']) : 'newest';
 
-// Fetch filter options (fragrances, colors, categories)
+// Fetch ONLY filter options that are actually PRESENT in active products
 $filter_fragrances = [];
-$res_frag = $conn->query("SELECT fragrance_id, fragrance_name FROM fragrances ORDER BY fragrance_name ASC");
+$res_frag = $conn->query("
+    SELECT DISTINCT f.fragrance_id, f.fragrance_name 
+    FROM fragrances f 
+    INNER JOIN products p ON p.fragrance_id = f.fragrance_id 
+    ORDER BY f.fragrance_name ASC
+");
 if ($res_frag) {
     while ($row = $res_frag->fetch_assoc()) {
         $filter_fragrances[] = $row;
@@ -116,7 +122,12 @@ if ($res_frag) {
 }
 
 $filter_colors = [];
-$res_col = $conn->query("SELECT color_id, color_name FROM colors ORDER BY color_name ASC");
+$res_col = $conn->query("
+    SELECT DISTINCT c.color_id, c.color_name 
+    FROM colors c 
+    INNER JOIN products p ON (JSON_CONTAINS(p.color_id, CAST(c.color_id AS JSON)) OR p.color_id LIKE CONCAT('%\"', c.color_id, '\"%') OR p.color_id LIKE CONCAT('%', c.color_id, '%')) 
+    ORDER BY c.color_name ASC
+");
 if ($res_col) {
     while ($row = $res_col->fetch_assoc()) {
         $filter_colors[] = $row;
@@ -124,10 +135,28 @@ if ($res_col) {
 }
 
 $filter_categories = [];
-$res_cat = $conn->query("SELECT id, category_name FROM categories ORDER BY category_name ASC");
+$res_cat = $conn->query("
+    SELECT DISTINCT c.id, c.category_name 
+    FROM categories c 
+    INNER JOIN products p ON (JSON_CONTAINS(p.size_id, CAST(c.id AS JSON)) OR p.size_id LIKE CONCAT('%\"', c.id, '\"%') OR p.size_id LIKE CONCAT('%', c.id, '%')) 
+    ORDER BY c.category_name ASC
+");
 if ($res_cat) {
     while ($row = $res_cat->fetch_assoc()) {
         $filter_categories[] = $row;
+    }
+}
+
+$filter_wicks = [];
+$res_wick = $conn->query("
+    SELECT DISTINCT wick_type 
+    FROM products 
+    WHERE wick_type IS NOT NULL AND wick_type != '' 
+    ORDER BY CASE wick_type WHEN 'single' THEN 1 WHEN 'double' THEN 2 WHEN 'triple' THEN 3 ELSE 4 END ASC
+");
+if ($res_wick) {
+    while ($row = $res_wick->fetch_assoc()) {
+        $filter_wicks[] = $row['wick_type'];
     }
 }
 
@@ -171,6 +200,24 @@ if (!empty($whereClauses)) {
     $whereSql = 'WHERE ' . implode(' AND ', $whereClauses);
 }
 
+// Compute sorting clause
+$sortSql = "p.created_at DESC";
+if ($sortOption === 'oldest') {
+    $sortSql = "p.created_at ASC";
+} elseif ($sortOption === 'sku_asc') {
+    $sortSql = "p.sku ASC";
+} elseif ($sortOption === 'sku_desc') {
+    $sortSql = "p.sku DESC";
+} elseif ($sortOption === 'name_asc') {
+    $sortSql = "p.product_name ASC";
+} elseif ($sortOption === 'name_desc') {
+    $sortSql = "p.product_name DESC";
+} elseif ($sortOption === 'price_asc') {
+    $sortSql = "CAST(p.size_prices AS DECIMAL(10,2)) ASC";
+} elseif ($sortOption === 'price_desc') {
+    $sortSql = "CAST(p.size_prices AS DECIMAL(10,2)) DESC";
+}
+
 // Compute total rows matching the filters
 $countQuery = "SELECT COUNT(*) as total FROM products p $whereSql";
 $totalRows = (int)($conn->query($countQuery)->fetch_assoc()['total'] ?? 0);
@@ -184,7 +231,7 @@ $query = "
     FROM products p
     LEFT JOIN fragrances f ON p.fragrance_id = f.fragrance_id
     $whereSql
-    ORDER BY p.created_at DESC
+    ORDER BY $sortSql
     LIMIT $offset, $limit
 ";
 
@@ -575,13 +622,13 @@ function build_page_url($p) {
     <div style="background: white; border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
         <form method="GET" action="<?= base_url('/admin/list_product'); ?>" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
             
-            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; flex: 1;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; flex: 1;">
                 <!-- Search Input -->
-                <div style="position: relative; min-width: 240px; flex: 1;">
-                    <input type="text" name="search" value="<?= htmlspecialchars($searchQuery); ?>" placeholder="🔍 Search by product name, SKU, description..." style="width: 100%; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; outline: none; transition: border 0.2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'">
+                <div style="position: relative; min-width: 220px; flex: 1;">
+                    <input type="text" name="search" value="<?= htmlspecialchars($searchQuery); ?>" placeholder="🔍 Search by product name, SKU..." style="width: 100%; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; outline: none; transition: border 0.2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
 
-                <!-- Vessel / Category Filter -->
+                <!-- Vessel / Category Filter (ONLY PRESENT) -->
                 <select name="category" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="0">All Vessels</option>
                     <?php foreach ($filter_categories as $c): ?>
@@ -591,7 +638,7 @@ function build_page_url($p) {
                     <?php endforeach; ?>
                 </select>
 
-                <!-- Fragrance Filter -->
+                <!-- Fragrance Filter (ONLY PRESENT) -->
                 <select name="fragrance" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="0">All Fragrances</option>
                     <?php foreach ($filter_fragrances as $f): ?>
@@ -601,7 +648,7 @@ function build_page_url($p) {
                     <?php endforeach; ?>
                 </select>
 
-                <!-- Color Filter -->
+                <!-- Color Filter (ONLY PRESENT) -->
                 <select name="color" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="0">All Colors</option>
                     <?php foreach ($filter_colors as $cl): ?>
@@ -611,12 +658,14 @@ function build_page_url($p) {
                     <?php endforeach; ?>
                 </select>
 
-                <!-- Wick Filter -->
+                <!-- Wick Filter (ONLY PRESENT) -->
                 <select name="wick" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="">All Wicks</option>
-                    <option value="single" <?= $wickFilter === 'single' ? 'selected' : ''; ?>>Single Wick</option>
-                    <option value="double" <?= $wickFilter === 'double' ? 'selected' : ''; ?>>Double Wick</option>
-                    <option value="triple" <?= $wickFilter === 'triple' ? 'selected' : ''; ?>>Triple Wick</option>
+                    <?php foreach ($filter_wicks as $w): ?>
+                        <option value="<?= $w; ?>" <?= $wickFilter === $w ? 'selected' : ''; ?>>
+                            <?= ucfirst($w); ?> Wick
+                        </option>
+                    <?php endforeach; ?>
                 </select>
 
                 <!-- Stock Status Filter -->
@@ -626,9 +675,21 @@ function build_page_url($p) {
                     <option value="outofstock" <?= $stockFilter === 'outofstock' ? 'selected' : ''; ?>>Out of Stock (<?= $outOfStockCount ?>)</option>
                 </select>
 
+                <!-- Sort By Dropdown -->
+                <select name="sort" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid #bfdbfe; font-size: 13px; color: #1e40af; background: #eff6ff; font-weight: 600; outline: none; cursor: pointer;">
+                    <option value="newest" <?= $sortOption === 'newest' ? 'selected' : ''; ?>>Sort: Newest First</option>
+                    <option value="oldest" <?= $sortOption === 'oldest' ? 'selected' : ''; ?>>Sort: Oldest First</option>
+                    <option value="sku_asc" <?= $sortOption === 'sku_asc' ? 'selected' : ''; ?>>Sort: SKU (A → Z)</option>
+                    <option value="sku_desc" <?= $sortOption === 'sku_desc' ? 'selected' : ''; ?>>Sort: SKU (Z → A)</option>
+                    <option value="name_asc" <?= $sortOption === 'name_asc' ? 'selected' : ''; ?>>Sort: Name (A → Z)</option>
+                    <option value="name_desc" <?= $sortOption === 'name_desc' ? 'selected' : ''; ?>>Sort: Name (Z → A)</option>
+                    <option value="price_asc" <?= $sortOption === 'price_asc' ? 'selected' : ''; ?>>Sort: Price (Low → High)</option>
+                    <option value="price_desc" <?= $sortOption === 'price_desc' ? 'selected' : ''; ?>>Sort: Price (High → Low)</option>
+                </select>
+
                 <button type="submit" class="btn-primary" style="padding: 9px 18px; font-size: 13px;">Filter</button>
 
-                <?php if (!empty($searchQuery) || $categoryFilter > 0 || $fragranceFilter > 0 || $colorFilter > 0 || !empty($wickFilter) || $stockFilter !== 'all'): ?>
+                <?php if (!empty($searchQuery) || $categoryFilter > 0 || $fragranceFilter > 0 || $colorFilter > 0 || !empty($wickFilter) || $stockFilter !== 'all' || $sortOption !== 'newest'): ?>
                     <a href="<?= base_url('/admin/list_product'); ?>" style="font-size: 13px; color: var(--danger); text-decoration: none; font-weight: 600; padding: 6px 10px;">Reset Filters</a>
                 <?php endif; ?>
             </div>
