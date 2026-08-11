@@ -133,7 +133,7 @@ if (!$showVesselSelection) {
             $fragrance_image_name = '';
             if ($fragrance_id > 0 && !empty($fragrance_details[$fragrance_id])) {
                 $fImg = $fragrance_details[$fragrance_id];
-                $fragrance_image_name = (strpos($fImg, 'http') === 0) ? $fImg : $base . '/' . ltrim($fImg, '/');
+                $fragrance_image_name = (strpos($fImg, 'http') === 0) ? $fImg : base_url('/' . ltrim($fImg, '/'));
             }
             $row['fragrance_image'] = $fragrance_image_name;
             $products[] = $row;
@@ -1166,8 +1166,13 @@ function renderFragranceOptions(items, activeFragId) {
         const isActive = (parseInt(item.fragrance_id) === parseInt(activeFragId));
         tile.className = 'fragrance-option-tile' + (isActive ? ' active' : '');
         
+        let iconHtml = '<div style="font-size: 16px;">🏷️</div>';
+        if (item.fragrance_image) {
+            iconHtml = `<img src="${escapeHtml(item.fragrance_image)}" style="width: 24px; height: 24px; object-fit: cover; border-radius: 4px;" alt="${escapeHtml(item.fragrance_name)}">`;
+        }
+
         tile.innerHTML = `
-            <div style="font-size: 16px;">🏷️</div>
+            ${iconHtml}
             <div style="flex: 1;">
                 <div class="fragrance-tile-title">${escapeHtml(item.fragrance_name)}</div>
                 <div class="fragrance-tile-sku">SKU: ${escapeHtml(item.sku)}</div>
@@ -1209,10 +1214,14 @@ function switchFragranceItem(productData) {
 
     document.getElementById('modalTitle').innerText = productData.product_name || (productData.fragrance_name + ' Candle');
     
-    // Build image array
+    // Build image array: Candle image + Fragrance image if present
     imageUrls = [];
     const candleImg = getImageUrl(productData);
-    imageUrls.push(candleImg);
+    if (candleImg) imageUrls.push(candleImg);
+    
+    if (productData.fragrance_image && productData.fragrance_image !== candleImg) {
+        imageUrls.push(productData.fragrance_image);
+    }
     
     setMainImage(imageUrls[0], 0);
     renderThumbnails();
