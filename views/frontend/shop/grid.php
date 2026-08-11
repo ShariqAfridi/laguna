@@ -915,9 +915,9 @@ if (!empty($boxes)) {
         if (!isset($colorVariations[$primaryColorId])) {
             $colorName = isset($colors[$primaryColorId]) ? $colors[$primaryColorId]['color_name'] : 'Standard';
             
-            // Prefer color double-wick render if present
+            // Prefer custom uploaded product image over default vessel render
             $varImg = $p['image_url'];
-            if (!empty($colors[$primaryColorId]['double_wick_image'])) {
+            if ((empty($p['image']) || strpos($p['image'], 'uploads/products/') === false) && !empty($colors[$primaryColorId]['double_wick_image'])) {
                 $dbImg = $colors[$primaryColorId]['double_wick_image'];
                 $varImg = base_url('/' . ltrim($dbImg, '/'));
             }
@@ -1144,12 +1144,13 @@ function openVariationModal(variationData, targetFragId) {
 
 function getImageUrl(item) {
     if (!item) return 'https://placehold.co/600x600?text=No+Image';
-    if (item.image_url) return item.image_url;
-    if (item.image) {
-        if (item.image.startsWith('http')) return item.image;
-        if (item.image.includes('uploads/')) return '<?= base_url('/public/') ?>' + item.image.replace(/^\/+/, '');
-        return '<?= $base ?>/img/' + item.image.replace(/^\/+/, '');
+    if (item.image && typeof item.image === 'string' && item.image.trim() !== '') {
+        let img = item.image.trim();
+        if (img.startsWith('http')) return img;
+        if (img.includes('uploads/')) return '<?= base_url('/public/') ?>' + img.replace(/^\/+/, '');
+        return '<?= $base ?>/img/' + img.replace(/^\/+/, '');
     }
+    if (item.image_url) return item.image_url;
     return 'https://placehold.co/600x600?text=No+Image';
 }
 
