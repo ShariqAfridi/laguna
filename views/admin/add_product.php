@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // ── FETCH LOOKUPS ─────────────────────────────────────────────────────
-$fragrances = $conn->query("SELECT fragrance_id, fragrance_name, sku FROM fragrances ORDER BY fragrance_name ASC");
+$fragrances = $conn->query("SELECT fragrance_id, fragrance_name, fragrance_image, sku FROM fragrances ORDER BY fragrance_name ASC");
 $sizes      = $conn->query("SELECT id AS size_id, category_name AS size_name, dimensions_subtitle AS size_details, sku, wick_type FROM categories WHERE status = 1 ORDER BY sort_order ASC, id ASC");
 $boxes      = $conn->query("SELECT box_id, box_name FROM boxes ORDER BY box_name ASC");
 $colors     = $conn->query("SELECT color_id, color_name, color_hex, sku FROM colors ORDER BY color_name ASC");
@@ -72,20 +72,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $single_price  = floatval($_POST['price'] ?? 0);
     $single_qty    = isset($_POST['qty']) ? max(0, (int)$_POST['qty']) : 0;
 
-    // ── IMAGE UPLOAD & COMPRESSION ────────────────────────────────────
-    $image = null;
-
+    // ── MAIN FALLBACK IMAGE UPLOAD & COMPRESSION ──────────────────────
+    $main_image = null;
     if (!empty($_FILES['image']) && isset($_FILES['image']['tmp_name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $opt = ImageOptimizer::optimize($_FILES['image'], 'uploads/products/', 'candle_', 1400, 1048576, 85);
         if ($opt['success']) {
-            $image = $opt['path'];
+            $main_image = $opt['path'];
         } else {
             $error_message = $opt['error'];
         }
     } elseif (!empty($_POST['existing_image'])) {
-        $image = trim($_POST['existing_image']);
-    } else {
-        $error_message = "Product image is required.";
+        $main_image = trim($_POST['existing_image']);
+    }
+
+    // ── PER-FRAGRANCE IMAGE UPLOADS ────────────────────────────────────
+    $uploaded_fragrance_images = [];
+    foreach ($selected_fragrance_ids as $fid) {
+        $file_key = 'fragrance_image_' . $fid;
+        if (!empty($_FILES[$file_key]) && isset($_FILES[$file_key]['tmp_name']) && $_FILES[$file_key]['error'] === UPLOAD_ERR_OK) {
+            $opt = ImageOptimizer::optimize($_FILES[$file_key], 'uploads/products/', 'fragrance_' . $fid . '_', 1400, 1048576, 85);
+            if ($opt['success']) {
+                $uploaded_fragrance_images[$fid] = $opt['path'];
+            }
+        }
+    }
+
+    // Ensure at least one image is available (either main image or per-fragrance image)
+    if (empty($main_image) && empty($uploaded_fragrance_images)) {
+        $error_message = "Please upload a main product image or individual fragrance pictures.";
     }
 
     // ── BASIC FIELD VALIDATION ────────────────────────────────────────
@@ -120,6 +134,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // Construct JSON map of fragrance images
+        $fragrance_images_map = [];
+        foreach ($selected_fragrance_ids as $fid) {
+            if (isset($uploaded_fragrance_images[$fid])) {
+                $fragrance_images_map[(string)$fid] = $uploaded_fragrance_images[$fid];
+            } elseif ($main_image) {
+                $fragrance_images_map[(string)$fid] = $main_image;
+            }
+        }
+        $fragrance_images_json = json_encode($fragrance_images_map);
+
         $inserted_count = 0;
         $conn->begin_transaction();
 
@@ -128,6 +153,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $frag_info = $fragrance_map[$fid] ?? null;
                 $frag_name = $frag_info['fragrance_name'] ?? 'Scent';
                 $frag_sku  = !empty($frag_info['sku']) ? $frag_info['sku'] : sprintf('%02d', $fid);
+
+                // Determine specific image for this fragrance
+                $variation_image = $uploaded_fragrance_images[$fid] ?? ($main_image ?: ($frag_info['fragrance_image'] ?? ''));
 
                 // Compute product name for this fragrance variation
                 if (!empty($base_product_name) && count($selected_fragrance_ids) === 1) {
@@ -162,6 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             product_name = ?,
                             description = ?,
                             image = ?,
+                            fragrance_images = ?,
                             qty = ?,
                             fragrance_id = ?,
                             color_id = ?,
@@ -174,10 +203,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         WHERE product_id = ?
                     ");
                     $u_stmt->bind_param(
-                        "sssiissssssi",
+                        "ssssiissssssi",
                         $p_name,
                         $description,
-                        $image,
+                        $variation_image,
+                        $fragrance_images_json,
                         $total_qty,
                         $fid,
                         $colors_json,
@@ -195,17 +225,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Insert new variation
                     $i_stmt = $conn->prepare("
                         INSERT INTO products
-                            (product_name, sku, description, image, qty,
+                            (product_name, sku, description, image, fragrance_images, qty,
                              fragrance_id, color_id, size_id, size_prices, size_qtys, box_id, wick_type,
                              created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                     ");
                     $i_stmt->bind_param(
-                        "ssssiissssss",
+                        "sssssiissssss",
                         $p_name,
                         $final_sku,
                         $description,
-                        $image,
+                        $variation_image,
+                        $fragrance_images_json,
                         $total_qty,
                         $fid,
                         $colors_json,
@@ -223,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $conn->commit();
             $show_success = true;
-            $success_message = "$inserted_count fragrance variation product(s) saved successfully! Redirecting...";
+            $success_message = "$inserted_count fragrance variation product(s) saved successfully with fragrance-specific images! Redirecting...";
             echo '<script>setTimeout(function(){ window.location.href = "' . base_url('/admin/list_product') . '"; }, 1200);</script>';
 
         } catch (Exception $e) {
@@ -238,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add Product — Candle Shop</title>
+<title>Add Product &amp; Fragrance Images — Candle Shop</title>
 <style>
 :root {
     --blue:        #2563eb;
@@ -478,7 +509,7 @@ select {
 }
 
 .image-main {
-    height: 220px;
+    height: 200px;
     border: 2px dashed var(--border);
     border-radius: var(--radius-lg);
     display: flex;
@@ -505,6 +536,50 @@ select {
     inset: 0;
     border-radius: 12px;
     background: #f8fafc;
+}
+
+.fragrance-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.fragrance-upload-box {
+    background: #f8fafc;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    position: relative;
+    transition: border-color 0.2s;
+}
+
+.fragrance-upload-box:hover {
+    border-color: var(--blue);
+    background: #eff6ff;
+}
+
+.fragrance-upload-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.fragrance-img-preview {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: white;
 }
 
 .alert {
@@ -566,9 +641,7 @@ select {
     min-width: 80px;
 }
 
-.wick-option input[type="radio"] {
-    display: none;
-}
+.wick-option input[type="radio"] { display: none; }
 
 .wick-option label {
     display: flex;
@@ -657,8 +730,8 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
 
     <div class="page-header">
         <div>
-            <h2>🕯️ Add Product &amp; Variations</h2>
-            <p style="color: var(--muted); margin-top: 4px;">Select Vessel, Color, and choose Fragrance variations to batch create products.</p>
+            <h2>🕯️ Add Product &amp; Per-Fragrance Pictures</h2>
+            <p style="color: var(--muted); margin-top: 4px;">Upload custom pictures for each selected fragrance variation.</p>
         </div>
         <div class="header-actions">
             <a href="<?php echo $base; ?>/admin/list_product" class="btn-back">← Back</a>
@@ -712,13 +785,15 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
                 </div>
 
                 <div class="form-group">
-                    <label>Fragrances <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(Select multiple to batch create variations)</small></label>
+                    <label>Fragrances <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(Check fragrances to add specific pictures for each)</small></label>
                     <div class="chip-group" id="fragranceChips">
                         <?php foreach ($fragrances_arr as $f): ?>
                             <input type="checkbox" name="fragrances[]"
                                    id="frag-<?= $f['fragrance_id'] ?>"
                                    value="<?= $f['fragrance_id'] ?>"
-                                   onchange="updateAllSummaries()"
+                                   data-name="<?= htmlspecialchars($f['fragrance_name']) ?>"
+                                   data-image="<?= htmlspecialchars($f['fragrance_image'] ?? '') ?>"
+                                   onchange="onFragranceSelectionChange(); updateAllSummaries();"
                                    <?= (!empty($duplicate_info['fragrance_id']) && $duplicate_info['fragrance_id'] == $f['fragrance_id']) ? 'checked' : '' ?>>
                             <label for="frag-<?= $f['fragrance_id'] ?>">
                                 🏷️ <?= htmlspecialchars($f['fragrance_name']) ?>
@@ -728,6 +803,12 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
                     <div class="summary-row" id="fragranceSummary">
                         <span class="summary-empty">No fragrances selected</span>
                     </div>
+                </div>
+
+                <!-- INDIVIDUAL FRAGRANCE PICTURE UPLOADERS -->
+                <div style="margin-top: 20px;" id="fragranceImagesSection">
+                    <label style="color: #004b66; font-size: 12px;">📷 Upload Picture for Each Fragrance</label>
+                    <div class="fragrance-upload-grid" id="fragranceUploadContainer"></div>
                 </div>
             </div>
 
@@ -791,9 +872,9 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
         <!-- RIGHT COLUMN -->
         <div class="right-column">
 
-            <!-- Image Upload -->
+            <!-- Main Fallback Image Upload -->
             <div class="card">
-                <h3><span class="icon">🖼️</span> Product Image</h3>
+                <h3><span class="icon">🖼️</span> Main Product / Default Image</h3>
 
                 <?php
                 $img_preview_url = '';
@@ -814,15 +895,15 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
                         <div style="background: rgba(0,0,0,0.5); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;">Copied Image (Click to change)</div>
                     <?php else: ?>
                         <div class="upload-icon">📷</div>
-                        <div class="upload-text">Click to upload image</div>
-                        <div class="upload-sub">JPG, PNG, GIF, WEBP</div>
+                        <div class="upload-text">Upload Default Candle Image</div>
+                        <div class="upload-sub">Used if fragrance picture is not uploaded</div>
                     <?php endif; ?>
                 </div>
                 <input type="file" id="imageInput" name="image"
-                       accept="image/*" onchange="previewImage(this)" hidden <?= empty($val_image) ? 'required' : '' ?>>
+                       accept="image/*" onchange="previewImage(this)" hidden>
 
                 <p style="font-size:0.75rem;color:#94a3b8;text-align:center;margin-top:10px;">
-                    Click the area above to choose a photo
+                    Click above to choose main default candle photo
                 </p>
             </div>
 
@@ -921,6 +1002,7 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     updateAllSummaries();
+    onFragranceSelectionChange();
 });
 
 function toggleSelectAllFragrances() {
@@ -930,6 +1012,63 @@ function toggleSelectAllFragrances() {
     const allChecked = [...checkboxes].every(cb => cb.checked);
     checkboxes.forEach(cb => cb.checked = !allChecked);
     updateAllSummaries();
+    onFragranceSelectionChange();
+}
+
+function onFragranceSelectionChange() {
+    const container = document.getElementById('fragranceUploadContainer');
+    const checked = [...document.querySelectorAll('#fragranceChips input[type="checkbox"]:checked')];
+    if (!container) return;
+
+    if (checked.length === 0) {
+        container.innerHTML = '<div style="font-size:12px; color:#94a3b8; font-style:italic;">Check fragrances above to upload picture for each.</div>';
+        return;
+    }
+
+    // Preserve existing upload previews if present
+    const existingHTMLs = {};
+    container.querySelectorAll('.fragrance-upload-box').forEach(box => {
+        const fid = box.getAttribute('data-fid');
+        if (fid) existingHTMLs[fid] = box;
+    });
+
+    container.innerHTML = '';
+    checked.forEach(cb => {
+        const fid = cb.value;
+        const fname = cb.getAttribute('data-name');
+        const defaultImg = cb.getAttribute('data-image');
+
+        if (existingHTMLs[fid]) {
+            container.appendChild(existingHTMLs[fid]);
+        } else {
+            const box = document.createElement('div');
+            box.className = 'fragrance-upload-box';
+            box.setAttribute('data-fid', fid);
+            
+            let previewSrc = 'https://placehold.co/100x100?text=' + encodeURIComponent(fname);
+            if (defaultImg) {
+                previewSrc = defaultImg.startsWith('http') ? defaultImg : ('<?php echo base_url('/'); ?>' + defaultImg.replace(/^\/+/, ''));
+            }
+
+            box.innerHTML = `
+                <div class="fragrance-upload-title">🏷️ ${escapeHtml(fname)}</div>
+                <img id="frag_prev_${fid}" src="${previewSrc}" class="fragrance-img-preview" alt="${escapeHtml(fname)}">
+                <input type="file" name="fragrance_image_${fid}" accept="image/*" onchange="previewIndividualFragranceImage(this, ${fid})" style="font-size: 11px; width: 100%;">
+            `;
+            container.appendChild(box);
+        }
+    });
+}
+
+function previewIndividualFragranceImage(input, fid) {
+    const imgEl = document.getElementById('frag_prev_' + fid);
+    if (input.files && input.files[0] && imgEl) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imgEl.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
 }
 
 /* ── VESSEL CHANGE HANDLER ── */
@@ -982,6 +1121,16 @@ function updateChipSummary(chipsId, summaryId, emptyText) {
     }
 }
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
 /* ── FORM SUBMIT VALIDATION ── */
 function submitForm() {
     const vesselSel = document.getElementById('vesselSelect');
@@ -1008,13 +1157,6 @@ function submitForm() {
     const wickSelected = document.querySelector('input[name="wick_type"]:checked');
     if (!wickSelected) {
         alert('Please select a wick type (Single, Double, or Triple Wick).');
-        return;
-    }
-
-    const image = document.getElementById('imageInput');
-    const existingImage = document.querySelector('input[name="existing_image"]');
-    if ((!image || !image.files || image.files.length === 0) && !existingImage) {
-        alert('Please upload a product image.');
         return;
     }
 
