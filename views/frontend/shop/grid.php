@@ -1142,13 +1142,15 @@ function openVariationModal(variationData, targetFragId) {
     document.getElementById('productModal').style.display = 'flex';
 }
 
-function openModal(productData) {
-    // Legacy fallback wrapper
-    openVariationModal({
-        color_name: 'Standard',
-        vessel_name: 'Vessel ' + selectedVessel.toUpperCase(),
-        items: [productData]
-    }, productData.fragrance_id);
+function getImageUrl(item) {
+    if (!item) return 'https://placehold.co/600x600?text=No+Image';
+    if (item.image_url) return item.image_url;
+    if (item.image) {
+        if (item.image.startsWith('http')) return item.image;
+        if (item.image.includes('uploads/')) return '<?= base_url('/public/') ?>' + item.image.replace(/^\/+/, '');
+        return '<?= $base ?>/img/' + item.image.replace(/^\/+/, '');
+    }
+    return 'https://placehold.co/600x600?text=No+Image';
 }
 
 function renderFragranceOptions(items, activeFragId) {

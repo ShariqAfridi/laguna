@@ -1,4 +1,5 @@
 <?php
+ob_start();
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../../db.php';
 require_once __DIR__ . '/../../app/Helpers/ImageOptimizer.php';
@@ -6,6 +7,7 @@ use App\Helpers\ImageOptimizer;
 
 $show_success  = false;
 $error_message = '';
+$success_message = '';
 
 // Enable error reporting for debugging
 error_reporting(E_ALL);
@@ -27,7 +29,6 @@ if ($product_id > 0) {
     $stmt->close();
     
     if ($edit_data) {
-        // Decode JSON fields
         $edit_data['color_ids'] = json_decode($edit_data['color_id'], true) ?: [];
         $edit_data['size_ids'] = json_decode($edit_data['size_id'], true) ?: [];
         $edit_data['size_prices_array'] = json_decode($edit_data['size_prices'], true) ?: [];
@@ -38,7 +39,7 @@ if ($product_id > 0) {
 }
 
 // ── FETCH LOOKUPS ─────────────────────────────────────────────────────
-$fragrances = $conn->query("SELECT fragrance_id, fragrance_name, sku FROM fragrances ORDER BY fragrance_name ASC");
+$fragrances = $conn->query("SELECT fragrance_id, fragrance_name, fragrance_image, sku FROM fragrances ORDER BY fragrance_name ASC");
 $sizes      = $conn->query("SELECT id AS size_id, category_name AS size_name, dimensions_subtitle AS size_details, sku, wick_type FROM categories WHERE status = 1 ORDER BY sort_order ASC, id ASC");
 $boxes      = $conn->query("SELECT box_id, box_name FROM boxes ORDER BY box_name ASC");
 $colors     = $conn->query("SELECT color_id, color_name, color_hex, sku FROM colors ORDER BY color_name ASC");
@@ -52,6 +53,9 @@ if ($fragrances) while ($r = $fragrances->fetch_assoc()) $fragrances_arr[] = $r;
 if ($sizes)      while ($r = $sizes->fetch_assoc())      $sizes_arr[]      = $r;
 if ($boxes)      while ($r = $boxes->fetch_assoc())      $boxes_arr[]      = $r;
 if ($colors)     while ($r = $colors->fetch_assoc())     $colors_arr[]     = $r;
+
+$fragrance_map = [];
+foreach ($fragrances_arr as $f) { $fragrance_map[$f['fragrance_id']] = $f; }
 
 function getImagePathForDisplay($image_filename) {
     if (empty($image_filename)) {
@@ -81,124 +85,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product_name    = trim($_POST['product_name']  ?? '');
     $user_sku        = trim($_POST['sku']           ?? '');
     $description     = trim($_POST['description']   ?? '');
-    $fragrance_id    = !empty($_POST['fragrance_id']) ? (int)$_POST['fragrance_id'] : null;
     $selected_colors = array_map('intval', $_POST['colors'] ?? []);
     $selected_boxes  = array_map('intval', $_POST['boxes']  ?? []);
     $wick_type       = trim($_POST['wick_type'] ?? 'single');
+
+    // Handle selected fragrances
+    $selected_fragrance_ids = [];
+    if (!empty($_POST['fragrances']) && is_array($_POST['fragrances'])) {
+        $selected_fragrance_ids = array_map('intval', $_POST['fragrances']);
+    } elseif (!empty($_POST['fragrance_id']) && is_numeric($_POST['fragrance_id'])) {
+        $selected_fragrance_ids = [(int)$_POST['fragrance_id']];
+    }
 
     $colors_json = !empty($selected_colors) ? json_encode($selected_colors) : '[]';
     $boxes_json  = !empty($selected_boxes)  ? json_encode($selected_boxes)  : '[]';
 
     $selected_size = isset($_POST['size_id']) ? (int)$_POST['size_id'] : 0;
-    $selected_sizes = $selected_size > 0 ? [$selected_size] : [];
+    $single_price  = floatval($_POST['price'] ?? 0);
+    $single_qty    = isset($_POST['qty']) ? max(0, (int)$_POST['qty']) : 0;
 
-    $single_price = floatval($_POST['price'] ?? 0);
-    $single_qty   = isset($_POST['qty']) ? max(0, (int)$_POST['qty']) : 0;
-
-    // ── IMAGE UPLOAD & COMPRESSION ────────────────────────────────────
-    $image = null;
-    
+    // ── MAIN DEFAULT IMAGE UPLOAD ──────────────────────────────────────
+    $main_image = null;
     if (!empty($_FILES['image']) && isset($_FILES['image']['tmp_name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $opt = ImageOptimizer::optimize($_FILES['image'], 'uploads/products/', 'candle_', 1400, 1048576, 85);
         if ($opt['success']) {
-            $image = $opt['path'];
-            if ($edit_mode && $edit_data && !empty($edit_data['image'])) {
-                $old_file = basename($edit_data['image']);
-                $old_image_path = dirname(__DIR__, 2) . "/public/uploads/products/" . $old_file;
-                if (file_exists($old_image_path)) {
-                    @unlink($old_image_path);
-                }
-            }
+            $main_image = $opt['path'];
         } else {
             $error_message = $opt['error'];
         }
-    } elseif ($edit_mode && isset($_POST['existing_image']) && !empty($_POST['existing_image'])) {
-        $image = $_POST['existing_image'];
-    } elseif (!$edit_mode) {
-        $error_message = "Product image is required.";
+    } elseif (isset($_POST['existing_image']) && !empty($_POST['existing_image'])) {
+        $main_image = trim($_POST['existing_image']);
+    }
+
+    // ── PER-FRAGRANCE IMAGE UPLOADS ────────────────────────────────────
+    $uploaded_fragrance_images = [];
+    foreach ($selected_fragrance_ids as $fid) {
+        $file_key = 'fragrance_image_' . $fid;
+        if (!empty($_FILES[$file_key]) && isset($_FILES[$file_key]['tmp_name']) && $_FILES[$file_key]['error'] === UPLOAD_ERR_OK) {
+            $opt = ImageOptimizer::optimize($_FILES[$file_key], 'uploads/products/', 'fragrance_' . $fid . '_', 1400, 1048576, 85);
+            if ($opt['success']) {
+                $uploaded_fragrance_images[$fid] = $opt['path'];
+            }
+        } elseif (isset($_POST['existing_fragrance_image_' . $fid]) && !empty($_POST['existing_fragrance_image_' . $fid])) {
+            $uploaded_fragrance_images[$fid] = trim($_POST['existing_fragrance_image_' . $fid]);
+        }
     }
 
     // ── BASIC FIELD VALIDATION ────────────────────────────────────────
     if (empty($error_message)) {
-        if (!$product_name)             $error_message = "Product name is required.";
-        elseif (!$description)          $error_message = "Description is required.";
-        elseif ($selected_size <= 0)    $error_message = "Please select a vessel category (size).";
-        elseif ($single_price <= 0)     $error_message = "Please enter a valid price.";
-        elseif (empty($wick_type))      $error_message = "Please select a wick type.";
+        if (!$description)                      $error_message = "Description is required.";
+        elseif ($selected_size <= 0)            $error_message = "Please select a vessel category (size).";
+        elseif ($single_price <= 0)             $error_message = "Please enter a valid price.";
+        elseif (empty($wick_type))              $error_message = "Please select a wick type.";
+        elseif (empty($selected_fragrance_ids)) $error_message = "Please select at least one fragrance.";
     }
 
-    // ── INSERT OR UPDATE ──────────────────────────────────────────────
+    // ── SAVE / UPDATE VARIATIONS ──────────────────────────────────────
     if (empty($error_message)) {
         $size_ids_json   = json_encode([$selected_size]);
         $size_prices_str = number_format((float)$single_price, 2, '.', '');
         $size_qtys_str   = (string)$single_qty;
         $total_qty       = $single_qty;
-        
-        // ── DYNAMIC SKU GENERATION ────────────────────────────────────────
-        if (!empty($user_sku)) {
-            $final_sku = strtoupper($user_sku);
-        } else {
-            $vessel_sku = 'C';
-            if ($selected_size > 0) {
-                foreach ($sizes_arr as $s) {
-                    if ((int)$s['size_id'] === $selected_size && !empty($s['sku'])) {
-                        $vessel_sku = $s['sku'];
-                        break;
-                    }
+
+        $vessel_sku = 'C';
+        if ($selected_size > 0) {
+            foreach ($sizes_arr as $s) {
+                if ((int)$s['size_id'] === $selected_size && !empty($s['sku'])) {
+                    $vessel_sku = $s['sku'];
+                    break;
                 }
             }
-
-            $color_sku = '00';
-            if (!empty($selected_colors)) {
-                $first_color_id = $selected_colors[0];
-                foreach ($colors_arr as $c) {
-                    if ((int)$c['color_id'] === $first_color_id && !empty($c['sku'])) {
-                        $color_sku = $c['sku'];
-                        break;
-                    }
-                }
-            }
-
-            $fragrance_sku = '00';
-            if ($fragrance_id !== null && $fragrance_id > 0) {
-                foreach ($fragrances_arr as $f) {
-                    if ((int)$f['fragrance_id'] === $fragrance_id && !empty($f['sku'])) {
-                        $fragrance_sku = $f['sku'];
-                        break;
-                    }
-                }
-            }
-
-            $final_sku = strtoupper($vessel_sku . $color_sku . $fragrance_sku);
         }
 
-        // Check SKU uniqueness (exclude current product when editing)
-        $sku_check_stmt = $conn->prepare("SELECT COUNT(*) FROM products WHERE sku = ? AND product_id != ?");
-        $sku_check_stmt->bind_param("si", $final_sku, $product_id);
-        $sku_check_stmt->execute();
-        $sku_count = 0;
-        $sku_check_stmt->bind_result($sku_count);
-        $sku_check_stmt->fetch();
-        $sku_check_stmt->close();
-
-        if ($sku_count > 0) {
-            $error_message = "A product with SKU \"{$final_sku}\" already exists. Please choose a different vessel, color, or fragrance.";
+        $color_sku = '00';
+        if (!empty($selected_colors)) {
+            $first_color_id = $selected_colors[0];
+            foreach ($colors_arr as $c) {
+                if ((int)$c['color_id'] === $first_color_id && !empty($c['sku'])) {
+                    $color_sku = $c['sku'];
+                    break;
+                }
+            }
         }
-    }
 
-    // ── INSERT OR UPDATE ──────────────────────────────────────────────
-    if (empty($error_message)) {
-        $fragrance_id_db = $fragrance_id !== null ? $fragrance_id : 0;
-        
+        $fragrance_images_map = [];
+        foreach ($selected_fragrance_ids as $fid) {
+            if (isset($uploaded_fragrance_images[$fid])) {
+                $fragrance_images_map[(string)$fid] = $uploaded_fragrance_images[$fid];
+            } elseif ($main_image) {
+                $fragrance_images_map[(string)$fid] = $main_image;
+            }
+        }
+        $fragrance_images_json = json_encode($fragrance_images_map);
+
         $conn->begin_transaction();
         try {
-            if ($edit_mode && $product_id > 0) {
-                $stmt = $conn->prepare("
-                    UPDATE products SET
+            if ($edit_mode && count($selected_fragrance_ids) === 1 && $selected_fragrance_ids[0] == $edit_data['fragrance_id']) {
+                // Updating single product record directly
+                $fid = $selected_fragrance_ids[0];
+                $frag_info = $fragrance_map[$fid] ?? null;
+                $frag_name = $frag_info['fragrance_name'] ?? 'Scent';
+                $frag_sku  = !empty($frag_info['sku']) ? $frag_info['sku'] : sprintf('%02d', $fid);
+
+                $variation_image = $uploaded_fragrance_images[$fid] ?? ($main_image ?: ($edit_data['image'] ?? ''));
+
+                if (!empty($product_name)) {
+                    $p_name = $product_name;
+                } else {
+                    $p_name = $frag_name . ' Candle';
+                }
+
+                $final_sku = !empty($user_sku) ? strtoupper($user_sku) : strtoupper($vessel_sku . $color_sku . $frag_sku);
+
+                $u_stmt = $conn->prepare("
+                    UPDATE products SET 
                         product_name = ?,
                         sku = ?,
                         description = ?,
                         image = ?,
+                        fragrance_images = ?,
                         qty = ?,
                         fragrance_id = ?,
                         color_id = ?,
@@ -210,17 +215,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         updated_at = NOW()
                     WHERE product_id = ?
                 ");
-                
-                if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
-                
-                $stmt->bind_param(
-                    "ssssiissssssi",
-                    $product_name,
+                $u_stmt->bind_param(
+                    "sssssiissssssi",
+                    $p_name,
                     $final_sku,
                     $description,
-                    $image,
+                    $variation_image,
+                    $fragrance_images_json,
                     $total_qty,
-                    $fragrance_id_db,
+                    $fid,
                     $colors_json,
                     $size_ids_json,
                     $size_prices_str,
@@ -229,41 +232,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $wick_type,
                     $product_id
                 );
+                $u_stmt->execute();
+                $u_stmt->close();
             } else {
-                $stmt = $conn->prepare("
-                    INSERT INTO products
-                        (product_name, sku, description, image, qty,
-                         fragrance_id, color_id, size_id, size_prices, size_qtys, box_id, wick_type,
-                         created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-                ");
-                
-                if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
-                
-                $stmt->bind_param(
-                    "ssssiissssss",
-                    $product_name,
-                    $final_sku,
-                    $description,
-                    $image,
-                    $total_qty,
-                    $fragrance_id_db,
-                    $colors_json,
-                    $size_ids_json,
-                    $size_prices_str,
-                    $size_qtys_str,
-                    $boxes_json,
-                    $wick_type
-                );
+                // Multi-fragrance batch save
+                foreach ($selected_fragrance_ids as $fid) {
+                    $frag_info = $fragrance_map[$fid] ?? null;
+                    $frag_name = $frag_info['fragrance_name'] ?? 'Scent';
+                    $frag_sku  = !empty($frag_info['sku']) ? $frag_info['sku'] : sprintf('%02d', $fid);
+
+                    $variation_image = $uploaded_fragrance_images[$fid] ?? ($main_image ?: ($frag_info['fragrance_image'] ?? ''));
+
+                    $p_name = !empty($product_name) ? $product_name . ' (' . $frag_name . ')' : $frag_name . ' Candle';
+                    $final_sku = strtoupper($vessel_sku . $color_sku . $frag_sku);
+
+                    $check = $conn->prepare("SELECT product_id FROM products WHERE sku = ?");
+                    $check->bind_param("s", $final_sku);
+                    $check->execute();
+                    $cres = $check->get_result();
+
+                    if ($cres && $row = $cres->fetch_assoc()) {
+                        $existing_id = (int)$row['product_id'];
+                        $check->close();
+
+                        $u_stmt = $conn->prepare("
+                            UPDATE products SET 
+                                product_name = ?,
+                                description = ?,
+                                image = ?,
+                                fragrance_images = ?,
+                                qty = ?,
+                                fragrance_id = ?,
+                                color_id = ?,
+                                size_id = ?,
+                                size_prices = ?,
+                                size_qtys = ?,
+                                box_id = ?,
+                                wick_type = ?,
+                                updated_at = NOW()
+                            WHERE product_id = ?
+                        ");
+                        $u_stmt->bind_param(
+                            "ssssiissssssi",
+                            $p_name,
+                            $description,
+                            $variation_image,
+                            $fragrance_images_json,
+                            $total_qty,
+                            $fid,
+                            $colors_json,
+                            $size_ids_json,
+                            $size_prices_str,
+                            $size_qtys_str,
+                            $boxes_json,
+                            $wick_type,
+                            $existing_id
+                        );
+                        $u_stmt->execute();
+                        $u_stmt->close();
+                    } else {
+                        $check->close();
+                        $i_stmt = $conn->prepare("
+                            INSERT INTO products
+                                (product_name, sku, description, image, fragrance_images, qty,
+                                 fragrance_id, color_id, size_id, size_prices, size_qtys, box_id, wick_type,
+                                 created_at, updated_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                        ");
+                        $i_stmt->bind_param(
+                            "sssssiissssss",
+                            $p_name,
+                            $final_sku,
+                            $description,
+                            $variation_image,
+                            $fragrance_images_json,
+                            $total_qty,
+                            $fid,
+                            $colors_json,
+                            $size_ids_json,
+                            $size_prices_str,
+                            $size_qtys_str,
+                            $boxes_json,
+                            $wick_type
+                        );
+                        $i_stmt->execute();
+                        $i_stmt->close();
+                    }
+                }
             }
 
-            if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
-            
-            $stmt->close();
             $conn->commit();
-
             $show_success = true;
-            echo '<script>setTimeout(function(){ window.location.href = "' . base_url('/admin/list_product') . '"; }, 1000);</script>';
+            $success_message = "Product variation(s) updated successfully! Redirecting...";
+            echo '<script>setTimeout(function(){ window.location.href = "' . base_url('/admin/list_product') . '"; }, 1200);</script>';
 
         } catch (Exception $e) {
             $conn->rollback();
@@ -277,7 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= $edit_mode ? 'Edit' : 'Add' ?> Product — Candle Shop</title>
+<title><?= $edit_mode ? 'Edit Product' : 'Add Product' ?> — Candle Shop</title>
 <style>
 :root {
     --blue:        #2563eb;
@@ -289,84 +350,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     --border:      #e2e8f0;
     --text:        #1e293b;
     --muted:       #64748b;
-    --success-bg:  #f0fdf4;
-    --success-bdr: #86efac;
-    --success-txt: #166534;
+    --danger:      #ef4444;
+    --danger-txt:  #991b1b;
     --danger-bg:   #fef2f2;
     --danger-bdr:  #fca5a5;
-    --danger-txt:  #991b1b;
-    --input-h:     40px;
+    --success-txt: #166534;
+    --success-bg:  #f0fdf4;
+    --success-bdr: #86efac;
     --radius:      10px;
     --radius-lg:   14px;
+    --input-h:     42px;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background: var(--bg);
-    margin: 0;
-    padding: 0;
     color: var(--text);
     font-size: 14px;
-    line-height: 1.5;
 }
 
-.page-main-content {
-    padding: 28px 32px;
-    margin-left: 250px;
-}
+.page-main-content { padding: 28px 32px; }
 
 @media (max-width: 960px) {
-    .page-main-content { margin-left: 0; padding: 16px; padding-top: 70px; }
+    .page-main-content { margin-left: 0; padding: 16px; }
 }
 
 .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 22px;
+    margin-bottom: 24px;
     flex-wrap: wrap;
     gap: 12px;
 }
 
-.page-header h2 {
-    margin: 0;
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: var(--text);
-}
-
+.page-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--text); }
 .header-actions { display: flex; gap: 10px; align-items: center; }
 
 .btn-primary {
     background: var(--blue);
     color: #fff;
     border: none;
-    padding: 10px 22px;
+    padding: 10px 24px;
     border-radius: var(--radius);
     font-weight: 600;
-    font-size: 0.88rem;
-    cursor: pointer;
-    transition: background 0.18s, transform 0.1s;
-}
-.btn-primary:hover  { background: var(--blue-h); }
-.btn-primary:active { transform: scale(0.98); }
-
-.btn-back {
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-    padding: 10px 18px;
-    border-radius: var(--radius);
-    font-weight: 500;
-    font-size: 0.88rem;
     cursor: pointer;
     text-decoration: none;
-    transition: all 0.18s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+    font-size: 0.88rem;
+}
+
+.btn-primary:hover { background: var(--blue-h); }
+
+.btn-back {
+    background: #fff;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 9px 16px;
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    font-size: 0.88rem;
+    transition: all 0.15s;
 }
 .btn-back:hover { color: var(--text); border-color: #94a3b8; background: #f8fafc; }
 
@@ -525,7 +578,7 @@ select {
 }
 
 .image-main {
-    height: 220px;
+    height: 200px;
     border: 2px dashed var(--border);
     border-radius: var(--radius-lg);
     display: flex;
@@ -552,6 +605,50 @@ select {
     inset: 0;
     border-radius: 12px;
     background: #f8fafc;
+}
+
+.fragrance-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.fragrance-upload-box {
+    background: #f8fafc;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    position: relative;
+    transition: border-color 0.2s;
+}
+
+.fragrance-upload-box:hover {
+    border-color: var(--blue);
+    background: #eff6ff;
+}
+
+.fragrance-upload-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.fragrance-img-preview {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: white;
 }
 
 .alert {
@@ -654,13 +751,49 @@ select {
 </head>
 <body>
 
+<?php
+// Pre-fill values
+$val_product_name = $_POST['product_name'] ?? ($edit_data['product_name'] ?? '');
+$val_sku          = $_POST['sku']          ?? ($edit_data['sku'] ?? '');
+$val_description  = $_POST['description']  ?? ($edit_data['description'] ?? '');
+$val_fragrance_id = $_POST['fragrance_id'] ?? ($edit_data['fragrance_id'] ?? '');
+
+$val_colors       = $_POST['colors'] ?? ($edit_data['color_ids'] ?? []);
+$val_boxes        = $_POST['boxes']  ?? ($edit_data['box_ids'] ?? []);
+$val_wick_type    = $_POST['wick_type'] ?? ($edit_data['wick_type'] ?? 'single');
+
+$val_size_id = '';
+if (!empty($edit_data['size_ids'])) {
+    $val_size_id = $edit_data['size_ids'][0];
+}
+
+$val_price = '';
+if (!empty($edit_data['size_prices_array'])) {
+    $val_price = reset($edit_data['size_prices_array']);
+} elseif (isset($edit_data['size_prices']) && is_numeric($edit_data['size_prices'])) {
+    $val_price = $edit_data['size_prices'];
+}
+
+$val_qty = '';
+if (isset($edit_data['qty'])) {
+    $val_qty = $edit_data['qty'];
+} elseif (!empty($edit_data['size_qtys_array'])) {
+    $val_qty = reset($edit_data['size_qtys_array']);
+}
+
+$val_image = $_POST['existing_image'] ?? ($edit_data['image'] ?? '');
+?>
+
 <div class="page-main-content">
 
     <div class="page-header">
-        <h2>✏️ Edit Product <?= $edit_mode ? '(#'. (int)$product_id .')' : '' ?></h2>
+        <div>
+            <h2>✏️ Edit Product Variation</h2>
+            <p style="color: var(--muted); margin-top: 4px;">Update product variation details and per-fragrance picture uploads.</p>
+        </div>
         <div class="header-actions">
             <a href="<?php echo $base; ?>/admin/list_product" class="btn-back">← Back</a>
-            <button type="button" onclick="submitForm()" class="btn-primary">💾 Save Changes</button>
+            <button type="button" onclick="submitForm()" class="btn-primary">✓ Update Product Variation</button>
         </div>
     </div>
 
@@ -669,13 +802,10 @@ select {
     <?php endif; ?>
 
     <?php if ($show_success): ?>
-        <div class="alert alert-success">✅ Product saved successfully! Redirecting...</div>
+        <div class="alert alert-success">✅ <?= htmlspecialchars($success_message ?: 'Product updated successfully!') ?></div>
     <?php endif; ?>
 
     <form id="productForm" action="" method="POST" enctype="multipart/form-data" class="product-layout">
-        <?php if ($edit_mode && !empty($edit_data['image'])): ?>
-            <input type="hidden" name="existing_image" value="<?= htmlspecialchars($edit_data['image']) ?>">
-        <?php endif; ?>
 
         <!-- LEFT COLUMN -->
         <div class="left-column">
@@ -684,108 +814,107 @@ select {
             <div class="card">
                 <h3><span class="icon">📋</span> General Information</h3>
 
-                <?php
-                $val_name  = $_POST['product_name'] ?? ($edit_data['product_name'] ?? '');
-                $val_sku   = $_POST['sku']          ?? ($edit_data['sku'] ?? '');
-                $val_desc  = $_POST['description']   ?? ($edit_data['description'] ?? '');
-                $val_frag  = $_POST['fragrance_id'] ?? ($edit_data['fragrance_id'] ?? '');
-                $val_colors= isset($_POST['colors']) ? (array)$_POST['colors'] : ($edit_data['color_ids'] ?? []);
-                $val_boxes = isset($_POST['boxes'])  ? (array)$_POST['boxes']  : ($edit_data['box_ids'] ?? []);
-                $val_wick  = $_POST['wick_type']    ?? ($edit_data['wick_type'] ?? 'single');
-                ?>
-
                 <div class="form-group">
-                    <label>Product Name <span class="req">*</span></label>
+                    <label>Product Title</label>
                     <input type="text" name="product_name" id="productName"
-                           placeholder="e.g. Amber Musk Candle" required
-                           value="<?= htmlspecialchars($val_name) ?>">
+                           placeholder="e.g. White Frost (Fragrance Free)"
+                           value="<?= htmlspecialchars($val_product_name) ?>">
                 </div>
 
                 <div class="form-group">
-                    <label>Product SKU <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(Auto-generated)</small></label>
-                    <div style="display:flex;gap:8px;">
-                        <input type="text" name="sku" id="productSku" placeholder="e.g. C0702"
-                               value="<?= htmlspecialchars($val_sku) ?>"
-                               readonly
-                               style="text-transform:uppercase;font-family:monospace;font-weight:600;background:#f8fafc;cursor:not-allowed;">
-                        <button type="button" onclick="autoGenerateSKU()" class="btn-back" style="flex-shrink:0;padding:0 12px;" title="Generate SKU automatically">⚡ Refresh SKU</button>
-                    </div>
+                    <label>SKU Code</label>
+                    <input type="text" name="sku" id="productSku"
+                           placeholder="Auto-generated if empty"
+                           value="<?= htmlspecialchars($val_sku) ?>">
                 </div>
 
                 <div class="form-group">
                     <label>Description <span class="req">*</span></label>
-                    <textarea name="description" placeholder="Describe your candle…" required><?= htmlspecialchars($val_desc) ?></textarea>
+                    <textarea name="description" required><?= htmlspecialchars($val_description) ?></textarea>
+                </div>
+            </div>
+
+            <!-- Fragrance Selector -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+                    <h3 style="padding-bottom:0; border-bottom:none; margin-bottom:0;"><span class="icon">🏷️</span> Fragrance Variations <span class="req">*</span></h3>
+                    <button type="button" class="btn-back" style="padding: 4px 10px; font-size: 11px;" onclick="toggleSelectAllFragrances()">
+                        ✨ Select / Deselect All
+                    </button>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group" style="margin-bottom:0">
-                        <label>Fragrance</label>
-                        <select name="fragrance_id" id="fragranceSelect" onchange="autoGenerateSKU()">
-                            <option value="" data-sku="00">— None —</option>
-                            <?php foreach ($fragrances_arr as $f): ?>
-                                <option value="<?= $f['fragrance_id'] ?>"
-                                        data-sku="<?= htmlspecialchars($f['sku'] ?? '00') ?>"
-                                    <?= ((int)$val_frag === (int)$f['fragrance_id']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($f['fragrance_name']) ?> (SKU: <?= htmlspecialchars($f['sku'] ?? '00') ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                <div class="form-group">
+                    <label>Fragrances <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(Check fragrances to assign pictures)</small></label>
+                    <div class="chip-group" id="fragranceChips">
+                        <?php foreach ($fragrances_arr as $f): ?>
+                            <input type="checkbox" name="fragrances[]"
+                                   id="frag-<?= $f['fragrance_id'] ?>"
+                                   value="<?= $f['fragrance_id'] ?>"
+                                   data-name="<?= htmlspecialchars($f['fragrance_name']) ?>"
+                                   data-image="<?= htmlspecialchars($f['fragrance_image'] ?? '') ?>"
+                                   onchange="onFragranceSelectionChange(); updateAllSummaries();"
+                                   <?= ($val_fragrance_id == $f['fragrance_id']) ? 'checked' : '' ?>>
+                            <label for="frag-<?= $f['fragrance_id'] ?>">
+                                🏷️ <?= htmlspecialchars($f['fragrance_name']) ?>
+                            </label>
+                        <?php endforeach; ?>
                     </div>
+                    <div class="summary-row" id="fragranceSummary">
+                        <span class="summary-empty">No fragrances selected</span>
+                    </div>
+                </div>
+
+                <!-- INDIVIDUAL FRAGRANCE PICTURE UPLOADS -->
+                <div style="margin-top: 20px;" id="fragranceImagesSection">
+                    <label style="color: #004b66; font-size: 12px;">📷 Upload Picture for Each Fragrance</label>
+                    <div class="fragrance-upload-grid" id="fragranceUploadContainer"></div>
                 </div>
             </div>
 
             <!-- Colors & Boxes -->
             <div class="card">
-                <h3><span class="icon">🎨</span> Colors &amp; Packaging</h3>
+                <h3><span class="icon">🎨</span> Vessel Color &amp; Packaging</h3>
 
                 <div class="form-group">
-                    <label>Colors <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(select single color)</small></label>
-                    <?php if (empty($colors_arr)): ?>
-                        <div class="empty-state">No colors found. Please add colors first.</div>
-                    <?php else: ?>
-                        <div class="chip-group" id="colorChips">
-                            <?php foreach ($colors_arr as $c): ?>
-                                <input type="radio" name="colors[]"
-                                       id="color-<?= $c['color_id'] ?>"
-                                       value="<?= $c['color_id'] ?>"
-                                       data-sku="<?= htmlspecialchars($c['sku'] ?? '00') ?>"
-                                       onchange="autoGenerateSKU(); updateAllSummaries();"
-                                       <?= in_array($c['color_id'], $val_colors) ? 'checked' : '' ?>>
-                                <label for="color-<?= $c['color_id'] ?>">
-                                    <span class="color-dot" style="background:<?= htmlspecialchars($c['color_hex']) ?>"></span>
-                                    <?= htmlspecialchars($c['color_name']) ?>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="summary-row" id="colorSummary">
-                            <span class="summary-empty">No colors selected</span>
-                        </div>
-                    <?php endif; ?>
+                    <label>Vessel Color</label>
+                    <div class="chip-group" id="colorChips">
+                        <?php foreach ($colors_arr as $c): ?>
+                            <input type="radio" name="colors[]"
+                                   id="color-<?= $c['color_id'] ?>"
+                                   value="<?= $c['color_id'] ?>"
+                                   data-sku="<?= htmlspecialchars($c['sku'] ?? '00') ?>"
+                                   onchange="updateAllSummaries();"
+                                   <?= in_array($c['color_id'], (array)$val_colors) ? 'checked' : '' ?>>
+                            <label for="color-<?= $c['color_id'] ?>">
+                                <span class="color-dot" style="background:<?= htmlspecialchars($c['color_hex']) ?>"></span>
+                                <?= htmlspecialchars($c['color_name']) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="summary-row" id="colorSummary">
+                        <span class="summary-empty">No colors selected</span>
+                    </div>
                 </div>
 
                 <hr class="section-divider">
 
                 <div class="form-group">
-                    <label>Box / Packaging <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(select multiple)</small></label>
-                    <?php if (empty($boxes_arr)): ?>
-                        <div class="empty-state">No box types found. Please add boxes first.</div>
-                    <?php else: ?>
-                        <div class="chip-group" id="boxChips">
-                            <?php foreach ($boxes_arr as $b): ?>
-                                <input type="checkbox" name="boxes[]"
-                                       id="box-<?= $b['box_id'] ?>"
-                                       value="<?= $b['box_id'] ?>"
-                                       onchange="updateAllSummaries()"
-                                       <?= in_array($b['box_id'], $val_boxes) ? 'checked' : '' ?>>
-                                <label for="box-<?= $b['box_id'] ?>">
-                                    📦 <?= htmlspecialchars($b['box_name']) ?>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="summary-row" id="boxSummary">
-                            <span class="summary-empty">No packaging selected</span>
-                        </div>
-                    <?php endif; ?>
+                    <label>Box / Packaging</label>
+                    <div class="chip-group" id="boxChips">
+                        <?php foreach ($boxes_arr as $b): ?>
+                            <input type="checkbox" name="boxes[]"
+                                   id="box-<?= $b['box_id'] ?>"
+                                   value="<?= $b['box_id'] ?>"
+                                   onchange="updateAllSummaries()"
+                                   <?= in_array($b['box_id'], (array)$val_boxes) ? 'checked' : '' ?>>
+                            <label for="box-<?= $b['box_id'] ?>">
+                                📦 <?= htmlspecialchars($b['box_name']) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="summary-row" id="boxSummary">
+                        <span class="summary-empty">No packaging selected</span>
+                    </div>
                 </div>
             </div>
 
@@ -794,27 +923,35 @@ select {
         <!-- RIGHT COLUMN -->
         <div class="right-column">
 
-            <!-- Image Upload -->
+            <!-- Main Product Image -->
             <div class="card">
-                <h3><span class="icon">🖼️</span> Product Image</h3>
+                <h3><span class="icon">🖼️</span> Variation Product Image</h3>
 
-                <?php $existing_img_url = !empty($edit_data['image']) ? getImagePathForDisplay($edit_data['image']) : null; ?>
+                <?php
+                $img_preview_url = getImagePathForDisplay($val_image);
+                ?>
+
+                <?php if (!empty($val_image)): ?>
+                    <input type="hidden" name="existing_image" value="<?= htmlspecialchars($val_image) ?>">
+                <?php endif; ?>
+
                 <div id="front-preview"
                      class="image-main"
-                     onclick="document.getElementById('imageInput').click()">
-                    <?php if ($existing_img_url): ?>
-                        <img src="<?= htmlspecialchars($existing_img_url) ?>" alt="Product image">
+                     onclick="document.getElementById('imageInput').click()"
+                     style="<?= $img_preview_url ? 'background-image:url(' . htmlspecialchars($img_preview_url) . '); background-size:cover; background-position:center;' : '' ?>">
+                    <?php if (!empty($val_image)): ?>
+                        <div style="background: rgba(0,0,0,0.5); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;">Current Image (Click to change)</div>
                     <?php else: ?>
                         <div class="upload-icon">📷</div>
-                        <div class="upload-text">Click to upload image</div>
-                        <div class="upload-sub">JPG, PNG, GIF, WEBP</div>
+                        <div class="upload-text">Upload Variation Image</div>
+                        <div class="upload-sub">Primary candle render</div>
                     <?php endif; ?>
                 </div>
                 <input type="file" id="imageInput" name="image"
                        accept="image/*" onchange="previewImage(this)" hidden>
 
                 <p style="font-size:0.75rem;color:#94a3b8;text-align:center;margin-top:10px;">
-                    Click area above to replace current photo
+                    Click image to upload new variation photo
                 </p>
             </div>
 
@@ -825,7 +962,7 @@ select {
                     <div class="wick-options">
                         <div class="wick-option">
                             <input type="radio" name="wick_type" id="wick_single" value="single"
-                                   <?= ($val_wick === 'single') ? 'checked' : '' ?>>
+                                   <?= ($val_wick_type === 'single') ? 'checked' : '' ?>>
                             <label for="wick_single">
                                 <span class="wick-icon">🕯️</span>
                                 Single Wick
@@ -833,7 +970,7 @@ select {
                         </div>
                         <div class="wick-option">
                             <input type="radio" name="wick_type" id="wick_double" value="double"
-                                   <?= ($val_wick === 'double') ? 'checked' : '' ?>>
+                                   <?= ($val_wick_type === 'double') ? 'checked' : '' ?>>
                             <label for="wick_double">
                                 <span class="wick-icon">🕯️🕯️</span>
                                 Double Wick
@@ -841,7 +978,7 @@ select {
                         </div>
                         <div class="wick-option">
                             <input type="radio" name="wick_type" id="wick_triple" value="triple"
-                                   <?= ($val_wick === 'triple') ? 'checked' : '' ?>>
+                                   <?= ($val_wick_type === 'triple') ? 'checked' : '' ?>>
                             <label for="wick_triple">
                                 <span class="wick-icon">🕯️🕯️🕯️</span>
                                 Triple Wick
@@ -855,69 +992,40 @@ select {
             <div class="card">
                 <h3><span class="icon">📏</span> Size &amp; Pricing</h3>
 
-                <?php if (empty($sizes_arr)): ?>
-                    <div class="empty-state">No vessel categories found. Please add categories first.</div>
-                <?php else: ?>
-                    <?php
-                    $current_size_id = isset($_POST['size_id']) ? (int)$_POST['size_id'] : (!empty($edit_data['size_ids']) ? (int)$edit_data['size_ids'][0] : 0);
-                    $current_price   = isset($_POST['price']) ? $_POST['price'] : ($edit_data['size_prices'] ?? '');
-                    if (is_array(json_decode($current_price, true))) {
-                        $sp_arr = json_decode($current_price, true);
-                        $current_price = reset($sp_arr);
-                    }
-                    $current_qty     = isset($_POST['qty']) ? $_POST['qty'] : ($edit_data['qty'] ?? ($edit_data['size_qtys'] ?? 100));
-                    if (is_array(json_decode($current_qty, true))) {
-                        $sq_arr = json_decode($current_qty, true);
-                        $current_qty = reset($sq_arr);
-                    }
-                    ?>
+                <div class="form-group">
+                    <label>Vessel Category (Size) <span class="req">*</span></label>
+                    <select name="size_id" id="vesselSelect" class="admin-select" required
+                            style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff;">
+                        <option value="">Select Vessel Category...</option>
+                        <?php foreach ($sizes_arr as $s): ?>
+                            <option value="<?= $s['size_id'] ?>"
+                                    <?= ((int)$val_size_id === (int)$s['size_id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($s['size_name']) ?> <?= $s['size_details'] ? '(' . htmlspecialchars($s['size_details']) . ')' : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
 
-                    <div class="form-group">
-                        <label>Vessel Category (Size) <span class="req">*</span></label>
-                        <select name="size_id" id="vesselSelect" class="admin-select" required
-                                onchange="onVesselChange();"
-                                style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff;">
-                            <option value="" data-sku="C" data-wick="single">Select Vessel Category (Size)...</option>
-                            <?php foreach ($sizes_arr as $s): ?>
-                                <?php
-                                $wType = 'single';
-                                $wStr = strtolower($s['wick_type'] ?? '');
-                                if (strpos($wStr, 'double') !== false) $wType = 'double';
-                                elseif (strpos($wStr, 'triple') !== false) $wType = 'triple';
-                                ?>
-                                <option value="<?= $s['size_id'] ?>"
-                                        data-sku="<?= htmlspecialchars($s['sku'] ?? 'C') ?>"
-                                        data-wick="<?= $wType ?>"
-                                        <?= ((int)$current_size_id === (int)$s['size_id']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($s['size_name']) ?> <?= $s['size_details'] ? '(' . htmlspecialchars($s['size_details']) . ')' : '' ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Price ($) <span class="req">*</span></label>
+                    <input type="number"
+                           step="0.01"
+                           name="price"
+                           id="priceInput"
+                           placeholder="0.00"
+                           value="<?= htmlspecialchars($val_price) ?>"
+                           required>
+                </div>
 
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label>Price ($) <span class="req">*</span></label>
-                        <input type="number"
-                               step="0.01"
-                               name="price"
-                               id="priceInput"
-                               placeholder="0.00"
-                               class="admin-input"
-                               value="<?= htmlspecialchars($current_price) ?>"
-                               required>
-                    </div>
-
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label>Quantity</label>
-                        <input type="number"
-                               name="qty"
-                               id="qtyInput"
-                               placeholder="0"
-                               min="0"
-                               class="admin-input"
-                               value="<?= htmlspecialchars($current_qty) ?>">
-                    </div>
-                <?php endif; ?>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Stock Qty</label>
+                    <input type="number"
+                           name="qty"
+                           id="qtyInput"
+                           placeholder="100"
+                           min="0"
+                           value="<?= htmlspecialchars($val_qty) ?>">
+                </div>
             </div>
 
         </div><!-- /right-column -->
@@ -925,52 +1033,80 @@ select {
 </div>
 
 <script>
+const existingImgUrl = <?= json_encode($img_preview_url ?: '') ?>;
+
 document.addEventListener('DOMContentLoaded', function () {
     updateAllSummaries();
-    if (!document.getElementById('productSku').value) {
-        autoGenerateSKU();
-    }
+    onFragranceSelectionChange();
 });
 
-/* ── SKU AUTO-GENERATION ── */
-function autoGenerateSKU() {
-    const vesselSel = document.getElementById('vesselSelect');
-    const vesselOpt = vesselSel ? vesselSel.options[vesselSel.selectedIndex] : null;
-    const vesselSku = (vesselOpt && vesselOpt.dataset.sku) ? vesselOpt.dataset.sku : 'C';
-
-    let colorSku = '00';
-    const checkedColor = document.querySelector('#colorChips input:checked');
-    if (checkedColor && checkedColor.dataset.sku) {
-        colorSku = checkedColor.dataset.sku;
-    }
-
-    const fragSel = document.getElementById('fragranceSelect');
-    const fragOpt = fragSel ? fragSel.options[fragSel.selectedIndex] : null;
-    const fragSku = (fragOpt && fragOpt.dataset.sku) ? fragOpt.dataset.sku : '00';
-
-    const generated = (vesselSku + colorSku + fragSku).toUpperCase();
-    const skuInput = document.getElementById('productSku');
-    if (skuInput) {
-        skuInput.value = generated;
-    }
+function toggleSelectAllFragrances() {
+    const checkboxes = document.querySelectorAll('#fragranceChips input[type="checkbox"]');
+    if (checkboxes.length === 0) return;
+    const allChecked = [...checkboxes].every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
+    updateAllSummaries();
+    onFragranceSelectionChange();
 }
 
-/* ── VESSEL CHANGE HANDLER ── */
-function onVesselChange() {
-    autoGenerateSKU();
-    const vesselSel = document.getElementById('vesselSelect');
-    if (!vesselSel) return;
-    const vesselOpt = vesselSel.options[vesselSel.selectedIndex];
-    if (vesselOpt && vesselOpt.dataset.wick) {
-        const targetWick = vesselOpt.dataset.wick;
-        const wickRadio = document.getElementById('wick_' + targetWick);
-        if (wickRadio) {
-            wickRadio.checked = true;
+function onFragranceSelectionChange() {
+    const container = document.getElementById('fragranceUploadContainer');
+    const checked = [...document.querySelectorAll('#fragranceChips input[type="checkbox"]:checked')];
+    if (!container) return;
+
+    if (checked.length === 0) {
+        container.innerHTML = '<div style="font-size:12px; color:#94a3b8; font-style:italic;">Check fragrances above to upload picture for each.</div>';
+        return;
+    }
+
+    const existingHTMLs = {};
+    container.querySelectorAll('.fragrance-upload-box').forEach(box => {
+        const fid = box.getAttribute('data-fid');
+        if (fid) existingHTMLs[fid] = box;
+    });
+
+    container.innerHTML = '';
+    checked.forEach(cb => {
+        const fid = cb.value;
+        const fname = cb.getAttribute('data-name');
+        const defaultImg = cb.getAttribute('data-image');
+
+        if (existingHTMLs[fid]) {
+            container.appendChild(existingHTMLs[fid]);
+        } else {
+            const box = document.createElement('div');
+            box.className = 'fragrance-upload-box';
+            box.setAttribute('data-fid', fid);
+            
+            let previewSrc = existingImgUrl || 'https://placehold.co/100x100?text=' + encodeURIComponent(fname);
+            if (defaultImg) {
+                previewSrc = defaultImg.startsWith('http') ? defaultImg : ('<?php echo base_url('/'); ?>' + defaultImg.replace(/^\/+/, ''));
+            }
+
+            box.innerHTML = `
+                <div class="fragrance-upload-title">🏷️ ${escapeHtml(fname)}</div>
+                <img id="frag_prev_${fid}" src="${previewSrc}" class="fragrance-img-preview" alt="${escapeHtml(fname)}">
+                <?php if (!empty($val_image)): ?>
+                    <input type="hidden" name="existing_fragrance_image_${fid}" value="${escapeHtml(existingImgUrl)}">
+                <?php endif; ?>
+                <input type="file" name="fragrance_image_${fid}" accept="image/*" onchange="previewIndividualFragranceImage(this, ${fid})" style="font-size: 11px; width: 100%;">
+            `;
+            container.appendChild(box);
         }
+    });
+}
+
+function previewIndividualFragranceImage(input, fid) {
+    const imgEl = document.getElementById('frag_prev_' + fid);
+    if (input.files && input.files[0] && imgEl) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imgEl.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
     }
 }
 
-/* ── IMAGE PREVIEW ── */
 function previewImage(input) {
     const preview = document.getElementById('front-preview');
     if (input.files && input.files[0]) {
@@ -985,10 +1121,10 @@ function previewImage(input) {
     }
 }
 
-/* ── CHIP SUMMARIES ── */
 function updateAllSummaries() {
-    updateChipSummary('colorChips', 'colorSummary', 'No colors selected');
-    updateChipSummary('boxChips',   'boxSummary',   'No packaging selected');
+    updateChipSummary('fragranceChips', 'fragranceSummary', 'No fragrances selected');
+    updateChipSummary('colorChips',     'colorSummary',     'No colors selected');
+    updateChipSummary('boxChips',       'boxSummary',       'No packaging selected');
 }
 
 function updateChipSummary(chipsId, summaryId, emptyText) {
@@ -1005,19 +1141,26 @@ function updateChipSummary(chipsId, summaryId, emptyText) {
     }
 }
 
-/* ── FORM SUBMIT VALIDATION ── */
-function submitForm() {
-    const name = document.getElementById('productName');
-    if (!name || !name.value.trim()) {
-        alert('Please enter a product name.');
-        name && name.focus();
-        return;
-    }
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
 
+function submitForm() {
     const vesselSel = document.getElementById('vesselSelect');
     if (!vesselSel || !vesselSel.value) {
         alert('Please select a vessel category (size).');
-        vesselSel && vesselSel.focus();
+        return;
+    }
+
+    const fragChecked = document.querySelectorAll('#fragranceChips input[type="checkbox"]:checked');
+    if (fragChecked.length === 0) {
+        alert('Please select at least one fragrance variation.');
         return;
     }
 
@@ -1025,19 +1168,12 @@ function submitForm() {
     const price = priceInput ? parseFloat(priceInput.value) : 0;
     if (!price || price <= 0) {
         alert('Please enter a valid price.');
-        priceInput && priceInput.focus();
-        return;
-    }
-
-    const wickSelected = document.querySelector('input[name="wick_type"]:checked');
-    if (!wickSelected) {
-        alert('Please select a wick type (Single, Double, or Triple Wick).');
         return;
     }
 
     document.getElementById('productForm').submit();
 }
 </script>
-<script src="<?= base_url('/public/assets/js/image-compressor.js') ?>"></script>
+<?php ob_end_flush(); ?>
 </body>
 </html>
