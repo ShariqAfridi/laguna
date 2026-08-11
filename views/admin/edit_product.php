@@ -29,11 +29,21 @@ if ($product_id > 0) {
     $stmt->close();
     
     if ($edit_data) {
-        $edit_data['color_ids'] = json_decode($edit_data['color_id'], true) ?: [];
-        $edit_data['size_ids'] = json_decode($edit_data['size_id'], true) ?: [];
-        $edit_data['size_prices_array'] = json_decode($edit_data['size_prices'], true) ?: [];
-        $edit_data['size_qtys_array'] = json_decode($edit_data['size_qtys'], true) ?: [];
-        $edit_data['box_ids'] = json_decode($edit_data['box_id'], true) ?: [];
+        $c_dec = json_decode($edit_data['color_id'], true);
+        $edit_data['color_ids'] = is_array($c_dec) ? $c_dec : [];
+
+        $s_dec = json_decode($edit_data['size_id'], true);
+        $edit_data['size_ids'] = is_array($s_dec) ? $s_dec : [];
+
+        $p_dec = json_decode($edit_data['size_prices'], true);
+        $edit_data['size_prices_array'] = is_array($p_dec) ? $p_dec : [];
+
+        $q_dec = json_decode($edit_data['size_qtys'], true);
+        $edit_data['size_qtys_array'] = is_array($q_dec) ? $q_dec : [];
+
+        $b_dec = json_decode($edit_data['box_id'], true);
+        $edit_data['box_ids'] = is_array($b_dec) ? $b_dec : [];
+
         $edit_data['wick_type'] = $edit_data['wick_type'] ?? 'single';
     }
 }
@@ -768,16 +778,16 @@ if (!empty($edit_data['size_ids'])) {
 }
 
 $val_price = '';
-if (!empty($edit_data['size_prices_array'])) {
+if (!empty($edit_data['size_prices_array']) && is_array($edit_data['size_prices_array'])) {
     $val_price = reset($edit_data['size_prices_array']);
 } elseif (isset($edit_data['size_prices']) && is_numeric($edit_data['size_prices'])) {
     $val_price = $edit_data['size_prices'];
 }
 
 $val_qty = '';
-if (isset($edit_data['qty'])) {
+if (isset($edit_data['qty']) && $edit_data['qty'] !== null && $edit_data['qty'] !== '') {
     $val_qty = $edit_data['qty'];
-} elseif (!empty($edit_data['size_qtys_array'])) {
+} elseif (!empty($edit_data['size_qtys_array']) && is_array($edit_data['size_qtys_array'])) {
     $val_qty = reset($edit_data['size_qtys_array']);
 }
 
