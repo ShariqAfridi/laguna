@@ -8,6 +8,7 @@ use App\Helpers\ImageOptimizer;
 
 $show_success  = false;
 $error_message = '';
+$success_message = '';
 
 // Enable error reporting for debugging
 error_reporting(E_ALL);
@@ -29,6 +30,10 @@ if ($sizes)      while ($r = $sizes->fetch_assoc())      $sizes_arr[]      = $r;
 if ($boxes)      while ($r = $boxes->fetch_assoc())      $boxes_arr[]      = $r;
 if ($colors)     while ($r = $colors->fetch_assoc())     $colors_arr[]     = $r;
 
+// Index lookup maps by ID for fast key retrieval
+$fragrance_map = [];
+foreach ($fragrances_arr as $f) { $fragrance_map[$f['fragrance_id']] = $f; }
+
 // ── DUPLICATE PRODUCT DATA FETCH ─────────────────────────────────────
 $duplicate_info = null;
 if (isset($_GET['duplicate_id']) && is_numeric($_GET['duplicate_id'])) {
@@ -45,22 +50,27 @@ if (isset($_GET['duplicate_id']) && is_numeric($_GET['duplicate_id'])) {
 
 // ── FORM SUBMISSION ───────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $product_name    = trim($_POST['product_name']  ?? '');
-    $user_sku        = trim($_POST['sku']           ?? '');
-    $description     = trim($_POST['description']   ?? '');
-    $fragrance_id    = !empty($_POST['fragrance_id']) ? (int)$_POST['fragrance_id'] : null;
-    $selected_colors = array_map('intval', $_POST['colors'] ?? []);
-    $selected_boxes  = array_map('intval', $_POST['boxes']  ?? []);
-    $wick_type       = trim($_POST['wick_type'] ?? 'single');
+    $base_product_name = trim($_POST['product_name']  ?? '');
+    $user_sku          = trim($_POST['sku']           ?? '');
+    $description       = trim($_POST['description']   ?? '');
+    $selected_colors   = array_map('intval', $_POST['colors'] ?? []);
+    $selected_boxes    = array_map('intval', $_POST['boxes']  ?? []);
+    $wick_type         = trim($_POST['wick_type'] ?? 'single');
+
+    // Handle single or multiple selected fragrances
+    $selected_fragrance_ids = [];
+    if (!empty($_POST['fragrances']) && is_array($_POST['fragrances'])) {
+        $selected_fragrance_ids = array_map('intval', $_POST['fragrances']);
+    } elseif (!empty($_POST['fragrance_id']) && is_numeric($_POST['fragrance_id'])) {
+        $selected_fragrance_ids = [(int)$_POST['fragrance_id']];
+    }
 
     $colors_json = !empty($selected_colors) ? json_encode($selected_colors) : '[]';
     $boxes_json  = !empty($selected_boxes)  ? json_encode($selected_boxes)  : '[]';
 
     $selected_size = isset($_POST['size_id']) ? (int)$_POST['size_id'] : 0;
-    $selected_sizes = $selected_size > 0 ? [$selected_size] : [];
-
-    $single_price = floatval($_POST['price'] ?? 0);
-    $single_qty   = isset($_POST['qty']) ? max(0, (int)$_POST['qty']) : 0;
+    $single_price  = floatval($_POST['price'] ?? 0);
+    $single_qty    = isset($_POST['qty']) ? max(0, (int)$_POST['qty']) : 0;
 
     // ── IMAGE UPLOAD & COMPRESSION ────────────────────────────────────
     $image = null;
@@ -80,120 +90,141 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ── BASIC FIELD VALIDATION ────────────────────────────────────────
     if (empty($error_message)) {
-        if (!$product_name)             $error_message = "Product name is required.";
-        elseif (!$description)          $error_message = "Description is required.";
-        elseif ($selected_size <= 0)    $error_message = "Please select a vessel category (size).";
-        elseif ($single_price <= 0)     $error_message = "Please enter a valid price.";
-        elseif (empty($wick_type))      $error_message = "Please select a wick type.";
+        if (!$description)                       $error_message = "Description is required.";
+        elseif ($selected_size <= 0)             $error_message = "Please select a vessel category (size).";
+        elseif ($single_price <= 0)              $error_message = "Please enter a valid price.";
+        elseif (empty($wick_type))               $error_message = "Please select a wick type.";
+        elseif (empty($selected_fragrance_ids))  $error_message = "Please select at least one fragrance.";
     }
 
-    // ── INSERT ────────────────────────────────────────────────────────
+    // ── BATCH INSERT VARIATIONS ───────────────────────────────────────
     if (empty($error_message)) {
-        // Simple non-array price and quantity values
-        $size_ids_json   = json_encode([$selected_size]);
-        $size_prices_str = number_format((float)$single_price, 2, '.', '');
-        $size_qtys_str   = (string)$single_qty;
-        $total_qty       = $single_qty;
-
-        // ── DYNAMIC SKU GENERATION ────────────────────────────────────────
-        if (!empty($user_sku)) {
-            $final_sku = strtoupper($user_sku);
-        } else {
-            $vessel_sku = 'C';
-            if ($selected_size > 0) {
-                foreach ($sizes_arr as $s) {
-                    if ((int)$s['size_id'] === $selected_size && !empty($s['sku'])) {
-                        $vessel_sku = $s['sku'];
-                        break;
-                    }
+        $vessel_sku = 'C';
+        if ($selected_size > 0) {
+            foreach ($sizes_arr as $s) {
+                if ((int)$s['size_id'] === $selected_size && !empty($s['sku'])) {
+                    $vessel_sku = $s['sku'];
+                    break;
                 }
             }
-
-            $color_sku = '00';
-            if (!empty($selected_colors)) {
-                $first_color_id = $selected_colors[0];
-                foreach ($colors_arr as $c) {
-                    if ((int)$c['color_id'] === $first_color_id && !empty($c['sku'])) {
-                        $color_sku = $c['sku'];
-                        break;
-                    }
-                }
-            }
-
-            $fragrance_sku = '00';
-            if ($fragrance_id !== null && $fragrance_id > 0) {
-                foreach ($fragrances_arr as $f) {
-                    if ((int)$f['fragrance_id'] === $fragrance_id && !empty($f['sku'])) {
-                        $fragrance_sku = $f['sku'];
-                        break;
-                    }
-                }
-            }
-
-            $final_sku = strtoupper($vessel_sku . $color_sku . $fragrance_sku);
         }
 
-        // Check SKU uniqueness
-        $sku_check_stmt = $conn->prepare("SELECT COUNT(*) FROM products WHERE sku = ?");
-        $sku_check_stmt->bind_param("s", $final_sku);
-        $sku_check_stmt->execute();
-        $sku_count = 0;
-        $sku_check_stmt->bind_result($sku_count);
-        $sku_check_stmt->fetch();
-        $sku_check_stmt->close();
-
-        if ($sku_count > 0) {
-            $error_message = "A product with SKU \"{$final_sku}\" already exists. Please choose a different vessel, color, or fragrance.";
+        $color_sku = '00';
+        if (!empty($selected_colors)) {
+            $first_color_id = $selected_colors[0];
+            foreach ($colors_arr as $c) {
+                if ((int)$c['color_id'] === $first_color_id && !empty($c['sku'])) {
+                    $color_sku = $c['sku'];
+                    break;
+                }
+            }
         }
-    }
 
-    // ── INSERT ────────────────────────────────────────────────────────
-    if (empty($error_message)) {
-        $fragrance_id_db = $fragrance_id !== null ? $fragrance_id : 0;
-        $color_id_str    = $colors_json;
-        $size_id_str     = $size_ids_json;
-        $size_prices_str = $size_prices_json;
-        $box_id_str      = $boxes_json;
-
+        $inserted_count = 0;
         $conn->begin_transaction();
+
         try {
-            $stmt = $conn->prepare("
-                INSERT INTO products
-                    (product_name, sku, description, image, qty,
-                     fragrance_id, color_id, size_id, size_prices, size_qtys, box_id, wick_type,
-                     created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-            ");
-            
-            if (!$stmt) {
-                throw new Exception("Prepare failed: " . $conn->error);
+            foreach ($selected_fragrance_ids as $fid) {
+                $frag_info = $fragrance_map[$fid] ?? null;
+                $frag_name = $frag_info['fragrance_name'] ?? 'Scent';
+                $frag_sku  = !empty($frag_info['sku']) ? $frag_info['sku'] : sprintf('%02d', $fid);
+
+                // Compute product name for this fragrance variation
+                if (!empty($base_product_name) && count($selected_fragrance_ids) === 1) {
+                    $p_name = $base_product_name;
+                } elseif (!empty($base_product_name)) {
+                    $p_name = $base_product_name . ' (' . $frag_name . ')';
+                } else {
+                    $p_name = $frag_name . ' Candle';
+                }
+
+                // Compute final SKU
+                $final_sku = strtoupper($vessel_sku . $color_sku . $frag_sku);
+
+                $size_ids_json   = json_encode([$selected_size]);
+                $size_prices_str = number_format((float)$single_price, 2, '.', '');
+                $size_qtys_str   = (string)$single_qty;
+                $total_qty       = $single_qty;
+
+                // Check if product with this SKU already exists
+                $check = $conn->prepare("SELECT product_id FROM products WHERE sku = ?");
+                $check->bind_param("s", $final_sku);
+                $check->execute();
+                $cres = $check->get_result();
+
+                if ($cres && $row = $cres->fetch_assoc()) {
+                    // Update existing variation
+                    $existing_id = (int)$row['product_id'];
+                    $check->close();
+
+                    $u_stmt = $conn->prepare("
+                        UPDATE products SET 
+                            product_name = ?,
+                            description = ?,
+                            image = ?,
+                            qty = ?,
+                            fragrance_id = ?,
+                            color_id = ?,
+                            size_id = ?,
+                            size_prices = ?,
+                            size_qtys = ?,
+                            box_id = ?,
+                            wick_type = ?,
+                            updated_at = NOW()
+                        WHERE product_id = ?
+                    ");
+                    $u_stmt->bind_param(
+                        "sssiissssssi",
+                        $p_name,
+                        $description,
+                        $image,
+                        $total_qty,
+                        $fid,
+                        $colors_json,
+                        $size_ids_json,
+                        $size_prices_str,
+                        $size_qtys_str,
+                        $boxes_json,
+                        $wick_type,
+                        $existing_id
+                    );
+                    $u_stmt->execute();
+                    $u_stmt->close();
+                } else {
+                    $check->close();
+                    // Insert new variation
+                    $i_stmt = $conn->prepare("
+                        INSERT INTO products
+                            (product_name, sku, description, image, qty,
+                             fragrance_id, color_id, size_id, size_prices, size_qtys, box_id, wick_type,
+                             created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                    ");
+                    $i_stmt->bind_param(
+                        "ssssiissssss",
+                        $p_name,
+                        $final_sku,
+                        $description,
+                        $image,
+                        $total_qty,
+                        $fid,
+                        $colors_json,
+                        $size_ids_json,
+                        $size_prices_str,
+                        $size_qtys_str,
+                        $boxes_json,
+                        $wick_type
+                    );
+                    $i_stmt->execute();
+                    $i_stmt->close();
+                }
+                $inserted_count++;
             }
 
-            $stmt->bind_param(
-                "ssssiissssss",
-                $product_name,
-                $final_sku,
-                $description,
-                $image,
-                $total_qty,
-                $fragrance_id_db,
-                $color_id_str,
-                $size_id_str,
-                $size_prices_str,
-                $size_qtys_str,
-                $box_id_str,
-                $wick_type
-            );
-
-            if (!$stmt->execute()) {
-                throw new Exception("Insert failed: " . $stmt->error);
-            }
-            
-            $stmt->close();
             $conn->commit();
-
             $show_success = true;
-            echo '<script>setTimeout(function(){ window.location.href = "' . base_url('/admin/list_product') . '"; }, 1000);</script>';
+            $success_message = "$inserted_count fragrance variation product(s) saved successfully! Redirecting...";
+            echo '<script>setTimeout(function(){ window.location.href = "' . base_url('/admin/list_product') . '"; }, 1200);</script>';
 
         } catch (Exception $e) {
             $conn->rollback();
@@ -219,84 +250,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     --border:      #e2e8f0;
     --text:        #1e293b;
     --muted:       #64748b;
-    --success-bg:  #f0fdf4;
-    --success-bdr: #86efac;
-    --success-txt: #166534;
+    --danger:      #ef4444;
+    --danger-txt:  #991b1b;
     --danger-bg:   #fef2f2;
     --danger-bdr:  #fca5a5;
-    --danger-txt:  #991b1b;
-    --input-h:     40px;
+    --success-txt: #166534;
+    --success-bg:  #f0fdf4;
+    --success-bdr: #86efac;
     --radius:      10px;
     --radius-lg:   14px;
+    --input-h:     42px;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background: var(--bg);
-    margin: 0;
-    padding: 0;
     color: var(--text);
     font-size: 14px;
-    line-height: 1.5;
 }
 
-.page-main-content {
-    padding: 28px 32px;
-    margin-left: 250px;
-}
+.page-main-content { padding: 28px 32px; }
 
 @media (max-width: 960px) {
-    .page-main-content { margin-left: 0; padding: 16px; padding-top: 70px; }
+    .page-main-content { margin-left: 0; padding: 16px; }
 }
 
 .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 22px;
+    margin-bottom: 24px;
     flex-wrap: wrap;
     gap: 12px;
 }
 
-.page-header h2 {
-    margin: 0;
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: var(--text);
-}
-
+.page-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--text); }
 .header-actions { display: flex; gap: 10px; align-items: center; }
 
 .btn-primary {
     background: var(--blue);
     color: #fff;
     border: none;
-    padding: 10px 22px;
+    padding: 10px 24px;
     border-radius: var(--radius);
     font-weight: 600;
-    font-size: 0.88rem;
-    cursor: pointer;
-    transition: background 0.18s, transform 0.1s;
-}
-.btn-primary:hover  { background: var(--blue-h); }
-.btn-primary:active { transform: scale(0.98); }
-
-.btn-back {
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-    padding: 10px 18px;
-    border-radius: var(--radius);
-    font-weight: 500;
-    font-size: 0.88rem;
     cursor: pointer;
     text-decoration: none;
-    transition: all 0.18s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+    font-size: 0.88rem;
+}
+
+.btn-primary:hover { background: var(--blue-h); }
+
+.btn-back {
+    background: #fff;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 9px 16px;
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    font-size: 0.88rem;
+    transition: all 0.15s;
 }
 .btn-back:hover { color: var(--text); border-color: #94a3b8; background: #f8fafc; }
 
@@ -587,11 +610,10 @@ select {
 <body>
 
 <?php
-// Compute Form Pre-fill Values (handles duplicate_id and POST errors)
+// Compute Form Pre-fill Values
 $val_product_name = $_POST['product_name'] ?? ($duplicate_info ? $duplicate_info['product_name'] . ' (Copy)' : '');
 $val_sku          = $_POST['sku']          ?? ($duplicate_info && !empty($duplicate_info['sku']) ? $duplicate_info['sku'] . '-COPY' : '');
 $val_description  = $_POST['description']  ?? ($duplicate_info['description'] ?? '');
-$val_fragrance_id = $_POST['fragrance_id'] ?? ($duplicate_info['fragrance_id'] ?? '');
 
 $val_colors       = $_POST['colors'] ?? ($duplicate_info ? (json_decode($duplicate_info['color_id'] ?? '[]', true) ?: []) : []);
 $val_boxes        = $_POST['boxes']  ?? ($duplicate_info ? (json_decode($duplicate_info['box_id'] ?? '[]', true) ?: []) : []);
@@ -634,16 +656,19 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
 <div class="page-main-content">
 
     <div class="page-header">
-        <h2>🕯️ Add New Product</h2>
+        <div>
+            <h2>🕯️ Add Product &amp; Variations</h2>
+            <p style="color: var(--muted); margin-top: 4px;">Select Vessel, Color, and choose Fragrance variations to batch create products.</p>
+        </div>
         <div class="header-actions">
             <a href="<?php echo $base; ?>/admin/list_product" class="btn-back">← Back</a>
-            <button type="button" onclick="submitForm()" class="btn-primary">+ Add Product</button>
+            <button type="button" onclick="submitForm()" class="btn-primary">+ Save Product Variations</button>
         </div>
     </div>
 
     <?php if ($duplicate_info): ?>
         <div style="background: #f0fdf4; color: #166534; border: 1px solid #86efac; padding: 14px 18px; border-radius: var(--radius); margin-bottom: 20px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-            <span>📋</span> Duplicating Product: <strong><?= htmlspecialchars($duplicate_info['product_name']) ?></strong> &nbsp;— All details copied. Review and click "+ Add Product" to save.
+            <span>📋</span> Duplicating Product: <strong><?= htmlspecialchars($duplicate_info['product_name']) ?></strong> &nbsp;— All details copied. Review and click "+ Save Product Variations" to save.
         </div>
     <?php endif; ?>
 
@@ -652,7 +677,7 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
     <?php endif; ?>
 
     <?php if ($show_success): ?>
-        <div class="alert alert-success">✅ Product added successfully! Redirecting...</div>
+        <div class="alert alert-success">✅ <?= htmlspecialchars($success_message ?: 'Product variations saved successfully!') ?></div>
     <?php endif; ?>
 
     <form id="productForm" action="" method="POST" enctype="multipart/form-data" class="product-layout">
@@ -665,51 +690,53 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
                 <h3><span class="icon">📋</span> General Information</h3>
 
                 <div class="form-group">
-                    <label>Product Name <span class="req">*</span></label>
+                    <label>Base Product Title <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(Optional — auto-generates if blank)</small></label>
                     <input type="text" name="product_name" id="productName"
-                           placeholder="e.g. Amber Musk Candle" required
+                           placeholder="e.g. Artisanal Candle (Leave blank to use Fragrance Name)"
                            value="<?= htmlspecialchars($val_product_name) ?>">
-                </div>
-
-                <div class="form-group">
-                    <label>Product SKU <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(Auto-generated)</small></label>
-                    <div style="display:flex;gap:8px;">
-                        <input type="text" name="sku" id="productSku" placeholder="e.g. C0702"
-                               value="<?= htmlspecialchars($val_sku) ?>"
-                               readonly
-                               style="text-transform:uppercase;font-family:monospace;font-weight:600;background:#f8fafc;cursor:not-allowed;">
-                        <button type="button" onclick="autoGenerateSKU()" class="btn-back" style="flex-shrink:0;padding:0 12px;" title="Generate SKU automatically">⚡ Refresh SKU</button>
-                    </div>
                 </div>
 
                 <div class="form-group">
                     <label>Description <span class="req">*</span></label>
                     <textarea name="description" placeholder="Describe your candle…" required><?= htmlspecialchars($val_description) ?></textarea>
                 </div>
+            </div>
 
-                <div class="form-row">
-                    <div class="form-group" style="margin-bottom:0">
-                        <label>Fragrance</label>
-                        <select name="fragrance_id" id="fragranceSelect" onchange="autoGenerateSKU()">
-                            <option value="" data-sku="00">— None —</option>
-                            <?php foreach ($fragrances_arr as $f): ?>
-                                <option value="<?= $f['fragrance_id'] ?>"
-                                        data-sku="<?= htmlspecialchars($f['sku'] ?? '00') ?>"
-                                    <?= ($val_fragrance_id == $f['fragrance_id']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($f['fragrance_name']) ?> (SKU: <?= htmlspecialchars($f['sku'] ?? '00') ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+            <!-- Fragrance Variations Selector -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+                    <h3 style="padding-bottom:0; border-bottom:none; margin-bottom:0;"><span class="icon">🏷️</span> Select Fragrance Variations <span class="req">*</span></h3>
+                    <button type="button" class="btn-back" style="padding: 4px 10px; font-size: 11px;" onclick="toggleSelectAllFragrances()">
+                        ✨ Select / Deselect All
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label>Fragrances <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(Select multiple to batch create variations)</small></label>
+                    <div class="chip-group" id="fragranceChips">
+                        <?php foreach ($fragrances_arr as $f): ?>
+                            <input type="checkbox" name="fragrances[]"
+                                   id="frag-<?= $f['fragrance_id'] ?>"
+                                   value="<?= $f['fragrance_id'] ?>"
+                                   onchange="updateAllSummaries()"
+                                   <?= (!empty($duplicate_info['fragrance_id']) && $duplicate_info['fragrance_id'] == $f['fragrance_id']) ? 'checked' : '' ?>>
+                            <label for="frag-<?= $f['fragrance_id'] ?>">
+                                🏷️ <?= htmlspecialchars($f['fragrance_name']) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="summary-row" id="fragranceSummary">
+                        <span class="summary-empty">No fragrances selected</span>
                     </div>
                 </div>
             </div>
 
             <!-- Colors & Boxes -->
             <div class="card">
-                <h3><span class="icon">🎨</span> Colors &amp; Packaging</h3>
+                <h3><span class="icon">🎨</span> Vessel Color &amp; Packaging</h3>
 
                 <div class="form-group">
-                    <label>Colors <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(select single color)</small></label>
+                    <label>Vessel Color <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(select color)</small></label>
                     <?php if (empty($colors_arr)): ?>
                         <div class="empty-state">No colors found. Please add colors first.</div>
                     <?php else: ?>
@@ -719,8 +746,8 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
                                        id="color-<?= $c['color_id'] ?>"
                                        value="<?= $c['color_id'] ?>"
                                        data-sku="<?= htmlspecialchars($c['sku'] ?? '00') ?>"
-                                       onchange="autoGenerateSKU(); updateAllSummaries();"
-                                       <?= in_array($c['color_id'], (array)$val_colors) ? 'checked' : '' ?>>
+                                       onchange="updateAllSummaries();"
+                                       <?= in_array($c['color_id'], (array)$val_colors) ? 'checked' : (count($colors_arr) === 1 ? 'checked' : '') ?>>
                                 <label for="color-<?= $c['color_id'] ?>">
                                     <span class="color-dot" style="background:<?= htmlspecialchars($c['color_hex']) ?>"></span>
                                     <?= htmlspecialchars($c['color_name']) ?>
@@ -863,7 +890,7 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
                     </div>
 
                     <div class="form-group" style="margin-top: 15px;">
-                        <label>Price ($) <span class="req">*</span></label>
+                        <label>Price per Unit ($) <span class="req">*</span></label>
                         <input type="number"
                                step="0.01"
                                name="price"
@@ -875,11 +902,11 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
                     </div>
 
                     <div class="form-group" style="margin-top: 15px;">
-                        <label>Quantity</label>
+                        <label>Initial Stock Qty per Fragrance</label>
                         <input type="number"
                                name="qty"
                                id="qtyInput"
-                               placeholder="0"
+                               placeholder="100"
                                min="0"
                                class="admin-input"
                                value="<?= htmlspecialchars($val_qty) ?>">
@@ -894,37 +921,19 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     updateAllSummaries();
-    if (!document.getElementById('productSku').value) {
-        autoGenerateSKU();
-    }
 });
 
-/* ── SKU AUTO-GENERATION ── */
-function autoGenerateSKU() {
-    const vesselSel = document.getElementById('vesselSelect');
-    const vesselOpt = vesselSel ? vesselSel.options[vesselSel.selectedIndex] : null;
-    const vesselSku = (vesselOpt && vesselOpt.dataset.sku) ? vesselOpt.dataset.sku : 'C';
-
-    let colorSku = '00';
-    const checkedColor = document.querySelector('#colorChips input:checked');
-    if (checkedColor && checkedColor.dataset.sku) {
-        colorSku = checkedColor.dataset.sku;
-    }
-
-    const fragSel = document.getElementById('fragranceSelect');
-    const fragOpt = fragSel ? fragSel.options[fragSel.selectedIndex] : null;
-    const fragSku = (fragOpt && fragOpt.dataset.sku) ? fragOpt.dataset.sku : '00';
-
-    const generated = (vesselSku + colorSku + fragSku).toUpperCase();
-    const skuInput = document.getElementById('productSku');
-    if (skuInput) {
-        skuInput.value = generated;
-    }
+function toggleSelectAllFragrances() {
+    const checkboxes = document.querySelectorAll('#fragranceChips input[type="checkbox"]');
+    if (checkboxes.length === 0) return;
+    
+    const allChecked = [...checkboxes].every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
+    updateAllSummaries();
 }
 
 /* ── VESSEL CHANGE HANDLER ── */
 function onVesselChange() {
-    autoGenerateSKU();
     const vesselSel = document.getElementById('vesselSelect');
     if (!vesselSel) return;
     const vesselOpt = vesselSel.options[vesselSel.selectedIndex];
@@ -954,8 +963,9 @@ function previewImage(input) {
 
 /* ── CHIP SUMMARIES ── */
 function updateAllSummaries() {
-    updateChipSummary('colorChips', 'colorSummary', 'No colors selected');
-    updateChipSummary('boxChips',   'boxSummary',   'No packaging selected');
+    updateChipSummary('fragranceChips', 'fragranceSummary', 'No fragrances selected');
+    updateChipSummary('colorChips',     'colorSummary',     'No colors selected');
+    updateChipSummary('boxChips',       'boxSummary',       'No packaging selected');
 }
 
 function updateChipSummary(chipsId, summaryId, emptyText) {
@@ -974,17 +984,16 @@ function updateChipSummary(chipsId, summaryId, emptyText) {
 
 /* ── FORM SUBMIT VALIDATION ── */
 function submitForm() {
-    const name = document.getElementById('productName');
-    if (!name || !name.value.trim()) {
-        alert('Please enter a product name.');
-        name && name.focus();
-        return;
-    }
-
     const vesselSel = document.getElementById('vesselSelect');
     if (!vesselSel || !vesselSel.value) {
         alert('Please select a vessel category (size).');
         vesselSel && vesselSel.focus();
+        return;
+    }
+
+    const fragChecked = document.querySelectorAll('#fragranceChips input[type="checkbox"]:checked');
+    if (fragChecked.length === 0) {
+        alert('Please select at least one fragrance variation.');
         return;
     }
 
@@ -1003,7 +1012,8 @@ function submitForm() {
     }
 
     const image = document.getElementById('imageInput');
-    if (!image || !image.files || image.files.length === 0) {
+    const existingImage = document.querySelector('input[name="existing_image"]');
+    if ((!image || !image.files || image.files.length === 0) && !existingImage) {
         alert('Please upload a product image.');
         return;
     }
