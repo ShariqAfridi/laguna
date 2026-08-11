@@ -1054,8 +1054,15 @@ function onFragranceSelectionChange() {
             box.setAttribute('data-fid', fid);
             
             let previewSrc = 'https://placehold.co/100x100?text=' + encodeURIComponent(fname);
-            if (defaultImg) {
-                previewSrc = defaultImg.startsWith('http') ? defaultImg : ('<?php echo base_url('/'); ?>' + defaultImg.replace(/^\/+/, ''));
+            if (defaultImg && defaultImg.trim() !== '') {
+                let cleanImg = defaultImg.trim();
+                if (cleanImg.startsWith('http')) {
+                    previewSrc = cleanImg;
+                } else if (cleanImg.includes('uploads/')) {
+                    previewSrc = '<?php echo base_url('/public/'); ?>' + cleanImg.replace(/^\/+/, '');
+                } else {
+                    previewSrc = '<?php echo base_url('/'); ?>' + cleanImg.replace(/^\/+/, '');
+                }
             }
 
             box.innerHTML = `

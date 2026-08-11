@@ -132,8 +132,14 @@ if (!$showVesselSelection) {
             // Get fragrance image dynamically from DB
             $fragrance_image_name = '';
             if ($fragrance_id > 0 && !empty($fragrance_details[$fragrance_id])) {
-                $fImg = $fragrance_details[$fragrance_id];
-                $fragrance_image_name = (strpos($fImg, 'http') === 0) ? $fImg : base_url('/' . ltrim($fImg, '/'));
+                $fImg = trim($fragrance_details[$fragrance_id]);
+                if (strpos($fImg, 'http') === 0) {
+                    $fragrance_image_name = $fImg;
+                } elseif (strpos($fImg, 'uploads/') !== false) {
+                    $fragrance_image_name = base_url('/public/' . ltrim($fImg, '/'));
+                } else {
+                    $fragrance_image_name = base_url('/' . ltrim($fImg, '/'));
+                }
             }
             $row['fragrance_image'] = $fragrance_image_name;
             $products[] = $row;
