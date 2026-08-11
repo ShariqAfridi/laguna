@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../../db.php';
+require_once __DIR__ . '/../../app/Helpers/ImageOptimizer.php';
+use App\Helpers\ImageOptimizer;
 
 $error_message = '';
 
@@ -11,48 +13,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sort_order            = (int)($_POST['sort_order'] ?? 0);
 
     $fragrance_image = '';
-    if (!empty($_FILES['fragrance_image']['tmp_name'])) {
-        $file = $_FILES['fragrance_image'];
-        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-        if (in_array($ext, $allowed)) {
-            $upload_dir = __DIR__ . '/../../public/uploads/fragrances/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-            $filename = 'frag_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-            $target_file = $upload_dir . $filename;
-
-            if (move_uploaded_file($file['tmp_name'], $target_file)) {
-                $fragrance_image = 'public/uploads/fragrances/' . $filename;
-            } else {
-                $error_message = 'Failed to upload fragrance image.';
-            }
+    if (!empty($_FILES['fragrance_image']['tmp_name']) && $_FILES['fragrance_image']['error'] === UPLOAD_ERR_OK) {
+        $opt = ImageOptimizer::optimize($_FILES['fragrance_image'], 'uploads/fragrances/', 'frag_', 1400, 1048576, 85);
+        if ($opt['success']) {
+            $fragrance_image = 'public/' . $opt['path'];
         } else {
-            $error_message = 'Invalid image format. Allowed: JPG, PNG, WEBP, GIF.';
+            $error_message = $opt['error'];
         }
     }
 
     $scent_note_image = '';
-    if (!empty($_FILES['scent_note_image']['tmp_name'])) {
-        $file = $_FILES['scent_note_image'];
-        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-        if (in_array($ext, $allowed)) {
-            $upload_dir = __DIR__ . '/../../public/uploads/fragrances/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-            $filename = 'scent_note_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-            $target_file = $upload_dir . $filename;
-
-            if (move_uploaded_file($file['tmp_name'], $target_file)) {
-                $scent_note_image = 'public/uploads/fragrances/' . $filename;
-            } else {
-                $error_message = 'Failed to upload scent note image.';
-            }
+    if (!empty($_FILES['scent_note_image']['tmp_name']) && $_FILES['scent_note_image']['error'] === UPLOAD_ERR_OK) {
+        $opt = ImageOptimizer::optimize($_FILES['scent_note_image'], 'uploads/fragrances/', 'scent_note_', 1400, 1048576, 85);
+        if ($opt['success']) {
+            $scent_note_image = 'public/' . $opt['path'];
+        } else {
+            $error_message = $opt['error'];
+        }
+    }
         } else {
             $error_message = 'Invalid scent note image format.';
         }

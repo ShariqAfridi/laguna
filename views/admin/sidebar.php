@@ -869,5 +869,6 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
             });
         })();
     </script>
+    <script src="<?= base_url('/public/assets/js/image-compressor.js') ?>"></script>
 </body>
 </html>

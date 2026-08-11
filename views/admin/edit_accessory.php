@@ -1,6 +1,8 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../../db.php';
+require_once __DIR__ . '/../../app/Helpers/ImageOptimizer.php';
+use App\Helpers\ImageOptimizer;
 
 $error_message = '';
 $accessory_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -29,25 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $image = $accessory['image'];
 
     if (!empty($_FILES['image']) && isset($_FILES['image']['tmp_name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $mime = mime_content_type($_FILES['image']['tmp_name']);
-
-        if (!in_array($mime, $allowed_types)) {
-            $error_message = 'Invalid image type. Supported: JPG, PNG, GIF, WEBP.';
+        $opt = ImageOptimizer::optimize($_FILES['image'], 'uploads/accessories/', 'accessory_', 1400, 1048576, 85);
+        if ($opt['success']) {
+            $image = basename($opt['path']);
         } else {
-            $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-            $new_image = uniqid('accessory_', true) . '.' . $ext;
-            $upload_dir = dirname(__DIR__, 2) . "/public/assets/img/";
-
-            if (!file_exists($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
-            }
-
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_dir . $new_image)) {
-                $image = $new_image;
-            } else {
-                $error_message = 'Failed to save uploaded image file.';
-            }
+            $error_message = $opt['error'];
         }
     }
 

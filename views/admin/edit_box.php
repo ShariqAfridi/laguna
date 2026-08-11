@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../../db.php';
+require_once __DIR__ . '/../../app/Helpers/ImageOptimizer.php';
+use App\Helpers\ImageOptimizer;
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if (!$id) {
@@ -28,26 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sort_order      = (int)($_POST['sort_order'] ?? 0);
 
     $box_image = $box['box_image'] ?? '';
-    if (!empty($_FILES['box_image']['tmp_name'])) {
-        $file = $_FILES['box_image'];
-        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-        if (in_array($ext, $allowed)) {
-            $upload_dir = __DIR__ . '/../../public/uploads/boxes/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-            $filename = 'box_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-            $target_file = $upload_dir . $filename;
-
-            if (move_uploaded_file($file['tmp_name'], $target_file)) {
-                $box_image = 'public/uploads/boxes/' . $filename;
-            } else {
-                $error_message = 'Failed to upload box image.';
-            }
+    if (!empty($_FILES['box_image']['tmp_name']) && $_FILES['box_image']['error'] === UPLOAD_ERR_OK) {
+        $opt = ImageOptimizer::optimize($_FILES['box_image'], 'uploads/boxes/', 'box_', 1400, 1048576, 85);
+        if ($opt['success']) {
+            $box_image = 'public/' . $opt['path'];
         } else {
-            $error_message = 'Invalid image format.';
+            $error_message = $opt['error'];
         }
     }
 

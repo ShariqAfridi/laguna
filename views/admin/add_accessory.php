@@ -1,6 +1,8 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../../db.php';
+require_once __DIR__ . '/../../app/Helpers/ImageOptimizer.php';
+use App\Helpers\ImageOptimizer;
 
 $error_message = '';
 
@@ -12,21 +14,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $image = '';
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $mime = mime_content_type($_FILES['image']['tmp_name']);
-
-        if (!in_array($mime, $allowed)) {
-            $error_message = "Invalid image type. Allowed: JPG, PNG, WEBP, GIF.";
+        $opt = ImageOptimizer::optimize($_FILES['image'], 'uploads/accessories/', 'accessory_', 1400, 1048576, 85);
+        if ($opt['success']) {
+            $image = basename($opt['path']);
         } else {
-            $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-            $image = uniqid('accessory_', true) . '.' . $ext;
-            $imgDir = dirname(__DIR__, 2) . "/public/assets/img/";
-
-            if (!file_exists($imgDir)) {
-                mkdir($imgDir, 0755, true);
-            }
-
-            move_uploaded_file($_FILES['image']['tmp_name'], $imgDir . $image);
+            $error_message = $opt['error'];
         }
     }
 

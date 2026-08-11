@@ -2,9 +2,11 @@
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../../../db.php';
 
-// Get vessel and target product ID from URL parameter
-$selectedVessel = isset($_GET['vessel']) ? strtolower($_GET['vessel']) : '';
-$targetProductId = isset($_GET['product_id']) ? (int)$_GET['product_id'] : (isset($_GET['product']) ? (int)$_GET['product'] : 0);
+// Get vessel, filter parameters, and target product ID from URL
+$selectedVessel    = isset($_GET['vessel']) ? strtolower($_GET['vessel']) : '';
+$targetProductId   = isset($_GET['product_id']) ? (int)$_GET['product_id'] : (isset($_GET['product']) ? (int)$_GET['product'] : 0);
+$selectedColor     = isset($_GET['color']) ? (int)$_GET['color'] : 0;
+$selectedFragrance = isset($_GET['fragrance']) ? (int)$_GET['fragrance'] : 0;
 
 // Fetch active categories to construct valid vessels map
 $categoriesMap = [];
@@ -88,7 +90,9 @@ if (!$showVesselSelection) {
         }
 
         while ($row = $result->fetch_assoc()) {
-            $row['size_prices'] = json_decode($row['size_prices'], true);
+            if (is_string($row['size_prices']) && is_array(json_decode($row['size_prices'], true))) {
+                $row['size_prices'] = json_decode($row['size_prices'], true);
+            }
             $row['size_id'] = json_decode($row['size_id'], true);
             $row['color_id'] = json_decode($row['color_id'], true);
             $row['box_id'] = json_decode($row['box_id'], true);
@@ -137,7 +141,12 @@ if (!$showVesselSelection) {
     }
 }
 
-$box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
+$box_prices = [];
+if (!empty($boxes)) {
+    foreach ($boxes as $bId => $bInfo) {
+        $box_prices[$bId] = (float)($bInfo['box_price'] ?? 6);
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -224,6 +233,8 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
         width: 100%;
         height: 380px; 
         object-fit: cover;
+        object-position: center;
+        background: #faf9f6;
         display: block;
     }
 
@@ -353,17 +364,204 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
         color: #92400e;
     }
 
-    .product-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 32px;
+    /* ── ELEGANT FULL-WIDTH SHOP FILTER BAR ── */
+    .shop-filter-bar {
+        display: flex;
+        align-items: flex-end;
+        gap: 20px;
+        background: #ffffff;
+        padding: 20px 24px;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 32px;
+        box-shadow: 0 4px 20px -2px rgba(0, 75, 102, 0.05);
+        width: 100%;
+        box-sizing: border-box;
     }
 
-    @media (max-width: 968px) { 
-        .product-grid { grid-template-columns: repeat(2,1fr); gap: 24px; } 
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1 1 0;
+        min-width: 220px;
     }
-    @media (max-width: 640px) { 
-        .product-grid { grid-template-columns: 1fr; } 
+
+    .filter-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .shop-filter-select {
+        width: 100%;
+        height: 44px;
+        padding: 0 38px 0 16px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        background-color: #f8fafc;
+        font-size: 14px;
+        font-weight: 500;
+        color: #0f172a;
+        cursor: pointer;
+        outline: none;
+        transition: all 0.2s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        box-sizing: border-box;
+    }
+
+    .shop-filter-select:hover,
+    .shop-filter-select:focus {
+        border-color: #004b66;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(0, 75, 102, 0.1);
+    }
+
+    .filter-status-col {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
+        height: 44px;
+        flex-shrink: 0;
+    }
+
+    .filter-count {
+        font-size: 13px;
+        color: #334155;
+        font-weight: 600;
+        background: #f1f5f9;
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        white-space: nowrap;
+    }
+
+    .reset-filter-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        background: #fef2f2;
+        color: #dc2626;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid #fecaca;
+        white-space: nowrap;
+    }
+
+    .reset-filter-btn:hover {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fca5a5;
+    }
+
+    @media (max-width: 900px) {
+        .shop-filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filter-status-col {
+            margin-left: 0;
+            justify-content: space-between;
+        }
+    }
+
+    /* ── SHOP PAGINATION STYLES ── */
+    .pagination-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        margin: 40px 0 60px 0;
+        width: 100%;
+    }
+
+    .pagination-buttons {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 42px;
+        height: 42px;
+        padding: 0 14px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #334155;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .page-btn:hover {
+        border-color: #004b66;
+        color: #004b66;
+        background: #f8fafc;
+        transform: translateY(-1px);
+    }
+
+    .page-btn.active {
+        background: #004b66;
+        color: #ffffff;
+        border-color: #004b66;
+        box-shadow: 0 4px 12px rgba(0, 75, 102, 0.25);
+    }
+
+    .page-btn.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        pointer-events: none;
+        background: #f1f5f9;
+        border-color: #e2e8f0;
+    }
+
+    .pagination-info {
+        font-size: 13px;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .product-grid,
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        margin-bottom: 80px;
+    }
+
+    @media (max-width: 1024px) {
+        .product-grid,
+        .products-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    }
+    @media (max-width: 768px) {
+        .product-grid,
+        .products-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    }
+    @media (max-width: 480px) {
+        .product-grid,
+        .products-grid { grid-template-columns: 1fr; }
     }
 
     .product-card {
@@ -374,7 +572,7 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
         overflow: hidden;
     }
     .product-card:hover { transform: translateY(-4px); }
-    .product-image { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #f0f0f0; display: block; }
+    .product-image { width: 100%; aspect-ratio: 1/1; object-fit: cover; object-position: center; background: #faf9f6; display: block; }
     .product-info { padding: 16px 12px 12px; }
     .product-name {
         font-family: 'Cormorant Garamond', serif;
@@ -695,7 +893,7 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
                     $wickIcon = '🕯️🕯️🕯️';
                 }
         ?>
-        <a href="?vessel=<?= htmlspecialchars($vesselCode) ?>" class="vessel-card">
+        <a href="<?= base_url('/shop?vessel=' . urlencode($vesselCode)) ?>" class="vessel-card">
             <img src="<?= $imageSrc ?>" alt="<?= htmlspecialchars($catRow['category_name']) ?> - <?= $wickText ?>" onerror="this.src='https://placehold.co/600x600?text=<?= $fallbackText ?>'">
             <div class="vessel-card-content">
                 <h3><?= htmlspecialchars($catRow['category_name']) ?></h3>
@@ -740,22 +938,68 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
         <a href="<?php echo $base; ?>/shop" class="back-btn">← Back to Vessels</a>
     </div>
 
-    <div class="product-grid">
-        <?php if (empty($products)): ?>
-            <div class="no-products-message">
-                <p>No <?= strtolower($wickLabel) ?> candles available</p>
-                <div style="font-size: 14px; margin-top: 8px;">Please check back later for new arrivals</div>
+    <!-- SHOP FILTERS -->
+    <div class="shop-filter-bar">
+        <div class="filter-group">
+            <label class="filter-label" for="filterColor">🎨 Color</label>
+            <select id="filterColor" class="shop-filter-select" onchange="applyShopFilters()">
+                <option value="">All Colors</option>
+                <?php foreach ($colors as $cId => $cData): ?>
+                    <option value="<?= $cId ?>" <?= ($selectedColor == $cId) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($cData['color_name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label" for="filterFragrance">🌸 Fragrance</label>
+            <select id="filterFragrance" class="shop-filter-select" onchange="applyShopFilters()">
+                <option value="">All Fragrances</option>
+                <?php foreach ($fragrances as $fId => $fName): ?>
+                    <option value="<?= $fId ?>" <?= ($selectedFragrance == $fId) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($fName) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div class="filter-status-col">
+            <div class="filter-count" id="filterCountDisplay">
+                Showing <?= count($products) ?> <?= count($products) === 1 ? 'candle' : 'candles' ?>
             </div>
-        <?php else: ?>
+
+            <?php if ($selectedColor > 0 || $selectedFragrance > 0): ?>
+                <a href="<?= base_url('/shop?vessel=' . urlencode($selectedVessel)) ?>" class="reset-filter-btn">
+                    ✕ Clear Filters
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <div class="product-grid">
+        <div class="no-products-message" id="filterNoProductsMessage" style="<?= empty($products) ? 'display:block;' : 'display:none;' ?>">
+            <p>No <?= strtolower($wickLabel) ?> candles match your selected filters</p>
+            <div style="font-size: 14px; margin-top: 8px;">Try clearing or changing your color or fragrance filters</div>
+        </div>
+        <?php if (!empty($products)): ?>
             <?php foreach ($products as $product): 
-                $displayPrice = 29;
-                if (isset($product['size_prices']) && isset($product['size_prices'][$vesselSizeId])) {
-                    $displayPrice = $product['size_prices'][$vesselSizeId];
-                } elseif (isset($product['size_prices']) && !empty($product['size_prices'])) {
-                    $displayPrice = reset($product['size_prices']);
+                $displayPrice = 29.00;
+                if (isset($product['size_prices']) && is_numeric($product['size_prices'])) {
+                    $displayPrice = (float)$product['size_prices'];
+                } elseif (isset($product['size_prices']) && is_array($product['size_prices'])) {
+                    if (isset($product['size_prices'][$vesselSizeId])) {
+                        $displayPrice = $product['size_prices'][$vesselSizeId];
+                    } else {
+                        $displayPrice = reset($product['size_prices']);
+                    }
                 }
+                $cIdsStr = is_array($product['color_id']) ? implode(',', $product['color_id']) : (string)$product['color_id'];
             ?>
-                <div class="product-card" onclick="openModal(<?= htmlspecialchars(json_encode($product)) ?>)">
+                <div class="product-card"
+                     data-color-ids="<?= htmlspecialchars($cIdsStr) ?>"
+                     data-fragrance-id="<?= (int)$product['fragrance_id'] ?>"
+                     onclick="openModal(<?= htmlspecialchars(json_encode($product)) ?>)">
                     <img class="product-image" src="<?= htmlspecialchars($product['image_url']) ?>" alt="<?= htmlspecialchars($product['product_name']) ?>">
                     <div class="product-info">
                         <div class="product-name"><?= htmlspecialchars($product['product_name']) ?></div>
@@ -767,6 +1011,16 @@ $box_prices = [1 => 6, 2 => 5, 3 => 6, 4 => 5];
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
+    </div>
+
+    <!-- PAGINATION CONTAINER -->
+    <div class="pagination-container" id="shopPaginationContainer" style="display: none;">
+        <div class="pagination-buttons" id="paginationButtons">
+            <!-- Rendered dynamically by JavaScript -->
+        </div>
+        <div class="pagination-info" id="paginationInfo">
+            <!-- Rendered dynamically by JavaScript -->
+        </div>
     </div>
 <?php endif; ?>
 
@@ -846,24 +1100,30 @@ function waitForLVBCart(callback) {
 
 const colorsData = <?php 
     $colors_js = [];
-    $color_res = $conn->query("SELECT color_id, color_name, color_hex FROM colors");
+    $color_res = $conn->query("SELECT color_id, color_name, sku AS color_sku, color_hex, color_image FROM colors WHERE status = 1");
     if ($color_res) { while ($row = $color_res->fetch_assoc()) $colors_js[$row['color_id']] = $row; }
     echo json_encode($colors_js);
 ?>;
 const sizesData = <?php
     $sizes_js = [];
-    $size_res = $conn->query("SELECT id AS size_id, category_name AS size_name, dimensions_subtitle AS size_details FROM categories ORDER BY sort_order ASC, id ASC");
+    $size_res = $conn->query("SELECT id AS size_id, category_name AS size_name, dimensions_subtitle AS size_details, burn_time_badge, wick_type, sku FROM categories WHERE status = 1 ORDER BY sort_order ASC, id ASC");
     if ($size_res) { while ($row = $size_res->fetch_assoc()) $sizes_js[$row['size_id']] = $row; }
     echo json_encode($sizes_js);
 ?>;
+const fragrancesData = <?php
+    $frag_js = [];
+    $frag_res = $conn->query("SELECT fragrance_id, fragrance_name, sku AS fragrance_sku, fragrance_image FROM fragrances WHERE status = 1");
+    if ($frag_res) { while ($row = $frag_res->fetch_assoc()) $frag_js[$row['fragrance_id']] = $row; }
+    echo json_encode($frag_js);
+?>;
 const boxesData = <?php
     $boxes_js = [];
-    $box_res = $conn->query("SELECT box_id, box_name FROM boxes ORDER BY box_id");
+    $box_res = $conn->query("SELECT box_id, box_name, box_price, box_image FROM boxes WHERE status = 1 ORDER BY sort_order ASC, box_id ASC");
     if ($box_res) { while ($row = $box_res->fetch_assoc()) $boxes_js[$row['box_id']] = $row; }
     echo json_encode($boxes_js);
 ?>;
-const boxPrices = { 1: 6, 2: 5, 3: 6, 4: 5 };
-const vesselSizeId = <?= $vesselSizeId ?>;
+const vesselSizeId = <?= (int)($vesselSizeId ?? 6) ?>;
+const selectedVessel = <?= json_encode($selectedVessel ?? ''); ?>;
 
 let currentProduct = null;
 let currentBasePrice = 0;
@@ -874,8 +1134,136 @@ let quantity = 1;
 let currentImageIndex = 0;
 let imageUrls = [];
 
-document.getElementById('productModal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
+const modalEl = document.getElementById('productModal');
+if (modalEl) {
+    modalEl.addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+}
+
+/* ── SHOP REAL-TIME FILTERS & PAGINATION (20 Products Per Page) ── */
+let currentPage = 1;
+const itemsPerPage = 20;
+let matchingCards = [];
+
+function applyShopFilters(targetPage = 1) {
+    currentPage = targetPage;
+    const selectedColor = document.getElementById('filterColor') ? document.getElementById('filterColor').value : '';
+    const selectedFrag  = document.getElementById('filterFragrance') ? document.getElementById('filterFragrance').value : '';
+
+    const cards = document.querySelectorAll('.product-card');
+    matchingCards = [];
+
+    cards.forEach(function(card) {
+        const cardColors = (card.dataset.colorIds || '').split(',').map(function(c) { return c.trim(); });
+        const cardFrag   = card.dataset.fragranceId || '';
+
+        const colorMatch = !selectedColor || cardColors.includes(selectedColor);
+        const fragMatch  = !selectedFrag  || cardFrag === selectedFrag;
+
+        if (colorMatch && fragMatch) {
+            matchingCards.push(card);
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const totalMatching = matchingCards.length;
+    const totalPages = Math.ceil(totalMatching / itemsPerPage) || 1;
+
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    matchingCards.forEach(function(card, index) {
+        if (index >= startIndex && index < endIndex) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Update filter count header
+    const countEl = document.getElementById('filterCountDisplay');
+    if (countEl) {
+        countEl.innerText = `Showing ${totalMatching} ${totalMatching === 1 ? 'candle' : 'candles'}`;
+    }
+
+    // Update no products message
+    const noProdMsg = document.getElementById('filterNoProductsMessage');
+    if (noProdMsg) {
+        noProdMsg.style.display = (totalMatching === 0) ? 'block' : 'none';
+    }
+
+    // Render pagination controls
+    renderPagination(totalMatching, totalPages);
+
+    // Update URL query string without reloading page
+    const url = new URL(window.location.href);
+    if (selectedColor) url.searchParams.set('color', selectedColor);
+    else url.searchParams.delete('color');
+
+    if (selectedFrag) url.searchParams.set('fragrance', selectedFrag);
+    else url.searchParams.delete('fragrance');
+
+    if (currentPage > 1) url.searchParams.set('page', currentPage);
+    else url.searchParams.delete('page');
+
+    window.history.replaceState({}, '', url);
+}
+
+function renderPagination(totalMatching, totalPages) {
+    const container = document.getElementById('shopPaginationContainer');
+    const buttonsEl = document.getElementById('paginationButtons');
+    const infoEl    = document.getElementById('paginationInfo');
+
+    if (!container || !buttonsEl || !infoEl) return;
+
+    if (totalMatching === 0 || totalPages <= 1) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'flex';
+
+    let html = '';
+
+    // Previous Button
+    const prevDisabled = (currentPage === 1) ? 'disabled' : '';
+    html += `<button class="page-btn ${prevDisabled}" onclick="goToPage(${currentPage - 1})">← Prev</button>`;
+
+    // Page Number Buttons
+    for (let p = 1; p <= totalPages; p++) {
+        const activeClass = (p === currentPage) ? 'active' : '';
+        html += `<button class="page-btn ${activeClass}" onclick="goToPage(${p})">${p}</button>`;
+    }
+
+    // Next Button
+    const nextDisabled = (currentPage === totalPages) ? 'disabled' : '';
+    html += `<button class="page-btn ${nextDisabled}" onclick="goToPage(${currentPage + 1})">Next →</button>`;
+
+    buttonsEl.innerHTML = html;
+
+    const startNum = Math.min((currentPage - 1) * itemsPerPage + 1, totalMatching);
+    const endNum   = Math.min(currentPage * itemsPerPage, totalMatching);
+    infoEl.innerText = `Showing ${startNum}–${endNum} of ${totalMatching} products (Page ${currentPage} of ${totalPages})`;
+}
+
+function goToPage(page) {
+    applyShopFilters(page);
+    const gridEl = document.querySelector('.product-grid');
+    if (gridEl) {
+        gridEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// Initialize pagination on load
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const initPage  = parseInt(urlParams.get('page')) || 1;
+    applyShopFilters(initPage);
 });
 
 function getImageUrl(product) {
@@ -893,26 +1281,31 @@ function showSuccessMessage(msg) {
 }
 
 function generateSKU(sizeId, colorId, fragranceId, boxId) {
-    const containerMap = { 2: 'D', 4: 'C' };
-    const container = containerMap[sizeId] || 'C';
+    let containerSKU = 'C';
+    if (sizeId && sizesData[sizeId] && sizesData[sizeId].sku) {
+        containerSKU = sizesData[sizeId].sku.toUpperCase();
+    } else if (typeof selectedVessel !== 'undefined' && selectedVessel) {
+        containerSKU = selectedVessel.toUpperCase();
+    } else if (currentProduct && currentProduct.sku) {
+        containerSKU = currentProduct.sku.charAt(0).toUpperCase();
+    }
 
-    const colorMap = {
-        1: '03', 2: '03', 3: '15', 4: '12',
-        5: '01', 6: '09', 7: '16', 8: '13',
-        9: '08', 10: '07'
-    };
-    const colorCode = colorMap[colorId] || '01';
+    let colorCode = '01';
+    if (colorId && colorsData[colorId] && colorsData[colorId].color_sku) {
+        colorCode = String(colorsData[colorId].color_sku).padStart(2, '0');
+    }
 
-    const fragranceMap = {
-        1: '02', 2: '05', 3: '08', 4: '01', 5: '13',
-        6: '09', 7: '11', 8: '14', 9: '10', 10: '06', 11: '04'
-    };
-    const fragranceCode = fragranceMap[fragranceId] || '01';
+    let fragCode = '01';
+    if (fragranceId && fragrancesData[fragranceId] && fragrancesData[fragranceId].fragrance_sku) {
+        fragCode = String(fragrancesData[fragranceId].fragrance_sku).padStart(2, '0');
+    }
 
-    const boxMap = { 1: 'B01W', 2: 'B02W', 3: 'B01B', 4: 'B02B' };
-    const boxCode = (boxId && boxMap[boxId]) ? boxMap[boxId] : 'B01W';
+    let boxCode = 'B01W';
+    if (boxId && boxesData[boxId]) {
+        boxCode = boxesData[boxId].box_sku || (boxesData[boxId].box_name.toLowerCase().includes('black') ? 'B01B' : 'B01W');
+    }
 
-    return container + colorCode + fragranceCode + boxCode;
+    return containerSKU + colorCode + fragCode + boxCode;
 }
 
 function setMainImage(imageUrl, index) {
@@ -929,52 +1322,99 @@ function setMainImage(imageUrl, index) {
     });
 }
 
+function getFullProductSKU(boxId) {
+    if (!currentProduct) return '';
+    let baseSKU = currentProduct.sku;
+    if (!baseSKU || baseSKU.trim() === '') {
+        const colorId = (currentProduct.color_id && currentProduct.color_id[0]) ? currentProduct.color_id[0] : null;
+        baseSKU = generateSKU(currentSizeId, colorId, currentProduct.fragrance_id, null);
+    }
+    
+    let boxCode = '';
+    if (boxId) {
+        if (boxesData && boxesData[boxId]) {
+            const bName = (boxesData[boxId].box_name || '').toLowerCase();
+            boxCode = boxesData[boxId].box_sku || (bName.includes('black') ? 'B01B' : 'B01W');
+        } else {
+            boxCode = (parseInt(boxId) === 6) ? 'B01B' : 'B01W';
+        }
+    }
+    return baseSKU + boxCode;
+}
+
 function openModal(productData) {
     currentProduct = productData;
-    currentSizeId = vesselSizeId;
     selectedBoxId = null;
     boxPrice = 0;
     quantity = 1;
 
-    if (productData.size_prices && productData.size_prices[vesselSizeId]) {
-        currentBasePrice = productData.size_prices[vesselSizeId];
-    } else if (productData.size_prices && Object.keys(productData.size_prices).length) {
-        const first = Object.keys(productData.size_prices)[0];
-        currentSizeId = parseInt(first);
-        currentBasePrice = productData.size_prices[first];
+    // Detect sizeId from product or fallback to current vesselSizeId
+    currentSizeId = null;
+    if (productData.size_id) {
+        let pSizes = Array.isArray(productData.size_id) ? productData.size_id : [productData.size_id];
+        if (pSizes.length > 0) {
+            currentSizeId = parseInt(pSizes[0]);
+        }
+    }
+
+    // Match product SKU first letter if needed (e.g. C -> Vessel C, D -> Vessel D, E -> Vessel E)
+    if ((!currentSizeId || !sizesData[currentSizeId]) && productData.sku) {
+        const firstLetter = productData.sku.charAt(0).toLowerCase();
+        for (let sId in sizesData) {
+            if (sizesData[sId].sku && sizesData[sId].sku.toLowerCase() === firstLetter) {
+                currentSizeId = parseInt(sId);
+                break;
+            }
+        }
+    }
+
+    if (!currentSizeId || !sizesData[currentSizeId]) {
+        currentSizeId = vesselSizeId;
+    }
+
+    if (typeof productData.size_prices === 'number' || (typeof productData.size_prices === 'string' && !isNaN(parseFloat(productData.size_prices)))) {
+        currentBasePrice = parseFloat(productData.size_prices);
+    } else if (productData.size_prices && productData.size_prices[currentSizeId]) {
+        currentBasePrice = parseFloat(productData.size_prices[currentSizeId]);
+    } else if (productData.price && parseFloat(productData.price) > 0) {
+        currentBasePrice = parseFloat(productData.price);
     } else {
-        currentBasePrice = 29;
+        currentBasePrice = 29.00;
     }
 
     document.getElementById('modalTitle').innerText = productData.product_name;
     
-    // Build image array
+    // Build image array (Candle image only)
     imageUrls = [];
     const candleImg = getImageUrl(productData);
     imageUrls.push(candleImg);
     
-    if (productData.fragrance_image && productData.fragrance_image !== '') {
-        imageUrls.push(productData.fragrance_image);
-    }
-    
     // Set initial image
     setMainImage(imageUrls[0], 0);
-    
-    // Render thumbnails
     renderThumbnails();
     
-    if (productData.sku) {
-        document.getElementById('modalSKU').innerText = productData.sku;
-    } else {
-        const colorId = productData.color_id && productData.color_id[0] ? productData.color_id[0] : 5;
-        const sku = generateSKU(currentSizeId, colorId, productData.fragrance_id, null);
-        document.getElementById('modalSKU').innerText = sku;
-    }
+    document.getElementById('modalSKU').innerText = getFullProductSKU(null);
 
-    // Set size value
-    const sizeLabel = currentSizeId == 4 ? 'Vessel C' : 'Vessel D';
-    const sizeDetails = currentSizeId == 4 ? '3" · 45 HRS' : '3.5" · 60 HRS';
-    document.getElementById('modalSizeValue').innerText = sizeLabel + ' (' + sizeDetails + ')';
+    // Dynamic Vessel/Size specifications strictly from database sizesData
+    let sizeLabel = 'Vessel ' + (selectedVessel ? selectedVessel.toUpperCase() : 'C');
+    let sizeDetails = '3" · 45 HRS';
+
+    if (currentSizeId && sizesData[currentSizeId]) {
+        const sObj = sizesData[currentSizeId];
+        sizeLabel = sObj.size_name || sizeLabel;
+        
+        let dims = sObj.size_details || '';
+        if (dims.includes('DIAMETER')) {
+            const m = dims.match(/(\d+(?:\.\d+)?["'])/);
+            if (m) dims = m[1];
+        }
+        const burn = sObj.burn_time_badge ? sObj.burn_time_badge.toUpperCase().replace('HOURS', 'HRS').trim() : '';
+        const parts = [dims, burn].filter(Boolean);
+        if (parts.length > 0) {
+            sizeDetails = parts.join(' · ');
+        }
+    }
+    document.getElementById('modalSizeValue').innerText = sizeLabel + (sizeDetails ? ' (' + sizeDetails + ')' : '');
 
     let colorNameText = 'Standard';
     if (productData.color_id && productData.color_id.length > 0) {
@@ -983,7 +1423,7 @@ function openModal(productData) {
     }
     document.getElementById('modalColorValue').innerText = colorNameText.replace(/Â·|Â/g, '·').trim();
     document.getElementById('modalFragranceValue').innerText = productData.fragrance_name || 'Luxury Scent';
-    document.getElementById('modalDesc').innerText = productData.description || 'Artisanal candle in a luminous ' + colorNameText.toLowerCase() + ' vessel.';
+    document.getElementById('modalDesc').innerText = productData.description || ('Artisanal candle in a luminous ' + colorNameText.toLowerCase() + ' vessel.');
 
     renderBoxOptions();
     document.getElementById('stockWarning').innerHTML = '';
@@ -993,16 +1433,21 @@ function openModal(productData) {
 
 function renderThumbnails() {
     const strip = document.getElementById('thumbnailStrip');
+    if (!strip) return;
     strip.innerHTML = '';
     
-    const labels = ['Candle', 'Fragrance'];
+    if (imageUrls.length <= 1) {
+        strip.style.display = 'none';
+        return;
+    }
+    strip.style.display = 'flex';
     
     imageUrls.forEach((url, index) => {
         const thumb = document.createElement('img');
         thumb.className = 'thumbnail-item' + (index === 0 ? ' active' : '');
         thumb.src = url;
-        thumb.alt = labels[index] || 'Image ' + (index + 1);
-        thumb.title = labels[index] || 'View image';
+        thumb.alt = 'Image ' + (index + 1);
+        thumb.title = 'View image';
         thumb.onerror = function() { this.style.display = 'none'; };
         thumb.onclick = function() {
             setMainImage(url, index);
@@ -1013,35 +1458,42 @@ function renderThumbnails() {
 
 function renderBoxOptions() {
     const c = document.getElementById('boxOptions');
+    if (!c) return;
     c.innerHTML = '';
-    const ids = Object.keys(boxesData).sort(function(a,b){return parseInt(a)-parseInt(b);});
-    if (ids.length) {
-        ids.forEach(function(bid) {
-            const box = boxesData[bid]; if (!box) return;
-            const price = boxPrices[bid] || 0;
-            const tile = document.createElement('div');
-            tile.className = 'option-tile' + (selectedBoxId===parseInt(bid)?' active':'');
-            tile.innerHTML = '<span class="tile-title">' + escapeHtml(box.box_name) + '</span><span class="tile-sub">+ $' + price + '</span>';
-            tile.onclick = (function(bid, price) { return function() { selectBox(tile, bid, price); }; })(parseInt(bid), price);
-            c.appendChild(tile);
-        });
-    }
+    
+    let boxesToUse = (boxesData && Object.keys(boxesData).length > 0) ? boxesData : {
+        5: { box_id: 5, box_name: 'White Cubic Box', box_price: 6.00, box_image: 'public/uploads/boxes/box_1785320073_1873.webp' },
+        6: { box_id: 6, box_name: 'Black Cubic Box', box_price: 6.00, box_image: 'public/uploads/boxes/box_1785320099_9604.webp' }
+    };
+    let ids = Object.keys(boxesToUse).sort(function(a,b){return parseInt(a)-parseInt(b);});
+
+    ids.forEach(function(bid) {
+        const box = boxesToUse[bid]; if (!box) return;
+        const price = parseFloat(box.box_price || 6);
+        const tile = document.createElement('div');
+        tile.className = 'option-tile' + (selectedBoxId === parseInt(bid) ? ' active' : '');
+        tile.innerHTML = '<span class="tile-title">' + escapeHtml(box.box_name) + '</span><span class="tile-sub">+ $' + price.toFixed(2) + '</span>';
+        tile.onclick = (function(bid, price) { return function() { selectBox(tile, bid, price); }; })(parseInt(bid), price);
+        c.appendChild(tile);
+    });
 }
 
 function selectBox(el, boxId, price) {
     if (selectedBoxId === boxId) {
-        selectedBoxId = null; boxPrice = 0; el.classList.remove('active');
+        selectedBoxId = null; 
+        boxPrice = 0; 
+        el.classList.remove('active');
     } else {
         var tiles = document.querySelectorAll('#boxOptions .option-tile');
         for (var i = 0; i < tiles.length; i++) tiles[i].classList.remove('active');
-        el.classList.add('active'); selectedBoxId = boxId; boxPrice = price;
+        el.classList.add('active'); 
+        selectedBoxId = boxId; 
+        boxPrice = price;
     }
     updateDisplay();
     
     if (currentProduct) {
-        const colorId = currentProduct.color_id && currentProduct.color_id[0] ? currentProduct.color_id[0] : 5;
-        const newSKU = generateSKU(currentSizeId, colorId, currentProduct.fragrance_id, selectedBoxId);
-        document.getElementById('modalSKU').innerText = newSKU;
+        document.getElementById('modalSKU').innerText = getFullProductSKU(selectedBoxId);
     }
 }
 
@@ -1065,18 +1517,35 @@ function closeModal() {
     document.getElementById('productModal').style.display = 'none';
 }
 
-document.getElementById('addToCartAction').onclick = function() {
+const addCartBtn = document.getElementById('addToCartAction');
+if (addCartBtn) {
+    addCartBtn.onclick = function() {
     if (!currentProduct) return;
 
-    const sizeLabel = currentSizeId == 4 ? 'Vessel C' : 'Vessel D';
-    const sizeDetails = currentSizeId == 4 ? '3" · 45 HRS' : '3.5" · 60 HRS';
-    const selectedSizeName = sizeLabel + ' (' + sizeDetails + ')';
+    let sizeLabel = 'Vessel ' + (selectedVessel ? selectedVessel.toUpperCase() : 'C');
+    let sizeDetails = '3" · 45 HRS';
+
+    if (currentSizeId && sizesData[currentSizeId]) {
+        const sObj = sizesData[currentSizeId];
+        sizeLabel = sObj.size_name || sizeLabel;
+        
+        let dims = sObj.size_details || '';
+        if (dims.includes('DIAMETER')) {
+            const m = dims.match(/(\d+(?:\.\d+)?["'])/);
+            if (m) dims = m[1];
+        }
+        const burn = sObj.burn_time_badge ? sObj.burn_time_badge.toUpperCase().replace('HOURS', 'HRS').trim() : '';
+        const parts = [dims, burn].filter(Boolean);
+        if (parts.length > 0) {
+            sizeDetails = parts.join(' · ');
+        }
+    }
+    const selectedSizeName = sizeLabel + (sizeDetails ? ' (' + sizeDetails + ')' : '');
 
     let boxName = null;
     if (selectedBoxId && boxesData[selectedBoxId]) boxName = boxesData[selectedBoxId].box_name;
 
-    const colorId = currentProduct.color_id && currentProduct.color_id[0] ? currentProduct.color_id[0] : 5;
-    const sku = generateSKU(currentSizeId, colorId, currentProduct.fragrance_id, selectedBoxId);
+    const sku = getFullProductSKU(selectedBoxId);
     
     let productDisplayName = currentProduct.product_name;
     if (boxName) productDisplayName += ' + ' + boxName;
@@ -1108,7 +1577,8 @@ document.getElementById('addToCartAction').onclick = function() {
             showSuccessMessage('Error: Cart not loaded. Please refresh the page.');
         }
     });
-};
+    };
+}
 
 function escapeHtml(str) {
     if (!str) return '';

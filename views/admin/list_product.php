@@ -4,9 +4,16 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/../../db.php';
 
-// Handle product deletion
-if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
-    $product_id = (int) $_GET['delete'];
+// Handle product deletion (via POST or GET)
+$delete_target_id = 0;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['delete_id']) && is_numeric($_POST['delete_id'])) {
+    $delete_target_id = (int)$_POST['delete_id'];
+} elseif (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
+    $delete_target_id = (int)$_GET['delete'];
+}
+
+if ($delete_target_id > 0) {
+    $product_id = $delete_target_id;
 
     // Get image filename before deleting
     $img_query = $conn->prepare('SELECT image FROM products WHERE product_id = ?');
@@ -15,18 +22,17 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $img_result = $img_query->get_result();
     if ($img_row = $img_result->fetch_assoc()) {
         if (!empty($img_row['image'])) {
-            // Try to delete image file from all possible locations
-            $image_name = $img_row['image'];
+            $image_name = basename($img_row['image']);
             $paths_to_check = [
-                $_SERVER['DOCUMENT_ROOT'] . '/public/assets/img/' . $image_name,
+                dirname(__DIR__, 2) . '/public/uploads/products/' . $image_name,
                 dirname(__DIR__, 2) . '/public/assets/img/' . $image_name,
-                __DIR__ . '/../public/assets/img/' . $image_name
+                $_SERVER['DOCUMENT_ROOT'] . '/public/uploads/products/' . $image_name,
+                $_SERVER['DOCUMENT_ROOT'] . '/public/assets/img/' . $image_name
             ];
 
             foreach ($paths_to_check as $path) {
                 if (file_exists($path)) {
-                    unlink($path);
-                    break;
+                    @unlink($path);
                 }
             }
         }
@@ -38,7 +44,7 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $delete_stmt->bind_param('i', $product_id);
     $delete_stmt->execute();
     $delete_stmt->close();
-    echo "<script>window.location.href='" . base_url('/admin/list_product') . "';</script>";
+    echo "<script>window.location.href='" . base_url('/admin/list_product?deleted=1') . "';</script>";
     exit();
 }
 
@@ -133,15 +139,10 @@ $totalPages = max(1, ceil($totalRows / $limit));
 $query = "
     SELECT 
         p.*,
-        GROUP_CONCAT(DISTINCT f.fragrance_name) as fragrance_names,
-        GROUP_CONCAT(DISTINCT c.color_name) as color_names,
-        GROUP_CONCAT(DISTINCT b.box_name) as box_names
+        f.fragrance_name
     FROM products p
-    LEFT JOIN fragrances f ON FIND_IN_SET(f.fragrance_id, REPLACE(REPLACE(p.fragrance_id, '[', ''), ']', ''))
-    LEFT JOIN colors c ON FIND_IN_SET(c.color_id, REPLACE(REPLACE(p.color_id, '[', ''), ']', ''))
-    LEFT JOIN boxes b ON FIND_IN_SET(b.box_id, REPLACE(REPLACE(p.box_id, '[', ''), ']', ''))
+    LEFT JOIN fragrances f ON p.fragrance_id = f.fragrance_id
     $whereSql
-    GROUP BY p.product_id
     ORDER BY p.created_at DESC
     LIMIT $offset, $limit
 ";
@@ -187,11 +188,7 @@ function build_page_url($p) {
             --radius-lg:   14px;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -200,18 +197,12 @@ function build_page_url($p) {
             font-size: 14px;
         }
 
-        .page-main-content {
-            padding: 28px 32px;
-        }
+        .page-main-content { padding: 28px 32px; }
 
         @media (max-width: 960px) {
-            .page-main-content { 
-                margin-left: 0; 
-                padding: 16px; 
-            }
+            .page-main-content { margin-left: 0; padding: 16px; }
         }
 
-        /* Header */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -227,12 +218,8 @@ function build_page_url($p) {
             color: var(--text);
         }
 
-        .header-actions {
-            display: flex;
-            gap: 12px;
-        }
+        .header-actions { display: flex; gap: 12px; }
 
-        /* Buttons */
         .btn-primary {
             background: var(--blue);
             color: #fff;
@@ -248,26 +235,68 @@ function build_page_url($p) {
             transition: background 0.2s;
         }
 
-        .btn-primary:hover {
-            background: var(--blue-h);
+        .btn-primary:hover { background: var(--blue-h); }
+
+        .btn-edit {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
         }
 
-        .btn-danger {
-            background: var(--danger);
+        .btn-edit:hover {
+            background: var(--blue);
             color: #fff;
-            border: none;
+            border-color: var(--blue);
+        }
+
+        .btn-duplicate {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+
+        .btn-duplicate:hover {
+            background: #16a34a;
+            color: #fff;
+            border-color: #16a34a;
+        }
+
+        .btn-delete {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
             padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-            transition: background 0.2s;
+            font-weight: 600;
+            transition: all 0.15s;
         }
 
-        .btn-danger:hover {
-            background: var(--danger-h);
+        .btn-delete:hover {
+            background: var(--danger);
+            color: #fff;
+            border-color: var(--danger);
         }
 
-        /* Alert */
         .alert-success {
             background: #f0fdf4;
             color: #166534;
@@ -277,7 +306,6 @@ function build_page_url($p) {
             margin-bottom: 20px;
         }
 
-        /* Table */
         .products-table {
             background: var(--card);
             border-radius: var(--radius-lg);
@@ -299,7 +327,7 @@ function build_page_url($p) {
             border-bottom: 1px solid var(--border);
             font-weight: 600;
             color: var(--muted);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
@@ -310,352 +338,250 @@ function build_page_url($p) {
             vertical-align: middle;
         }
 
-        tr:last-child td {
-            border-bottom: none;
-        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafbfc; }
 
-        tr:hover {
-            background: #fafbfc;
-        }
-
-        /* Image */
         .product-image {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
+            width: 54px;
+            height: 54px;
             border-radius: 8px;
+            object-fit: cover;
             background: #f1f5f9;
+            border: 1px solid var(--border);
         }
 
-        .no-image {
-            width: 60px;
-            height: 60px;
-            background: #f1f5f9;
+        .admin-no-thumb {
+            width: 54px;
+            height: 54px;
             border-radius: 8px;
+            background: #f1f5f9;
+            border: 1px dashed #cbd5e1;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--muted);
-            font-size: 12px;
+            text-align: center;
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: 600;
         }
 
-        /* Badges */
         .badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
             padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-            background: #e0e7ff;
-            color: #3730a3;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: #475569;
             margin: 2px;
         }
 
         .size-price-badge {
             display: inline-block;
             padding: 4px 10px;
-            border-radius: 12px;
+            border-radius: 6px;
             font-size: 12px;
-            background: #fef3c7;
-            color: #92400e;
-            margin: 2px;
+            font-weight: 600;
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
         }
 
-        .size-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        /* Wick badge styles */
         .wick-badge {
             display: inline-flex;
             align-items: center;
             gap: 4px;
             padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
+            border-radius: 20px;
+            font-size: 11px;
             font-weight: 600;
-            margin: 2px;
         }
-        
-        .wick-single {
-    background: #dbeafe;
-    color: #1e40af;
-}
 
-.wick-double {
-    background: #fef3c7;
-    color: #92400e;
-}
+        .wick-single { background: #fef3c7; color: #92400e; }
+        .wick-double { background: #e0e7ff; color: #3730a3; }
+        .wick-triple { background: #fae8ff; color: #86198f; }
 
-.wick-triple {
-    background: #fbcfe8;
-    color: #831843;
-}
-
-.wick-none {
-    background: #e5e7eb;
-    color: #6b7280;
-}
-
-.wick-unknown {
-    background: #e5e7eb;
-    color: #6b7280;
-}
-
-        /* Actions */
         .action-buttons {
             display: flex;
             gap: 8px;
+            align-items: center;
         }
 
-        .btn-edit, .btn-delete {
+        .admin-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            background: #fff;
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        }
+
+        .admin-pagination-pages { display: flex; gap: 4px; }
+
+        .admin-page-link {
             padding: 6px 12px;
             border-radius: 6px;
+            border: 1px solid var(--border);
+            color: var(--text);
             text-decoration: none;
             font-size: 12px;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: none;
-            cursor: pointer;
+            font-weight: 600;
         }
 
-        .btn-edit {
-            background: var(--blue-l);
-            color: var(--blue);
-        }
-
-        .btn-edit:hover {
+        .admin-page-link.active {
             background: var(--blue);
-            color: white;
-        }
-
-        .btn-delete {
-            background: #fef2f2;
-            color: var(--danger);
-        }
-
-        .btn-delete:hover {
-            background: var(--danger);
-            color: white;
-        }
-
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--muted);
-        }
-
-        /* Tooltip */
-        .tooltip {
-            position: relative;
-            display: inline-block;
-            cursor: help;
-        }
-
-        .tooltip .tooltip-text {
-            visibility: hidden;
-            width: 200px;
-            background-color: #333;
             color: #fff;
+            border-color: var(--blue);
+        }
+
+        .admin-page-link.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
             text-align: center;
-            border-radius: 6px;
-            padding: 8px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            margin-left: -100px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 12px;
-            white-space: normal;
-        }
-
-        .tooltip:hover .tooltip-text {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            th, td {
-                padding: 12px;
-            }
-            
-            .badge, .size-price-badge, .wick-badge {
-                font-size: 10px;
-                padding: 2px 6px;
-            }
+            color: var(--muted);
         }
     </style>
 </head>
 <body>
 
-<div class="admin-wrapper">
-    <div class="admin-header">
+<div class="page-main-content">
+
+    <div class="page-header">
         <div>
-            <h2 class="admin-title">Candle Products Catalog</h2>
-            <p class="admin-subtitle">Manage candle products, size variants, fragrances, colors, and inventory.</p>
+            <h2>🕯️ Product List</h2>
+            <p style="color: var(--muted); margin-top: 4px;">Manage candle products, size variants, fragrances, colors, and inventory.</p>
         </div>
         <div class="header-actions">
-            <a href="<?php echo $base; ?>/admin/add_product" class="admin-btn-primary">+ Add New Candle Product</a>
+            <a href="<?php echo $base; ?>/admin/add_product" class="btn-primary">+ Add New Product</a>
         </div>
     </div>
-
-    <!-- Stock Filter Pills -->
-    <div class="status-filters">
-        <a href="<?= build_filter_url('all'); ?>" class="status-pill <?= $stockFilter === 'all' ? 'active' : ''; ?>">
-            All Products <span class="count"><?= $allProductsCount; ?></span>
-        </a>
-        <a href="<?= build_filter_url('instock'); ?>" class="status-pill <?= $stockFilter === 'instock' ? 'active' : ''; ?>">
-            In Stock <span class="count"><?= $inStockCount; ?></span>
-        </a>
-        <a href="<?= build_filter_url('outofstock'); ?>" class="status-pill <?= $stockFilter === 'outofstock' ? 'active' : ''; ?>">
-            Out of Stock <span class="count"><?= $outOfStockCount; ?></span>
-        </a>
-    </div>
-
-    <!-- Search & Filter Bar -->
-    <form method="GET" action="<?= base_url('/admin/list_product') ?>" class="filter-form-wrapper" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-        <!-- Keep stock filter state -->
-        <input type="hidden" name="stock" value="<?= htmlspecialchars($stockFilter) ?>">
-        
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; align-items:end;">
-            <!-- Search Input -->
-            <div class="form-group" style="margin-bottom:0;">
-                <label style="display:block; font-size:11px; font-weight:600; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Search Product</label>
-                <input type="text" name="search" placeholder="Search name, SKU, desc..." value="<?= htmlspecialchars($searchQuery) ?>" style="width:100%; height:40px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff;">
-            </div>
-
-            <!-- Wick Filter -->
-            <div class="form-group" style="margin-bottom:0;">
-                <label style="display:block; font-size:11px; font-weight:600; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Wick Type</label>
-                <select name="wick" style="width:100%; height:40px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff; cursor:pointer;">
-                    <option value="">All Wicks</option>
-                    <option value="single" <?= $wickFilter === 'single' ? 'selected' : '' ?>>Single Wick</option>
-                    <option value="double" <?= $wickFilter === 'double' ? 'selected' : '' ?>>Double Wick</option>
-                    <option value="triple" <?= $wickFilter === 'triple' ? 'selected' : '' ?>>Triple Wick</option>
-                </select>
-            </div>
-
-            <!-- Fragrance Filter -->
-            <div class="form-group" style="margin-bottom:0;">
-                <label style="display:block; font-size:11px; font-weight:600; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Fragrance</label>
-                <select name="fragrance" style="width:100%; height:40px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff; cursor:pointer;">
-                    <option value="">All Fragrances</option>
-                    <?php foreach ($filter_fragrances as $f): ?>
-                        <option value="<?= $f['fragrance_id'] ?>" <?= $fragranceFilter === (int)$f['fragrance_id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($f['fragrance_name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <!-- Color Filter -->
-            <div class="form-group" style="margin-bottom:0;">
-                <label style="display:block; font-size:11px; font-weight:600; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Color</label>
-                <select name="color" style="width:100%; height:40px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff; cursor:pointer;">
-                    <option value="">All Colors</option>
-                    <?php foreach ($filter_colors as $c): ?>
-                        <option value="<?= $c['color_id'] ?>" <?= $colorFilter === (int)$c['color_id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($c['color_name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <!-- Size / Category Filter -->
-            <div class="form-group" style="margin-bottom:0;">
-                <label style="display:block; font-size:11px; font-weight:600; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Vessel / Size</label>
-                <select name="category" style="width:100%; height:40px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff; cursor:pointer;">
-                    <option value="">All Categories</option>
-                    <?php foreach ($filter_categories as $cat): ?>
-                        <option value="<?= $cat['id'] ?>" <?= $categoryFilter === (int)$cat['id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($cat['category_name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <!-- Buttons -->
-            <div style="display:flex; gap:10px;">
-                <button type="submit" style="flex:1; height:40px; background:#2563eb; color:#ffffff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:background 0.2s;">
-                    Filter
-                </button>
-                <a href="<?= base_url('/admin/list_product') ?>" style="flex:1; height:40px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-weight:600; text-decoration:none; display:flex; align-items:center; justify-content:center; transition:background 0.2s;">
-                    Reset
-                </a>
-            </div>
-        </div>
-    </form>
 
     <?php if ($success_message): ?>
-        <div style="background:#dcfce7; color:#15803d; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-weight:600;">✅ <?= htmlspecialchars($success_message) ?></div>
+        <div class="alert-success">✅ <?= htmlspecialchars($success_message) ?></div>
     <?php endif; ?>
 
-    <div class="admin-table-container">
+    <!-- Search & Filters Bar -->
+    <div style="background: white; border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <form method="GET" action="<?= base_url('/admin/list_product'); ?>" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+            
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; flex: 1;">
+                <!-- Search Input -->
+                <div style="position: relative; min-width: 260px; flex: 1;">
+                    <input type="text" name="search" value="<?= htmlspecialchars($searchQuery); ?>" placeholder="🔍 Search by product name, SKU, description..." style="width: 100%; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; outline: none; transition: border 0.2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'">
+                </div>
+
+                <!-- Vessel / Category Filter -->
+                <select name="category" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
+                    <option value="0">All Vessels</option>
+                    <?php foreach ($filter_categories as $c): ?>
+                        <option value="<?= $c['id']; ?>" <?= $categoryFilter == $c['id'] ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($c['category_name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <!-- Fragrance Filter -->
+                <select name="fragrance" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
+                    <option value="0">All Fragrances</option>
+                    <?php foreach ($filter_fragrances as $f): ?>
+                        <option value="<?= $f['fragrance_id']; ?>" <?= $fragranceFilter == $f['fragrance_id'] ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($f['fragrance_name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <!-- Wick Filter -->
+                <select name="wick" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
+                    <option value="">All Wicks</option>
+                    <option value="single" <?= $wickFilter === 'single' ? 'selected' : ''; ?>>Single Wick</option>
+                    <option value="double" <?= $wickFilter === 'double' ? 'selected' : ''; ?>>Double Wick</option>
+                    <option value="triple" <?= $wickFilter === 'triple' ? 'selected' : ''; ?>>Triple Wick</option>
+                </select>
+
+                <!-- Stock Status Filter -->
+                <select name="stock" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
+                    <option value="all" <?= $stockFilter === 'all' ? 'selected' : ''; ?>>All Stock (<?= $allProductsCount ?>)</option>
+                    <option value="instock" <?= $stockFilter === 'instock' ? 'selected' : ''; ?>>In Stock (<?= $inStockCount ?>)</option>
+                    <option value="outofstock" <?= $stockFilter === 'outofstock' ? 'selected' : ''; ?>>Out of Stock (<?= $outOfStockCount ?>)</option>
+                </select>
+
+                <button type="submit" class="btn-primary" style="padding: 9px 18px; font-size: 13px;">Filter</button>
+
+                <?php if (!empty($searchQuery) || $categoryFilter > 0 || $fragranceFilter > 0 || !empty($wickFilter) || $stockFilter !== 'all'): ?>
+                    <a href="<?= base_url('/admin/list_product'); ?>" style="font-size: 13px; color: var(--danger); text-decoration: none; font-weight: 600; padding: 6px 10px;">Reset Filters</a>
+                <?php endif; ?>
+            </div>
+
+        </form>
+    </div>
+
+    <div class="products-table">
         <?php if ($products && $products->num_rows > 0): ?>
-            <table class="admin-table">
+            <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Image</th>
-                        <th>Product Name</th>
+                        <th>Product Details</th>
                         <th>Description</th>
-                        <th>Sizes, Prices & Quantities</th>
+                        <th>Vessel &amp; Price</th>
                         <th>Wick</th>
                         <th>Colors</th>
-                        <th>Boxes</th>
-                        <th>Total Qty</th>
+                        <th>Packaging</th>
+                        <th>Stock</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php while ($row = $products->fetch_assoc()): ?>
                         <?php
-                        // Parse JSON fields
-                        $size_prices = json_decode($row['size_prices'], true);
-                        $size_qtys = json_decode($row['size_qtys'], true);
-                        $size_ids = json_decode($row['size_id'], true);
-                        // Get wick type, default to 'single' if not set
-                        $wick_type = $row['wick_type'] ?? 'single';
+                        $size_prices = json_decode($row['size_prices'], true) ?: [];
+                        $size_qtys   = json_decode($row['size_qtys'], true) ?: [];
+                        $size_ids    = json_decode($row['size_id'], true) ?: [];
+                        $color_ids   = json_decode($row['color_id'], true) ?: [];
+                        $box_ids     = json_decode($row['box_id'], true) ?: [];
+                        $wick_type   = $row['wick_type'] ?? 'single';
                         ?>
                         <tr>
-                            <td><?= $row['product_id'] ?></td>
                             
-                            <!-- Image Column with proper path handling -->
+                            <!-- Image Column -->
                             <td>
                                 <?php
                                 $image_file = $row['image'] ?? '';
+                                $img_url = null;
+
                                 if (!empty($image_file)) {
-                                    $clean_rel = ltrim(str_replace(['public/', 'assets/img/'], ['', 'uploads/products/'], $image_file), '/');
-                                    if (strpos($clean_rel, 'uploads/products/') === false && !preg_match('#^https?://#i', $clean_rel)) {
-                                        $clean_rel = 'uploads/products/' . $clean_rel;
-                                    }
-
-                                    $disk_path1 = dirname(__DIR__, 2) . '/public/' . $clean_rel;
-                                    $disk_path2 = dirname(__DIR__, 2) . '/public/assets/img/' . basename($clean_rel);
-
-                                    if (file_exists($disk_path1)) {
-                                        $img_url = base_url('/public/' . $clean_rel);
-                                        echo '<img src="' . htmlspecialchars($img_url) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
-                                    } else if (file_exists($disk_path2)) {
-                                        $img_url = base_url('/public/assets/img/' . basename($clean_rel));
-                                        echo '<img src="' . htmlspecialchars($img_url) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
-                                    } else if (preg_match('#^https?://#i', $image_file)) {
-                                        echo '<img src="' . htmlspecialchars($image_file) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
+                                    if (preg_match('#^https?://#i', $image_file)) {
+                                        $img_url = $image_file;
                                     } else {
-                                        echo '<div class="admin-no-thumb">No<br>Image</div>';
+                                        $clean_base = basename($image_file);
+                                        $upload_disk = dirname(__DIR__, 2) . '/public/uploads/products/' . $clean_base;
+                                        $asset_disk = dirname(__DIR__, 2) . '/public/assets/img/' . $clean_base;
+
+                                        if (file_exists($upload_disk)) {
+                                            $img_url = base_url('/public/uploads/products/' . $clean_base);
+                                        } elseif (file_exists($asset_disk)) {
+                                            $img_url = base_url('/public/assets/img/' . $clean_base);
+                                        } else {
+                                            $img_url = base_url('/public/' . ltrim($image_file, '/'));
+                                        }
                                     }
+                                }
+
+                                if ($img_url) {
+                                    echo '<img src="' . htmlspecialchars($img_url) . '" class="product-image" alt="' . htmlspecialchars($row['product_name'] ?? '') . '">';
                                 } else {
                                     echo '<div class="admin-no-thumb">No<br>Image</div>';
                                 }
                                 ?>
                             </td>
                             
+                            <!-- Product Details Column -->
                             <td>
                                 <strong><?= htmlspecialchars($row['product_name']) ?></strong>
                                 <?php if (!empty($row['sku'])): ?>
@@ -663,56 +589,44 @@ function build_page_url($p) {
                                         SKU: <?= htmlspecialchars($row['sku']) ?>
                                     </div>
                                 <?php endif; ?>
-                                <?php if ($row['fragrance_names']): ?>
+                                <?php if (!empty($row['fragrance_name'])): ?>
                                     <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">
-                                        🏷️ <?= htmlspecialchars($row['fragrance_names']) ?>
+                                        🏷️ <?= htmlspecialchars($row['fragrance_name']) ?>
                                     </div>
                                 <?php endif; ?>
                             </td>
                             
-                            <td style="max-width: 200px;">
-                                <?= htmlspecialchars(substr($row['description'], 0, 80)) ?>
-                                <?= strlen($row['description']) > 80 ? '...' : '' ?>
+                            <!-- Description Column -->
+                            <td style="max-width: 200px; color: #475569;">
+                                <?= htmlspecialchars(substr($row['description'], 0, 75)) ?>
+                                <?= strlen($row['description']) > 75 ? '...' : '' ?>
                             </td>
                             
+                            <!-- Vessel Category & Price Column -->
                             <td>
-                                <div class="size-info">
+                                <div>
                                     <?php
-                                    if (!empty($size_prices) && is_array($size_prices)) {
-                                        foreach ($size_prices as $size_id => $price) {
-                                            // Get size name from database
-                                            $size_name = '';
-                                            $size_query = $conn->prepare('SELECT category_name AS size_name, dimensions_subtitle AS size_details FROM categories WHERE id = ?');
-                                            $size_query->bind_param('i', $size_id);
-                                            $size_query->execute();
-                                            $size_result = $size_query->get_result();
-                                            if ($size_row = $size_result->fetch_assoc()) {
-                                                $size_name = $size_row['size_name'];
-                                                $size_details = $size_row['size_details'];
-                                            }
-                                            $size_query->close();
+                                    $display_price = is_numeric($row['size_prices']) ? (float)$row['size_prices'] : (is_array($size_prices) && !empty($size_prices) ? (float)reset($size_prices) : 29.00);
+                                    $display_qty   = (int)($row['qty'] ?? (is_numeric($row['size_qtys']) ? $row['size_qtys'] : (is_array($size_qtys) && !empty($size_qtys) ? (int)reset($size_qtys) : 100)));
 
-                                            if ($size_name) {
-                                                // Get quantity for this size from size_qtys JSON
-                                                $qty_for_size = isset($size_qtys[$size_id]) ? (int) $size_qtys[$size_id] : 0;
-
-                                                // Display with tooltip showing detailed info
-                                                echo '<div class="tooltip">';
-                                                echo '<span class="size-price-badge">';
-                                                echo htmlspecialchars($size_name) . ': $' . number_format($price, 2);
-                                                if ($qty_for_size > 0) {
-                                                    echo ' · ' . number_format($qty_for_size) . ' pcs';
-                                                }
-                                                echo '</span>';
-                                                if ($size_details) {
-                                                    echo '<span class="tooltip-text">' . htmlspecialchars($size_details) . '</span>';
-                                                }
-                                                echo '</div>';
-                                            }
+                                    $size_name = '';
+                                    if (!empty($size_ids) && is_array($size_ids)) {
+                                        $first_sid = (int)$size_ids[0];
+                                        $size_query = $conn->prepare('SELECT category_name FROM categories WHERE id = ?');
+                                        $size_query->bind_param('i', $first_sid);
+                                        $size_query->execute();
+                                        if ($srow = $size_query->get_result()->fetch_assoc()) {
+                                            $size_name = $srow['category_name'];
                                         }
-                                    } else {
-                                        echo '<span style="color: var(--muted); font-size: 12px;">No sizes</span>';
+                                        $size_query->close();
                                     }
+
+                                    echo '<span class="size-price-badge">';
+                                    echo ($size_name ? htmlspecialchars($size_name) . ': ' : '') . '$' . number_format($display_price, 2);
+                                    if ($display_qty > 0) {
+                                        echo ' · ' . number_format($display_qty) . ' pcs';
+                                    }
+                                    echo '</span>';
                                     ?>
                                 </div>
                             </td>
@@ -720,7 +634,6 @@ function build_page_url($p) {
                             <!-- Wick Type Column -->
                             <td>
                                 <?php
-                                // Determine wick display
                                 $wick_icon = '🕯️';
                                 $wick_class = 'wick-single';
                                 $wick_label = 'Single';
@@ -732,17 +645,6 @@ function build_page_url($p) {
                                     $wick_icon = '🕯️🕯️🕯️';
                                     $wick_class = 'wick-triple';
                                     $wick_label = 'Triple';
-                                } elseif ($wick_type === 'none') {
-                                    $wick_icon = '🚫';
-                                    $wick_class = 'wick-none';
-                                    $wick_label = 'No Wick';
-                                } elseif ($wick_type === 'single' || empty($wick_type)) {
-                                    $wick_icon = '🕯️';
-                                    $wick_class = 'wick-single';
-                                    $wick_label = 'Single';
-                                } else {
-                                    $wick_class = 'wick-unknown';
-                                    $wick_label = 'Unknown';
                                 }
 
                                 echo '<span class="wick-badge ' . $wick_class . '">';
@@ -751,30 +653,28 @@ function build_page_url($p) {
                                 ?>
                             </td>
                             
+                            <!-- Colors Column -->
                             <td>
                                 <?php
-                                $color_ids = json_decode($row['color_id'], true);
                                 if (!empty($color_ids) && is_array($color_ids)) {
                                     foreach ($color_ids as $color_id) {
                                         $color_name = '';
                                         $color_hex = '';
-                                        $color_query = $conn->prepare('SELECT color_name, color_hex FROM colors WHERE color_id = ?');
-                                        $color_query->bind_param('i', $color_id);
-                                        $color_query->execute();
-                                        $color_result = $color_query->get_result();
-                                        if ($color_row = $color_result->fetch_assoc()) {
-                                            $color_name = $color_row['color_name'];
-                                            $color_hex = $color_row['color_hex'];
+                                        $cq = $conn->prepare('SELECT color_name, color_hex FROM colors WHERE color_id = ?');
+                                        $cq->bind_param('i', $color_id);
+                                        $cq->execute();
+                                        $cres = $cq->get_result();
+                                        if ($crow = $cres->fetch_assoc()) {
+                                            $color_name = $crow['color_name'];
+                                            $color_hex  = $crow['color_hex'];
                                         }
-                                        $color_query->close();
+                                        $cq->close();
 
                                         if ($color_name) {
                                             echo '<span class="badge" style="';
-                                            if ($color_hex)
-                                                echo 'background: ' . $color_hex . '20; border-left: 3px solid ' . $color_hex . ';';
+                                            if ($color_hex) echo 'background: ' . $color_hex . '20; border-left: 3px solid ' . $color_hex . ';';
                                             echo '">';
-                                            if ($color_hex)
-                                                echo '<span style="display: inline-block; width: 10px; height: 10px; background: ' . $color_hex . '; border-radius: 2px; margin-right: 4px;"></span>';
+                                            if ($color_hex) echo '<span style="display: inline-block; width: 8px; height: 8px; background: ' . $color_hex . '; border-radius: 2px; margin-right: 4px;"></span>';
                                             echo htmlspecialchars($color_name) . '</span>';
                                         }
                                     }
@@ -784,58 +684,52 @@ function build_page_url($p) {
                                 ?>
                             </td>
                             
+                            <!-- Packaging Column -->
                             <td>
                                 <?php
-                                $box_ids = json_decode($row['box_id'], true);
                                 if (!empty($box_ids) && is_array($box_ids)) {
                                     foreach ($box_ids as $box_id) {
                                         $box_name = '';
-                                        $box_query = $conn->prepare('SELECT box_name FROM boxes WHERE box_id = ?');
-                                        $box_query->bind_param('i', $box_id);
-                                        $box_query->execute();
-                                        $box_result = $box_query->get_result();
-                                        if ($box_row = $box_result->fetch_assoc()) {
-                                            $box_name = $box_row['box_name'];
+                                        $bq = $conn->prepare('SELECT box_name FROM boxes WHERE box_id = ?');
+                                        $bq->bind_param('i', $box_id);
+                                        $bq->execute();
+                                        $bres = $bq->get_result();
+                                        if ($brow = $bres->fetch_assoc()) {
+                                            $box_name = $brow['box_name'];
                                         }
-                                        $box_query->close();
+                                        $bq->close();
 
                                         if ($box_name) {
                                             echo '<span class="badge">📦 ' . htmlspecialchars($box_name) . '</span>';
                                         }
                                     }
                                 } else {
-                                    echo '<span style="color: var(--muted); font-size: 12px;">No boxes</span>';
+                                    echo '<span style="color: var(--muted); font-size: 12px;">No packaging</span>';
                                 }
                                 ?>
                             </td>
                             
+                            <!-- Stock Column -->
                             <td style="text-align: center;">
                                 <?php
-                                // Calculate total from size_qtys if available, otherwise use qty field
-                                $total_qty_display = 0;
+                                $total_qty_display = (int)$row['qty'];
                                 if (!empty($size_qtys) && is_array($size_qtys)) {
                                     $total_qty_display = array_sum($size_qtys);
-                                } else {
-                                    $total_qty_display = (int) $row['qty'];
                                 }
                                 ?>
                                 <span class="badge" style="background: #dbeafe; color: #1e40af;">
                                     <?= number_format($total_qty_display) ?> units
                                 </span>
-                                
-                                <?php if (!empty($size_qtys) && is_array($size_qtys) && count($size_qtys) > 1): ?>
-                                    <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">
-                                        (split across <?= count($size_qtys) ?> sizes)
-                                    </div>
-                                <?php endif; ?>
                             </td>
                             
+                            <!-- Actions Column -->
                             <td>
                                 <div class="action-buttons">
-                                                         <a href="<?php echo $base; ?>/admin/edit_product?id=<?= $row['product_id'] ?>" class="btn-edit">✏️ Edit</a>
+                                    <a href="<?php echo $base; ?>/admin/edit_product?id=<?= $row['product_id'] ?>" class="btn-edit" title="Edit product">✏️ Edit</a>
+                                    <a href="<?php echo $base; ?>/admin/add_product?duplicate_id=<?= $row['product_id'] ?>" class="btn-duplicate" title="Duplicate product">📋 Duplicate</a>
                                     <form method="POST" action="" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
                                         <input type="hidden" name="delete_id" value="<?= $row['product_id'] ?>">
-                                        <button type="submit" class="btn-delete">🗑️ Delete</button>
+                                        <button type="submit" class="btn-delete" title="Delete product">🗑️ Delete</button>
                                     </form>
                                 </div>
                             </td>
@@ -871,17 +765,6 @@ function confirmDelete(productId, productName) {
         window.location.href = `?delete=${productId}`;
     }
 }
-
-// Add title attributes to buttons for better UX
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.btn-edit').forEach(btn => {
-        btn.setAttribute('title', 'Edit product');
-    });
-    
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.setAttribute('title', 'Delete product');
-    });
-});
 </script>
 
 </body>

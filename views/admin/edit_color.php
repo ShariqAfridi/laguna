@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../../db.php';
+require_once __DIR__ . '/../../app/Helpers/ImageOptimizer.php';
+use App\Helpers\ImageOptimizer;
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if (!$id) {
@@ -40,26 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $double_wick_image  = $color['double_wick_image'] ?? '';
     $triple_wick_image  = $color['triple_wick_image'] ?? '';
 
-    $upload_dir = __DIR__ . '/../../public/uploads/colors/';
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
-    }
-    $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-
-    $upload_file = function($key, $prefix, $current) use ($upload_dir, $allowed, &$error_message) {
-        if (!empty($_FILES[$key]['tmp_name'])) {
-            $file = $_FILES[$key];
-            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            if (in_array($ext, $allowed)) {
-                $filename = $prefix . '_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-                $target_file = $upload_dir . $filename;
-                if (move_uploaded_file($file['tmp_name'], $target_file)) {
-                    return 'public/uploads/colors/' . $filename;
-                } else {
-                    $error_message = "Failed to upload {$prefix} image.";
-                }
+    $upload_file = function($key, $prefix, $current) use (&$error_message) {
+        if (!empty($_FILES[$key]['tmp_name']) && $_FILES[$key]['error'] === UPLOAD_ERR_OK) {
+            $opt = ImageOptimizer::optimize($_FILES[$key], 'uploads/colors/', $prefix . '_', 1400, 1048576, 85);
+            if ($opt['success']) {
+                return 'public/' . $opt['path'];
             } else {
-                $error_message = 'Invalid image format. Allowed: JPG, PNG, WEBP, GIF.';
+                $error_message = $opt['error'];
             }
         }
         return $current;

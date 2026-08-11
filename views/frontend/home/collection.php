@@ -286,6 +286,8 @@ if (count($collectionProducts) < 6) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  background: #faf9f6;
   display: block;
   transition: transform 0.4s ease;
 }

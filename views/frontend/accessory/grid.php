@@ -32,20 +32,27 @@ $accessories = $conn->query($query);
 
         .product-grid-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            column-gap: 40px;
-            row-gap: 50px;
+            grid-template-columns: repeat(4, 1fr);
+            column-gap: 24px;
+            row-gap: 40px;
             justify-items: center;
         }
 
-        @media (max-width: 992px) {
+        @media (max-width: 1024px) {
             .product-grid-container {
-                grid-template-columns: repeat(2, 1fr);
-                column-gap: 30px;
+                grid-template-columns: repeat(3, 1fr);
+                column-gap: 20px;
             }
         }
 
-        @media (max-width: 680px) {
+        @media (max-width: 768px) {
+            .product-grid-container {
+                grid-template-columns: repeat(2, 1fr);
+                column-gap: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
             .product-grid-container {
                 grid-template-columns: 1fr;
             }
