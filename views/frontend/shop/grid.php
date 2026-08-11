@@ -1166,10 +1166,8 @@ function renderFragranceOptions(items, activeFragId) {
         const isActive = (parseInt(item.fragrance_id) === parseInt(activeFragId));
         tile.className = 'fragrance-option-tile' + (isActive ? ' active' : '');
         
-        let iconHtml = '<div style="font-size: 16px;">🏷️</div>';
-        if (item.fragrance_image) {
-            iconHtml = `<img src="${escapeHtml(item.fragrance_image)}" style="width: 24px; height: 24px; object-fit: cover; border-radius: 4px;" alt="${escapeHtml(item.fragrance_name)}">`;
-        }
+        let varImg = getImageUrl(item);
+        let iconHtml = `<img src="${escapeHtml(varImg)}" style="width: 28px; height: 28px; object-fit: cover; border-radius: 4px;" alt="${escapeHtml(item.fragrance_name)}">`;
 
         tile.innerHTML = `
             ${iconHtml}
@@ -1214,14 +1212,10 @@ function switchFragranceItem(productData) {
 
     document.getElementById('modalTitle').innerText = productData.product_name || (productData.fragrance_name + ' Candle');
     
-    // Build image array: Candle image + Fragrance image if present
+    // Build image array: Product variation candle image ONLY (no fragrance table image)
     imageUrls = [];
     const candleImg = getImageUrl(productData);
     if (candleImg) imageUrls.push(candleImg);
-    
-    if (productData.fragrance_image && productData.fragrance_image !== candleImg) {
-        imageUrls.push(productData.fragrance_image);
-    }
     
     setMainImage(imageUrls[0], 0);
     renderThumbnails();
