@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/../../db.php';
 
-// Handle product deletion (via POST or GET)
+// Handle single product deletion (via POST or GET)
 $delete_target_id = 0;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['delete_id']) && is_numeric($_POST['delete_id'])) {
     $delete_target_id = (int)$_POST['delete_id'];
@@ -48,10 +48,51 @@ if ($delete_target_id > 0) {
     exit();
 }
 
+// Handle bulk product deletion (via POST)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['bulk_delete_ids']) && is_array($_POST['bulk_delete_ids'])) {
+    $ids_to_delete = array_map('intval', $_POST['bulk_delete_ids']);
+    $ids_to_delete = array_filter($ids_to_delete, function($id) { return $id > 0; });
+
+    if (!empty($ids_to_delete)) {
+        $in_clause = implode(',', $ids_to_delete);
+
+        // Delete images
+        $img_query = $conn->query("SELECT image FROM products WHERE product_id IN ($in_clause)");
+        if ($img_query) {
+            while ($img_row = $img_query->fetch_assoc()) {
+                if (!empty($img_row['image'])) {
+                    $image_name = basename($img_row['image']);
+                    $paths_to_check = [
+                        dirname(__DIR__, 2) . '/public/uploads/products/' . $image_name,
+                        dirname(__DIR__, 2) . '/public/assets/img/' . $image_name,
+                        $_SERVER['DOCUMENT_ROOT'] . '/public/uploads/products/' . $image_name,
+                        $_SERVER['DOCUMENT_ROOT'] . '/public/assets/img/' . $image_name
+                    ];
+
+                    foreach ($paths_to_check as $path) {
+                        if (file_exists($path)) {
+                            @unlink($path);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Delete records
+        $conn->query("DELETE FROM products WHERE product_id IN ($in_clause)");
+        $count_deleted = count($ids_to_delete);
+        echo "<script>window.location.href='" . base_url("/admin/list_product?deleted_count=$count_deleted") . "';</script>";
+        exit();
+    }
+}
+
 // Get success message
 $success_message = '';
 if (isset($_GET['deleted'])) {
     $success_message = 'Product deleted successfully!';
+} elseif (isset($_GET['deleted_count'])) {
+    $c = (int)$_GET['deleted_count'];
+    $success_message = "$c product(s) deleted successfully!";
 }
 
 $page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
@@ -218,7 +259,7 @@ function build_page_url($p) {
             color: var(--text);
         }
 
-        .header-actions { display: flex; gap: 12px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
 
         .btn-primary {
             background: var(--blue);
@@ -295,6 +336,45 @@ function build_page_url($p) {
             background: var(--danger);
             color: #fff;
             border-color: var(--danger);
+        }
+
+        .btn-bulk-delete {
+            background: #ef4444;
+            color: #ffffff;
+            border: 1px solid #dc2626;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 1px 2px rgba(239,68,68,0.2);
+            transition: all 0.15s;
+        }
+
+        .btn-bulk-delete:hover {
+            background: #dc2626;
+            border-color: #b91c1c;
+        }
+
+        .bulk-actions-banner {
+            display: none;
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            padding: 12px 20px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 16px;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.08);
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .alert-success {
@@ -446,6 +526,13 @@ function build_page_url($p) {
             text-align: center;
             color: var(--muted);
         }
+
+        .custom-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--blue);
+        }
     </style>
 </head>
 <body>
@@ -466,13 +553,31 @@ function build_page_url($p) {
         <div class="alert-success">✅ <?= htmlspecialchars($success_message) ?></div>
     <?php endif; ?>
 
+    <!-- Bulk Selection Action Banner (shows at top when products are checked) -->
+    <div id="bulkActionsBanner" class="bulk-actions-banner">
+        <div style="display: flex; align-items: center; gap: 8px; color: #991b1b; font-weight: 600; font-size: 14px;">
+            <span>⚠️</span>
+            <span id="selectedCountText">0 products selected</span>
+        </div>
+        <div>
+            <button type="button" class="btn-bulk-delete" onclick="submitBulkDelete()">
+                🗑️ Delete Selected Products
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden Form for Bulk Delete -->
+    <form id="bulkDeleteForm" method="POST" action="">
+        <div id="bulkDeleteInputs"></div>
+    </form>
+
     <!-- Search & Filters Bar -->
     <div style="background: white; border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
         <form method="GET" action="<?= base_url('/admin/list_product'); ?>" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
             
             <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; flex: 1;">
                 <!-- Search Input -->
-                <div style="position: relative; min-width: 260px; flex: 1;">
+                <div style="position: relative; min-width: 240px; flex: 1;">
                     <input type="text" name="search" value="<?= htmlspecialchars($searchQuery); ?>" placeholder="🔍 Search by product name, SKU, description..." style="width: 100%; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; outline: none; transition: border 0.2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
 
@@ -496,6 +601,16 @@ function build_page_url($p) {
                     <?php endforeach; ?>
                 </select>
 
+                <!-- Color Filter -->
+                <select name="color" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
+                    <option value="0">All Colors</option>
+                    <?php foreach ($filter_colors as $cl): ?>
+                        <option value="<?= $cl['color_id']; ?>" <?= $colorFilter == $cl['color_id'] ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($cl['color_name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
                 <!-- Wick Filter -->
                 <select name="wick" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="">All Wicks</option>
@@ -513,7 +628,7 @@ function build_page_url($p) {
 
                 <button type="submit" class="btn-primary" style="padding: 9px 18px; font-size: 13px;">Filter</button>
 
-                <?php if (!empty($searchQuery) || $categoryFilter > 0 || $fragranceFilter > 0 || !empty($wickFilter) || $stockFilter !== 'all'): ?>
+                <?php if (!empty($searchQuery) || $categoryFilter > 0 || $fragranceFilter > 0 || $colorFilter > 0 || !empty($wickFilter) || $stockFilter !== 'all'): ?>
                     <a href="<?= base_url('/admin/list_product'); ?>" style="font-size: 13px; color: var(--danger); text-decoration: none; font-weight: 600; padding: 6px 10px;">Reset Filters</a>
                 <?php endif; ?>
             </div>
@@ -526,6 +641,9 @@ function build_page_url($p) {
             <table>
                 <thead>
                     <tr>
+                        <th style="width: 40px; text-align: center;">
+                            <input type="checkbox" id="selectAllCB" class="custom-checkbox" title="Select All Products" onchange="toggleSelectAll(this)">
+                        </th>
                         <th>Image</th>
                         <th>Product Details</th>
                         <th>Description</th>
@@ -547,8 +665,12 @@ function build_page_url($p) {
                         $box_ids     = json_decode($row['box_id'], true) ?: [];
                         $wick_type   = $row['wick_type'] ?? 'single';
                         ?>
-                        <tr>
-                            
+                        <tr id="product-row-<?= $row['product_id'] ?>">
+                            <!-- Select Checkbox Column -->
+                            <td style="text-align: center;">
+                                <input type="checkbox" class="product-cb custom-checkbox" value="<?= $row['product_id'] ?>" onchange="updateBulkSelection()">
+                            </td>
+
                             <!-- Image Column -->
                             <td>
                                 <?php
@@ -760,10 +882,64 @@ function build_page_url($p) {
 </div>
 
 <script>
-function confirmDelete(productId, productName) {
-    if (confirm(`Are you sure you want to delete "${productName}"?\n\nThis action cannot be undone.`)) {
-        window.location.href = `?delete=${productId}`;
+function toggleSelectAll(selectAllCb) {
+    const checkboxes = document.querySelectorAll('.product-cb');
+    checkboxes.forEach(cb => {
+        cb.checked = selectAllCb.checked;
+    });
+    updateBulkSelection();
+}
+
+function updateBulkSelection() {
+    const selectedCBs = document.querySelectorAll('.product-cb:checked');
+    const allCBs = document.querySelectorAll('.product-cb');
+    const banner = document.getElementById('bulkActionsBanner');
+    const selectedCountText = document.getElementById('selectedCountText');
+    const selectAllCb = document.getElementById('selectAllCB');
+
+    const count = selectedCBs.length;
+
+    if (count > 0) {
+        banner.style.display = 'flex';
+        selectedCountText.textContent = count + (count === 1 ? ' product selected' : ' products selected');
+    } else {
+        banner.style.display = 'none';
     }
+
+    if (allCBs.length > 0 && selectedCBs.length === allCBs.length) {
+        selectAllCb.checked = true;
+        selectAllCb.indeterminate = false;
+    } else if (selectedCBs.length > 0) {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = true;
+    } else {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = false;
+    }
+}
+
+function submitBulkDelete() {
+    const selectedCBs = document.querySelectorAll('.product-cb:checked');
+    const count = selectedCBs.length;
+
+    if (count === 0) return;
+
+    if (!confirm(`Are you sure you want to delete ${count} selected product(s)?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+
+    const container = document.getElementById('bulkDeleteInputs');
+    container.innerHTML = '';
+
+    selectedCBs.forEach(cb => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'bulk_delete_ids[]';
+        input.value = cb.value;
+        container.appendChild(input);
+    });
+
+    document.getElementById('bulkDeleteForm').submit();
 }
 </script>
 
