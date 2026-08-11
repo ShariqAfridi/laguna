@@ -95,8 +95,14 @@ if (isset($_GET['deleted'])) {
     $success_message = "$c product(s) deleted successfully!";
 }
 
+$perPageParam = isset($_GET['per_page']) ? trim($_GET['per_page']) : '10';
+if ($perPageParam === 'all') {
+    $limit = 99999;
+} else {
+    $limit = max(1, (int)$perPageParam);
+}
+
 $page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
-$limit = 10;
 $offset = ($page - 1) * $limit;
 
 $stockFilter = isset($_GET['stock']) ? $_GET['stock'] : 'all';
@@ -161,16 +167,16 @@ if ($res_wick) {
 }
 
 $allProductsCount = (int) ($conn->query('SELECT COUNT(*) as total FROM products')->fetch_assoc()['total'] ?? 0);
-$inStockCount = (int) ($conn->query("SELECT COUNT(*) as total FROM products WHERE qty > 0 OR size_qtys LIKE '%\"[1-9]%' OR size_qtys LIKE '%:[1-9]%'")->fetch_assoc()['total'] ?? 0);
+$inStockCount = (int) ($conn->query("SELECT COUNT(*) as total FROM products WHERE qty > 0 OR (size_qtys IS NOT NULL AND size_qtys != '' AND size_qtys != '0' AND size_qtys != '[]' AND size_qtys != '{}')")->fetch_assoc()['total'] ?? 0);
 $outOfStockCount = max(0, $allProductsCount - $inStockCount);
 
 // Build dynamic WHERE clauses
 $whereClauses = [];
 
 if ($stockFilter === 'instock') {
-    $whereClauses[] = "(p.qty > 0 OR p.size_qtys REGEXP ':[1-9]')";
+    $whereClauses[] = "(p.qty > 0 OR (p.size_qtys IS NOT NULL AND p.size_qtys != '' AND p.size_qtys != '0' AND p.size_qtys != '[]' AND p.size_qtys != '{}'))";
 } elseif ($stockFilter === 'outofstock') {
-    $whereClauses[] = "((p.qty <= 0 OR p.qty IS NULL) AND (p.size_qtys NOT REGEXP ':[1-9]'))";
+    $whereClauses[] = "((p.qty <= 0 OR p.qty IS NULL) AND (p.size_qtys IS NULL OR p.size_qtys = '' OR p.size_qtys = '0' OR p.size_qtys = '[]' OR p.size_qtys = '{}'))";
 }
 
 if (!empty($searchQuery)) {
@@ -216,6 +222,10 @@ if ($sortOption === 'oldest') {
     $sortSql = "CAST(p.size_prices AS DECIMAL(10,2)) ASC";
 } elseif ($sortOption === 'price_desc') {
     $sortSql = "CAST(p.size_prices AS DECIMAL(10,2)) DESC";
+} elseif ($sortOption === 'stock_desc') {
+    $sortSql = "p.qty DESC";
+} elseif ($sortOption === 'stock_asc') {
+    $sortSql = "p.qty ASC";
 }
 
 // Compute total rows matching the filters
@@ -628,7 +638,7 @@ function build_page_url($p) {
                     <input type="text" name="search" value="<?= htmlspecialchars($searchQuery); ?>" placeholder="🔍 Search by product name, SKU..." style="width: 100%; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; outline: none; transition: border 0.2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
 
-                <!-- Vessel / Category Filter (ONLY PRESENT) -->
+                <!-- Vessel / Category Filter -->
                 <select name="category" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="0">All Vessels</option>
                     <?php foreach ($filter_categories as $c): ?>
@@ -638,7 +648,7 @@ function build_page_url($p) {
                     <?php endforeach; ?>
                 </select>
 
-                <!-- Fragrance Filter (ONLY PRESENT) -->
+                <!-- Fragrance Filter -->
                 <select name="fragrance" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="0">All Fragrances</option>
                     <?php foreach ($filter_fragrances as $f): ?>
@@ -648,7 +658,7 @@ function build_page_url($p) {
                     <?php endforeach; ?>
                 </select>
 
-                <!-- Color Filter (ONLY PRESENT) -->
+                <!-- Color Filter -->
                 <select name="color" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="0">All Colors</option>
                     <?php foreach ($filter_colors as $cl): ?>
@@ -658,7 +668,7 @@ function build_page_url($p) {
                     <?php endforeach; ?>
                 </select>
 
-                <!-- Wick Filter (ONLY PRESENT) -->
+                <!-- Wick Filter -->
                 <select name="wick" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="">All Wicks</option>
                     <?php foreach ($filter_wicks as $w): ?>
@@ -670,7 +680,7 @@ function build_page_url($p) {
 
                 <!-- Stock Status Filter -->
                 <select name="stock" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
-                    <option value="all" <?= $stockFilter === 'all' ? 'selected' : ''; ?>>All Stock (<?= $allProductsCount ?>)</option>
+                    <option value="all" <?= $stockFilter === 'all' ? 'selected' : ''; ?>>All Products (<?= $allProductsCount ?>)</option>
                     <option value="instock" <?= $stockFilter === 'instock' ? 'selected' : ''; ?>>In Stock (<?= $inStockCount ?>)</option>
                     <option value="outofstock" <?= $stockFilter === 'outofstock' ? 'selected' : ''; ?>>Out of Stock (<?= $outOfStockCount ?>)</option>
                 </select>
@@ -679,6 +689,8 @@ function build_page_url($p) {
                 <select name="sort" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid #bfdbfe; font-size: 13px; color: #1e40af; background: #eff6ff; font-weight: 600; outline: none; cursor: pointer;">
                     <option value="newest" <?= $sortOption === 'newest' ? 'selected' : ''; ?>>Sort: Newest First</option>
                     <option value="oldest" <?= $sortOption === 'oldest' ? 'selected' : ''; ?>>Sort: Oldest First</option>
+                    <option value="stock_desc" <?= $sortOption === 'stock_desc' ? 'selected' : ''; ?>>Sort: Stock (High → Low)</option>
+                    <option value="stock_asc" <?= $sortOption === 'stock_asc' ? 'selected' : ''; ?>>Sort: Stock (Low → High)</option>
                     <option value="sku_asc" <?= $sortOption === 'sku_asc' ? 'selected' : ''; ?>>Sort: SKU (A → Z)</option>
                     <option value="sku_desc" <?= $sortOption === 'sku_desc' ? 'selected' : ''; ?>>Sort: SKU (Z → A)</option>
                     <option value="name_asc" <?= $sortOption === 'name_asc' ? 'selected' : ''; ?>>Sort: Name (A → Z)</option>
@@ -687,9 +699,18 @@ function build_page_url($p) {
                     <option value="price_desc" <?= $sortOption === 'price_desc' ? 'selected' : ''; ?>>Sort: Price (High → Low)</option>
                 </select>
 
+                <!-- Items Per Page Dropdown -->
+                <select name="per_page" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
+                    <option value="10" <?= $perPageParam === '10' ? 'selected' : ''; ?>>10 / page</option>
+                    <option value="25" <?= $perPageParam === '25' ? 'selected' : ''; ?>>25 / page</option>
+                    <option value="50" <?= $perPageParam === '50' ? 'selected' : ''; ?>>50 / page</option>
+                    <option value="100" <?= $perPageParam === '100' ? 'selected' : ''; ?>>100 / page</option>
+                    <option value="all" <?= $perPageParam === 'all' ? 'selected' : ''; ?>>Show All Products</option>
+                </select>
+
                 <button type="submit" class="btn-primary" style="padding: 9px 18px; font-size: 13px;">Filter</button>
 
-                <?php if (!empty($searchQuery) || $categoryFilter > 0 || $fragranceFilter > 0 || $colorFilter > 0 || !empty($wickFilter) || $stockFilter !== 'all' || $sortOption !== 'newest'): ?>
+                <?php if (!empty($searchQuery) || $categoryFilter > 0 || $fragranceFilter > 0 || $colorFilter > 0 || !empty($wickFilter) || $stockFilter !== 'all' || $sortOption !== 'newest' || $perPageParam !== '10'): ?>
                     <a href="<?= base_url('/admin/list_product'); ?>" style="font-size: 13px; color: var(--danger); text-decoration: none; font-weight: 600; padding: 6px 10px;">Reset Filters</a>
                 <?php endif; ?>
             </div>
@@ -921,7 +942,7 @@ function build_page_url($p) {
                 </tbody>
             </table>
 
-            <?php if ($totalPages > 1): ?>
+            <?php if ($totalPages > 1 && $perPageParam !== 'all'): ?>
                 <div class="admin-pagination">
                     <div>Showing <?= min($offset + 1, $totalRows); ?> to <?= min($offset + $limit, $totalRows); ?> of <?= $totalRows; ?> products</div>
                     <div class="admin-pagination-pages">
@@ -932,11 +953,15 @@ function build_page_url($p) {
                         <a href="<?= build_page_url(min($totalPages, $page + 1)); ?>" class="admin-page-link <?= $page >= $totalPages ? 'disabled' : ''; ?>">Next &raquo;</a>
                     </div>
                 </div>
+            <?php else: ?>
+                <div class="admin-pagination">
+                    <div>Showing all <?= $totalRows; ?> products</div>
+                </div>
             <?php endif; ?>
         <?php else: ?>
             <div class="empty-state">
-                <p>No products found in the database.</p>
-                <a href="<?php echo $base; ?>/admin/add_product" style="display: inline-block; margin-top: 16px;" class="btn-primary">Add Your First Product</a>
+                <p>No products found matching your filter criteria.</p>
+                <a href="<?= base_url('/admin/list_product'); ?>" style="display: inline-block; margin-top: 16px;" class="btn-primary">Clear Filters</a>
             </div>
         <?php endif; ?>
     </div>
