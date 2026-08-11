@@ -113,38 +113,35 @@ $colorFilter = isset($_GET['color']) ? (int)$_GET['color'] : 0;
 $categoryFilter = isset($_GET['category']) ? (int)$_GET['category'] : 0;
 $sortOption = isset($_GET['sort']) ? trim($_GET['sort']) : 'newest';
 
-// Fetch ONLY filter options that are actually PRESENT in active products
-$filter_fragrances = [];
-$res_frag = $conn->query("
-    SELECT DISTINCT f.fragrance_id, f.fragrance_name 
-    FROM fragrances f 
-    INNER JOIN products p ON p.fragrance_id = f.fragrance_id 
-    ORDER BY f.fragrance_name ASC
-");
-if ($res_frag) {
-    while ($row = $res_frag->fetch_assoc()) {
-        $filter_fragrances[] = $row;
-    }
+// Stock condition clause helper
+$stockWhere = "";
+if ($stockFilter === 'instock') {
+    $stockWhere = "(p.qty > 0 OR (p.size_qtys IS NOT NULL AND p.size_qtys != '' AND p.size_qtys != '0' AND p.size_qtys != '[]' AND p.size_qtys != '{}'))";
+} elseif ($stockFilter === 'outofstock') {
+    $stockWhere = "((p.qty <= 0 OR p.qty IS NULL) AND (p.size_qtys IS NULL OR p.size_qtys = '' OR p.size_qtys = '0' OR p.size_qtys = '[]' OR p.size_qtys = '{}'))";
 }
 
-$filter_colors = [];
-$res_col = $conn->query("
-    SELECT DISTINCT c.color_id, c.color_name 
-    FROM colors c 
-    INNER JOIN products p ON (JSON_CONTAINS(p.color_id, CAST(c.color_id AS JSON)) OR p.color_id LIKE CONCAT('%\"', c.color_id, '\"%') OR p.color_id LIKE CONCAT('%', c.color_id, '%')) 
-    ORDER BY c.color_name ASC
-");
-if ($res_col) {
-    while ($row = $res_col->fetch_assoc()) {
-        $filter_colors[] = $row;
-    }
+// Fetch Categories (Vessels) synced with active filters & available stock
+$cat_where = [];
+if ($stockWhere) $cat_where[] = $stockWhere;
+if ($fragranceFilter > 0) $cat_where[] = "p.fragrance_id = $fragranceFilter";
+if ($colorFilter > 0) $cat_where[] = "(p.color_id LIKE '%\"$colorFilter\"%' OR p.color_id LIKE '%[$colorFilter]%' OR p.color_id LIKE '%$colorFilter%')";
+if (!empty($wickFilter)) {
+    $wEsc = $conn->real_escape_string($wickFilter);
+    $cat_where[] = "p.wick_type = '$wEsc'";
 }
+if (!empty($searchQuery)) {
+    $sEsc = $conn->real_escape_string($searchQuery);
+    $cat_where[] = "(p.product_name LIKE '%$sEsc%' OR p.description LIKE '%$sEsc%' OR p.sku LIKE '%$sEsc%')";
+}
+$cat_sql_where = !empty($cat_where) ? 'WHERE ' . implode(' AND ', $cat_where) : '';
 
 $filter_categories = [];
 $res_cat = $conn->query("
     SELECT DISTINCT c.id, c.category_name 
     FROM categories c 
-    INNER JOIN products p ON (JSON_CONTAINS(p.size_id, CAST(c.id AS JSON)) OR p.size_id LIKE CONCAT('%\"', c.id, '\"%') OR p.size_id LIKE CONCAT('%', c.id, '%')) 
+    INNER JOIN products p ON (p.size_id LIKE CONCAT('%\"', c.id, '\"%') OR p.size_id LIKE CONCAT('%[', c.id, ']%') OR p.size_id LIKE CONCAT('%', c.id, '%')) 
+    $cat_sql_where
     ORDER BY c.category_name ASC
 ");
 if ($res_cat) {
@@ -153,12 +150,83 @@ if ($res_cat) {
     }
 }
 
+// Fetch Fragrances synced with active filters & available stock
+$frag_where = [];
+if ($stockWhere) $frag_where[] = $stockWhere;
+if ($categoryFilter > 0) $frag_where[] = "(p.size_id LIKE '%\"$categoryFilter\"%' OR p.size_id LIKE '%[$categoryFilter]%' OR p.size_id LIKE '%$categoryFilter%')";
+if ($colorFilter > 0) $frag_where[] = "(p.color_id LIKE '%\"$colorFilter\"%' OR p.color_id LIKE '%[$colorFilter]%' OR p.color_id LIKE '%$colorFilter%')";
+if (!empty($wickFilter)) {
+    $wEsc = $conn->real_escape_string($wickFilter);
+    $frag_where[] = "p.wick_type = '$wEsc'";
+}
+if (!empty($searchQuery)) {
+    $sEsc = $conn->real_escape_string($searchQuery);
+    $frag_where[] = "(p.product_name LIKE '%$sEsc%' OR p.description LIKE '%$sEsc%' OR p.sku LIKE '%$sEsc%')";
+}
+$frag_sql_where = !empty($frag_where) ? 'WHERE ' . implode(' AND ', $frag_where) : '';
+
+$filter_fragrances = [];
+$res_frag = $conn->query("
+    SELECT DISTINCT f.fragrance_id, f.fragrance_name 
+    FROM fragrances f 
+    INNER JOIN products p ON p.fragrance_id = f.fragrance_id 
+    $frag_sql_where
+    ORDER BY f.fragrance_name ASC
+");
+if ($res_frag) {
+    while ($row = $res_frag->fetch_assoc()) {
+        $filter_fragrances[] = $row;
+    }
+}
+
+// Fetch Colors synced with active filters & available stock
+$col_where = [];
+if ($stockWhere) $col_where[] = $stockWhere;
+if ($categoryFilter > 0) $col_where[] = "(p.size_id LIKE '%\"$categoryFilter\"%' OR p.size_id LIKE '%[$categoryFilter]%' OR p.size_id LIKE '%$categoryFilter%')";
+if ($fragranceFilter > 0) $col_where[] = "p.fragrance_id = $fragranceFilter";
+if (!empty($wickFilter)) {
+    $wEsc = $conn->real_escape_string($wickFilter);
+    $col_where[] = "p.wick_type = '$wEsc'";
+}
+if (!empty($searchQuery)) {
+    $sEsc = $conn->real_escape_string($searchQuery);
+    $col_where[] = "(p.product_name LIKE '%$sEsc%' OR p.description LIKE '%$sEsc%' OR p.sku LIKE '%$sEsc%')";
+}
+$col_sql_where = !empty($col_where) ? 'WHERE ' . implode(' AND ', $col_where) : '';
+
+$filter_colors = [];
+$res_col = $conn->query("
+    SELECT DISTINCT c.color_id, c.color_name 
+    FROM colors c 
+    INNER JOIN products p ON (p.color_id LIKE CONCAT('%\"', c.color_id, '\"%') OR p.color_id LIKE CONCAT('%[', c.color_id, ']%') OR p.color_id LIKE CONCAT('%', c.color_id, '%')) 
+    $col_sql_where
+    ORDER BY c.color_name ASC
+");
+if ($res_col) {
+    while ($row = $res_col->fetch_assoc()) {
+        $filter_colors[] = $row;
+    }
+}
+
+// Fetch Wicks synced with active filters & available stock
+$wick_where = [];
+$wick_where[] = "(p.wick_type IS NOT NULL AND p.wick_type != '')";
+if ($stockWhere) $wick_where[] = $stockWhere;
+if ($categoryFilter > 0) $wick_where[] = "(p.size_id LIKE '%\"$categoryFilter\"%' OR p.size_id LIKE '%[$categoryFilter]%' OR p.size_id LIKE '%$categoryFilter%')";
+if ($fragranceFilter > 0) $wick_where[] = "p.fragrance_id = $fragranceFilter";
+if ($colorFilter > 0) $wick_where[] = "(p.color_id LIKE '%\"$colorFilter\"%' OR p.color_id LIKE '%[$colorFilter]%' OR p.color_id LIKE '%$colorFilter%')";
+if (!empty($searchQuery)) {
+    $sEsc = $conn->real_escape_string($searchQuery);
+    $wick_where[] = "(p.product_name LIKE '%$sEsc%' OR p.description LIKE '%$sEsc%' OR p.sku LIKE '%$sEsc%')";
+}
+$wick_sql_where = 'WHERE ' . implode(' AND ', $wick_where);
+
 $filter_wicks = [];
 $res_wick = $conn->query("
-    SELECT DISTINCT wick_type 
-    FROM products 
-    WHERE wick_type IS NOT NULL AND wick_type != '' 
-    ORDER BY CASE wick_type WHEN 'single' THEN 1 WHEN 'double' THEN 2 WHEN 'triple' THEN 3 ELSE 4 END ASC
+    SELECT DISTINCT p.wick_type 
+    FROM products p 
+    $wick_sql_where
+    ORDER BY CASE p.wick_type WHEN 'single' THEN 1 WHEN 'double' THEN 2 WHEN 'triple' THEN 3 ELSE 4 END ASC
 ");
 if ($res_wick) {
     while ($row = $res_wick->fetch_assoc()) {
@@ -170,13 +238,11 @@ $allProductsCount = (int) ($conn->query('SELECT COUNT(*) as total FROM products'
 $inStockCount = (int) ($conn->query("SELECT COUNT(*) as total FROM products WHERE qty > 0 OR (size_qtys IS NOT NULL AND size_qtys != '' AND size_qtys != '0' AND size_qtys != '[]' AND size_qtys != '{}')")->fetch_assoc()['total'] ?? 0);
 $outOfStockCount = max(0, $allProductsCount - $inStockCount);
 
-// Build dynamic WHERE clauses
+// Build dynamic WHERE clauses for product listing query
 $whereClauses = [];
 
-if ($stockFilter === 'instock') {
-    $whereClauses[] = "(p.qty > 0 OR (p.size_qtys IS NOT NULL AND p.size_qtys != '' AND p.size_qtys != '0' AND p.size_qtys != '[]' AND p.size_qtys != '{}'))";
-} elseif ($stockFilter === 'outofstock') {
-    $whereClauses[] = "((p.qty <= 0 OR p.qty IS NULL) AND (p.size_qtys IS NULL OR p.size_qtys = '' OR p.size_qtys = '0' OR p.size_qtys = '[]' OR p.size_qtys = '{}'))";
+if ($stockWhere) {
+    $whereClauses[] = $stockWhere;
 }
 
 if (!empty($searchQuery)) {
@@ -194,11 +260,11 @@ if ($fragranceFilter > 0) {
 }
 
 if ($colorFilter > 0) {
-    $whereClauses[] = "(JSON_CONTAINS(p.color_id, '$colorFilter') OR p.color_id LIKE '%\"$colorFilter\"%' OR p.color_id LIKE '%$colorFilter%')";
+    $whereClauses[] = "(p.color_id LIKE '%\"$colorFilter\"%' OR p.color_id LIKE '%[$colorFilter]%' OR p.color_id LIKE '%$colorFilter%')";
 }
 
 if ($categoryFilter > 0) {
-    $whereClauses[] = "(JSON_CONTAINS(p.size_id, '$categoryFilter') OR p.size_id LIKE '%\"$categoryFilter\"%' OR p.size_id LIKE '%$categoryFilter%')";
+    $whereClauses[] = "(p.size_id LIKE '%\"$categoryFilter\"%' OR p.size_id LIKE '%[$categoryFilter]%' OR p.size_id LIKE '%$categoryFilter%')";
 }
 
 $whereSql = '';
@@ -638,7 +704,7 @@ function build_page_url($p) {
                     <input type="text" name="search" value="<?= htmlspecialchars($searchQuery); ?>" placeholder="🔍 Search by product name, SKU..." style="width: 100%; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; outline: none; transition: border 0.2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
 
-                <!-- Vessel / Category Filter -->
+                <!-- Vessel / Category Filter (DYNAMIC CASCADING DEPENDENT) -->
                 <select name="category" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="0">All Vessels</option>
                     <?php foreach ($filter_categories as $c): ?>
@@ -648,7 +714,7 @@ function build_page_url($p) {
                     <?php endforeach; ?>
                 </select>
 
-                <!-- Fragrance Filter -->
+                <!-- Fragrance Filter (DYNAMIC CASCADING DEPENDENT) -->
                 <select name="fragrance" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="0">All Fragrances</option>
                     <?php foreach ($filter_fragrances as $f): ?>
@@ -658,7 +724,7 @@ function build_page_url($p) {
                     <?php endforeach; ?>
                 </select>
 
-                <!-- Color Filter -->
+                <!-- Color Filter (DYNAMIC CASCADING DEPENDENT) -->
                 <select name="color" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="0">All Colors</option>
                     <?php foreach ($filter_colors as $cl): ?>
@@ -668,7 +734,7 @@ function build_page_url($p) {
                     <?php endforeach; ?>
                 </select>
 
-                <!-- Wick Filter -->
+                <!-- Wick Filter (DYNAMIC CASCADING DEPENDENT) -->
                 <select name="wick" onchange="this.form.submit()" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; color: var(--text); background: white; outline: none; cursor: pointer;">
                     <option value="">All Wicks</option>
                     <?php foreach ($filter_wicks as $w): ?>
