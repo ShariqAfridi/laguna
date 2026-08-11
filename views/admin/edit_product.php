@@ -197,6 +197,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $frag_name = $frag_info['fragrance_name'] ?? 'Scent';
                 $frag_sku  = !empty($frag_info['sku']) ? $frag_info['sku'] : sprintf('%02d', $fid);
 
+                if (isset($uploaded_fragrance_images[$fid])) {
+                    $u_frag = $conn->prepare("UPDATE fragrances SET fragrance_image = ? WHERE fragrance_id = ?");
+                    $u_frag->bind_param("si", $uploaded_fragrance_images[$fid], $fid);
+                    $u_frag->execute();
+                    $u_frag->close();
+                }
+
                 $variation_image = $uploaded_fragrance_images[$fid] ?? ($main_image ?: ($edit_data['image'] ?? ''));
 
                 if (!empty($product_name)) {
@@ -250,6 +257,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $frag_info = $fragrance_map[$fid] ?? null;
                     $frag_name = $frag_info['fragrance_name'] ?? 'Scent';
                     $frag_sku  = !empty($frag_info['sku']) ? $frag_info['sku'] : sprintf('%02d', $fid);
+
+                    if (isset($uploaded_fragrance_images[$fid])) {
+                        $u_frag = $conn->prepare("UPDATE fragrances SET fragrance_image = ? WHERE fragrance_id = ?");
+                        $u_frag->bind_param("si", $uploaded_fragrance_images[$fid], $fid);
+                        $u_frag->execute();
+                        $u_frag->close();
+                    }
 
                     $variation_image = $uploaded_fragrance_images[$fid] ?? ($main_image ?: ($frag_info['fragrance_image'] ?? ''));
 
