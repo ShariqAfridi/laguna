@@ -831,10 +831,13 @@ function build_page_url($p) {
                                     } else {
                                         $clean_base = basename($image_file);
                                         $upload_disk = dirname(__DIR__, 2) . '/public/uploads/products/' . $clean_base;
-                                        $asset_disk = dirname(__DIR__, 2) . '/public/assets/img/' . $clean_base;
+                                        $frag_disk   = dirname(__DIR__, 2) . '/public/uploads/fragrances/' . $clean_base;
+                                        $asset_disk  = dirname(__DIR__, 2) . '/public/assets/img/' . $clean_base;
 
                                         if (file_exists($upload_disk)) {
                                             $img_url = base_url('/public/uploads/products/' . $clean_base);
+                                        } elseif (file_exists($frag_disk)) {
+                                            $img_url = base_url('/public/uploads/fragrances/' . $clean_base);
                                         } elseif (file_exists($asset_disk)) {
                                             $img_url = base_url('/public/assets/img/' . $clean_base);
                                         } else {
