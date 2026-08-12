@@ -16,7 +16,7 @@ if (!function_exists('lvc_base_url')) {
         global $base;
         return $base . '/' . ltrim($path, '/');
     }
-}
+} 
 
 // Fetch active categories to construct valid vessels map and size details
 $categoriesMap = [];
