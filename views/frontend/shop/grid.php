@@ -58,12 +58,14 @@ if (!$showVesselSelection) {
 
     if ($result) {
         // Get lookup data
-        $frag_result = $conn->query("SELECT fragrance_id, fragrance_name, fragrance_image FROM fragrances");
+        $frag_result = $conn->query("SELECT fragrance_id, fragrance_name, fragrance_image, fragrance_description FROM fragrances");
         $fragrance_details = [];
+        $fragrance_descriptions = [];
         if ($frag_result) {
             while ($row = $frag_result->fetch_assoc()) {
                 $fragrances[$row['fragrance_id']] = $row['fragrance_name'];
                 $fragrance_details[$row['fragrance_id']] = $row['fragrance_image'] ?? '';
+                $fragrance_descriptions[$row['fragrance_id']] = $row['fragrance_description'] ?? '';
             }
         }
 
@@ -578,23 +580,32 @@ if (!empty($boxes)) {
     .modal-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.75);
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         display: none;
         align-items: center;
         justify-content: center;
         z-index: 2000;
-        padding: 20px;
+        padding: 24px;
     }
 
     .modal-content {
-        background: white;
-        width: 100%;
-        max-width: 640px;
-        max-height: 95vh;
+        background: #ffffff;
+        width: 92%;
+        max-width: 960px;
+        max-height: 90vh;
         display: flex;
-        border-radius: 16px;
+        border-radius: 24px;
         position: relative;
         overflow: hidden;
+        box-shadow: 0 25px 60px -15px rgba(0, 75, 102, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.2);
+        animation: modalFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalFadeUp {
+        from { opacity: 0; transform: scale(0.96) translateY(16px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     .modal-left {
@@ -602,210 +613,357 @@ if (!empty($boxes)) {
         flex: 0 0 48%;
         display: flex;
         flex-direction: column;
-        background: #f5f5f5;
+        background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%);
         position: relative;
+        border-right: 1px solid #e2e8f0;
+        padding: 16px;
+        gap: 12px;
+        box-sizing: border-box;
     }
     
     .modal-image-container {
         flex: 1;
+        width: 100%;
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        padding: 10px;
-        min-height: 250px;
+        position: relative;
+        border-radius: 16px;
+        min-height: 300px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        background: rgba(0, 0, 0, 0.03);
     }
     .modal-image-container img {
         width: 100%;
         height: 100%;
-        object-fit: contain;
+        max-height: 100%;
+        object-fit: cover;
+        object-position: center;
         display: block;
-        transition: opacity 0.3s ease;
+        border-radius: 16px;
+        transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
-    /* Thumbnail strip */
+    /* Floating glass thumbnail strip */
     .thumbnail-strip {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
         display: flex;
         gap: 8px;
-        padding: 10px 12px 12px 12px;
+        padding: 5px 10px;
         justify-content: center;
-        background: rgba(255,255,255,0.95);
-        border-top: 1px solid #e8eef2;
-        flex-wrap: wrap;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 999px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+        max-width: 90%;
     }
     .thumbnail-item {
-        width: 50px;
-        height: 50px;
-        border-radius: 6px;
-        border: 2px solid #e8eef2;
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        border: 2px solid rgba(255, 255, 255, 0.6);
         cursor: pointer;
         object-fit: cover;
         transition: all 0.2s ease;
         background: white;
-        padding: 3px;
+        padding: 2px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
     .thumbnail-item:hover {
-        transform: scale(1.05);
-        border-color: #004b66;
+        transform: scale(1.1);
+        border-color: #ffffff;
     }
     .thumbnail-item.active {
-        border-color: #004b66;
-        box-shadow: 0 0 0 2px #004b66;
+        border-color: #ffffff;
+        box-shadow: 0 0 0 2.5px #004b66, 0 4px 12px rgba(0, 0, 0, 0.35);
+        transform: scale(1.08);
+    }
+
+    /* Selected Scent Card on bottom left */
+    .selected-scent-card {
+        margin: 0;
+        padding: 14px 18px;
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .scent-card-tag {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: #004b66;
+        margin-bottom: 4px;
+    }
+    
+    .scent-card-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 8px;
+        font-family: inherit;
+    }
+    
+    .scent-card-notes {
+        font-size: 11px;
+        line-height: 1.6;
+        color: #334155;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        font-weight: 500;
+    }
+    
+    .scent-note-row strong {
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: 0.5px;
     }
 
     .modal-right {
         width: 52%;
         flex: 0 0 52%;
-        padding: 20px 24px;
+        padding: 32px 36px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
         overflow-y: auto;
+    }
+
+    /* Custom smooth scrollbar for right modal pane */
+    .modal-right::-webkit-scrollbar,
+    #fragranceOptionsContainer::-webkit-scrollbar {
+        width: 5px;
+    }
+    .modal-right::-webkit-scrollbar-track,
+    #fragranceOptionsContainer::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    .modal-right::-webkit-scrollbar-thumb,
+    #fragranceOptionsContainer::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+    .modal-right::-webkit-scrollbar-thumb:hover,
+    #fragranceOptionsContainer::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
 
     .modal-close {
         position: absolute;
-        right: 14px;
-        top: 14px;
+        right: 18px;
+        top: 18px;
         cursor: pointer;
-        font-size: 16px;
-        z-index: 10;
-        background: rgba(255,255,255,0.92);
-        width: 30px;
-        height: 30px;
+        font-size: 14px;
+        z-index: 20;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(6px);
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 1px solid #e0e0e0;
-        transition: background 0.2s;
-        color: #333;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        transition: all 0.2s ease;
+        color: #475569;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
-    .modal-close:hover { background: #ebebeb; }
+    .modal-close:hover {
+        background: #004b66;
+        color: #ffffff;
+        border-color: #004b66;
+        transform: rotate(90deg);
+    }
 
     .modal-header h2 {
-        font-family: 'Cormorant Garamond', serif;
-        font-weight: 500;
-        font-size: 26px;
-        color: #1a2a3a;
-        margin-bottom: 4px;
-        line-height: 1.2;
+        font-family: 'Cinzel', 'Cormorant Garamond', serif;
+        font-weight: 600;
+        font-size: 28px;
+        color: #0f172a;
+        margin-bottom: 6px;
+        line-height: 1.25;
+        letter-spacing: 0.3px;
     }
     .modal-desc {
-        font-size: 12px;
-        color: #666;
-        line-height: 1.55;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.6;
     }
 
-    .modal-divider { border: none; border-top: 1px solid #e8eef2; margin: 2px 0; }
+    .modal-divider { border: none; border-top: 1px solid #f1f5f9; margin: 4px 0; }
+
+    /* Specification Grid */
+    .modal-specs-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px 20px;
+        background: #f8fafc;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid #f1f5f9;
+    }
 
     .info-row {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0px 0;
+        flex-direction: column;
+        gap: 2px;
     }
     .info-label {
         font-size: 10px;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 1.8px;
-        color: #8fa3b0;
+        letter-spacing: 1.4px;
+        color: #94a3b8;
     }
     .info-value {
         font-family: 'Inter', sans-serif;
         font-size: 13px;
-        font-weight: 400;
-        color: #1a2a3a;
-        text-align: right;
+        font-weight: 600;
+        color: #0f172a;
     }
 
     .section-label {
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 1.6px;
-        color: #8fa3b0;
-        margin-bottom: 8px;
+        letter-spacing: 1.4px;
+        color: #64748b;
+        margin-bottom: 10px;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
-    .section-label span { font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 11px; color: #004b66; }
+    .section-label span { font-weight: 600; text-transform: none; letter-spacing: 0; font-size: 12px; color: #004b66; background: #e0f2fe; padding: 2px 10px; border-radius: 12px; }
 
     .fragrance-option-tile {
         display: flex;
         align-items: center;
-        gap: 10px;
-        border: 1.5px solid #e8eef2;
-        padding: 8px 12px;
-        border-radius: 8px;
+        gap: 12px;
+        border: 1.5px solid #e2e8f0;
+        padding: 10px 14px;
+        border-radius: 12px;
         cursor: pointer;
-        transition: all 0.18s ease;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         background: white;
     }
-    .fragrance-option-tile:hover { border-color: #004b66; background: #f0f7fa; }
-    .fragrance-option-tile.active { border-color: #004b66; background: #e0f2fe; box-shadow: 0 0 0 1px #004b66; }
-    .fragrance-tile-title { font-size: 12px; font-weight: 600; color: #1a2a3a; }
-    .fragrance-tile-sku { font-size: 10px; color: #64748b; font-family: monospace; }
+    .fragrance-option-tile:hover {
+        border-color: #004b66;
+        background: #f8fafc;
+        transform: translateY(-1px);
+    }
+    .fragrance-option-tile.active {
+        border-color: #004b66;
+        background: #f0f7fa;
+        box-shadow: 0 4px 14px rgba(0, 75, 102, 0.12);
+    }
+    .fragrance-tile-title { font-size: 13px; font-weight: 600; color: #0f172a; }
+    .fragrance-tile-sku { font-size: 10px; color: #64748b; font-family: monospace; margin-top: 1px; }
 
-    .option-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
+    .option-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
     .option-tile {
-        border: 1px solid #e8eef2;
-        padding: 8px 12px;
-        border-radius: 6px;
+        border: 1.5px solid #e2e8f0;
+        padding: 10px 14px;
+        border-radius: 10px;
         cursor: pointer;
-        transition: border-color 0.18s, background 0.18s;
+        transition: all 0.2s ease;
         background: white;
     }
-    .option-tile:hover { border-color: #004b66; }
-    .option-tile.active { border-color: #004b66; background: #f0f7fa; }
-    .tile-title { font-size: 12px; font-weight: 500; color: #1a2a3a; display: block; }
-    .tile-sub   { font-size: 10px; color: #8fa3b0; margin-top: 2px; display: block; }
+    .option-tile:hover { border-color: #004b66; background: #f8fafc; }
+    .option-tile.active { border-color: #004b66; background: #f0f7fa; box-shadow: 0 4px 12px rgba(0, 75, 102, 0.1); }
+    .tile-title { font-size: 13px; font-weight: 600; color: #0f172a; display: block; }
+    .tile-sub   { font-size: 11px; color: #64748b; margin-top: 3px; font-weight: 500; display: block; }
 
-    .qty-total-block { display: flex; flex-direction: column; gap: 10px; }
+    .qty-total-block {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 14px;
+        border: 1px solid #f1f5f9;
+    }
     .row-between { display: flex; justify-content: space-between; align-items: center; }
+
+    .total-label {
+        font-family: 'Cinzel', serif;
+        font-size: 16px;
+        font-weight: 600;
+        color: #0f172a;
+    }
+    .total-price {
+        font-family: 'Cinzel', serif;
+        font-size: 26px;
+        font-weight: 700;
+        color: #004b66;
+    }
 
     .qty-input {
         display: flex;
         align-items: center;
-        border: 1px solid #dde6eb;
+        border: 1px solid #cbd5e1;
         border-radius: 999px;
         overflow: hidden;
+        background: #ffffff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     .qty-input button {
         border: none;
         background: none;
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
         cursor: pointer;
         font-size: 16px;
-        line-height: 1;
-        transition: background 0.15s;
-        color: #1a2a3a;
-    }
-    .qty-input button:hover { background: #f0f0f0; }
-    .qty-input span {
-        min-width: 32px;
-        text-align: center;
-        font-size: 13px;
         font-weight: 600;
+        line-height: 1;
+        transition: background 0.15s, color 0.15s;
+        color: #0f172a;
+    }
+    .qty-input button:hover { background: #004b66; color: #ffffff; }
+    .qty-input span {
+        min-width: 36px;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: #0f172a;
     }
 
     .add-to-cart-btn {
-        background: #004b66;
+        background: linear-gradient(135deg, #004b66 0%, #00364a 100%);
         color: white;
         border: none;
-        padding: 14px;
-        border-radius: 999px;
-        font-size: 14px;
+        padding: 16px 24px;
+        border-radius: 12px;
+        font-size: 15px;
         font-weight: 600;
+        letter-spacing: 0.5px;
         cursor: pointer;
         width: 100%;
-        transition: background 0.2s, transform 0.1s;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 20px -4px rgba(0, 75, 102, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
     }
-    .add-to-cart-btn:hover { background: #003d54; }
-    .add-to-cart-btn:active { transform: scale(0.99); }
+    .add-to-cart-btn:hover {
+        background: linear-gradient(135deg, #003d54 0%, #002838 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px -4px rgba(0, 75, 102, 0.45);
+    }
+    .add-to-cart-btn:active { transform: translateY(0); }
 
     .cart-success {
         position: fixed;
@@ -813,11 +971,11 @@ if (!empty($boxes)) {
         right: 24px;
         background: #10b981;
         color: white;
-        padding: 12px 24px;
-        border-radius: 8px;
+        padding: 14px 28px;
+        border-radius: 12px;
         font-size: 14px;
         font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
         z-index: 3000;
         animation: slideIn 0.3s ease;
     }
@@ -827,12 +985,13 @@ if (!empty($boxes)) {
         to   { transform: translateX(0);    opacity: 1; }
     }
 
-    @media (max-width: 680px) {
-        .modal-content { flex-direction: column; max-width: 96%; max-height: 92vh; overflow-y: auto; }
-        .modal-left  { width: 100%; flex: none; height: 320px; }
-        .modal-right { width: 100%; flex: none; padding: 20px 18px 24px; }
-        .thumbnail-item { width: 40px; height: 40px; }
+    @media (max-width: 820px) {
+        .modal-content { flex-direction: column; max-width: 95%; max-height: 92vh; overflow-y: auto; }
+        .modal-left  { width: 100%; flex: none; height: 340px; border-right: none; border-bottom: 1px solid #e2e8f0; }
+        .modal-right { width: 100%; flex: none; padding: 24px 20px 28px; }
+        .thumbnail-item { width: 44px; height: 44px; }
     }
+
 </style>
 </head>
 <body>
@@ -908,6 +1067,7 @@ if (!empty($boxes)) {
 
         if (!isset($colorVariations[$primaryColorId])) {
             $colorName = isset($colors[$primaryColorId]) ? $colors[$primaryColorId]['color_name'] : 'Standard';
+            $colorHex  = isset($colors[$primaryColorId]) ? $colors[$primaryColorId]['color_hex']  : '#f1f5f9';
             
             // Prefer custom uploaded product image over default vessel render
             $varImg = $p['image_url'];
@@ -920,6 +1080,7 @@ if (!empty($boxes)) {
                 'variation_id' => 'vessel_' . $selectedVessel . '_color_' . $primaryColorId,
                 'color_id' => $primaryColorId,
                 'color_name' => $colorName,
+                'color_hex' => $colorHex,
                 'vessel_name' => $vesselLabel,
                 'wick_type' => $wickType,
                 'image_url' => $varImg,
@@ -1028,9 +1189,14 @@ if (!empty($boxes)) {
         <div class="modal-left">
             <div class="modal-image-container">
                 <img id="modalMainImage" src="" alt="Product">
+                <div class="thumbnail-strip" id="thumbnailStrip">
+                    <!-- Thumbnails will be rendered here -->
+                </div>
             </div>
-            <div class="thumbnail-strip" id="thumbnailStrip">
-                <!-- Thumbnails will be rendered here -->
+            <div class="selected-scent-card" id="selectedScentCard" style="display: none;">
+                <div class="scent-card-tag">SELECTED SCENT</div>
+                <div class="scent-card-title" id="scentCardTitle"></div>
+                <div class="scent-card-notes" id="scentCardNotes"></div>
             </div>
         </div>
         <div class="modal-right">
@@ -1038,22 +1204,23 @@ if (!empty($boxes)) {
                 <h2 id="modalTitle"></h2>
                 <p id="modalDesc" class="modal-desc"></p>
             </div>
-            <hr class="modal-divider">
-            <div class="info-row">
-                <span class="info-label">SKU</span>
-                <span id="modalSKU" class="info-value"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Size</span>
-                <span id="modalSizeValue" class="info-value"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Color</span>
-                <span id="modalColorValue" class="info-value"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Fragrance</span>
-                <span id="modalFragranceValue" class="info-value"></span>
+            <div class="modal-specs-grid">
+                <div class="info-row">
+                    <span class="info-label">SKU</span>
+                    <span id="modalSKU" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Size</span>
+                    <span id="modalSizeValue" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Color</span>
+                    <span id="modalColorValue" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Fragrance</span>
+                    <span id="modalFragranceValue" class="info-value"></span>
+                </div>
             </div>
             
             <!-- INTERACTIVE FRAGRANCE VARIATION SELECTOR -->
@@ -1105,6 +1272,7 @@ let selectedVessel = <?= json_encode($selectedVessel) ?>;
 let sizesData = <?= json_encode($sizes) ?>;
 let colorsData = <?= json_encode($colors) ?>;
 let fragrancesData = <?= json_encode($fragrances) ?>;
+let fragranceDescriptionsData = <?= json_encode($fragrance_descriptions) ?>;
 let boxesData = <?= json_encode($boxes) ?>;
 
 function waitForLVBCart(callback) {
@@ -1115,6 +1283,68 @@ function waitForLVBCart(callback) {
     }
 }
 
+function applyDynamicModalTheme(hexColor) {
+    const modalLeft = document.querySelector('.modal-left');
+    if (!modalLeft) return;
+    
+    if (!hexColor || typeof hexColor !== 'string' || hexColor.trim() === '') {
+        hexColor = '#f1f5f9';
+    }
+    
+    let hex = hexColor.replace('#', '').trim();
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+
+    if (isNaN(r) || isNaN(g) || isNaN(b)) {
+        r = 240; g = 240; b = 240;
+    }
+    
+    // Perceived brightness formula (0 - 255)
+    let brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    
+    const thumbStrip = document.getElementById('thumbnailStrip');
+    
+    if (brightness < 100) {
+        // Dark color (e.g. Black Matte #1B222E, Charcoal Grey #3A444C, Smoky Grey #1E293B)
+        let lighterR = Math.min(255, r + 45);
+        let lighterG = Math.min(255, g + 45);
+        let lighterB = Math.min(255, b + 45);
+        
+        modalLeft.style.background = `radial-gradient(circle at center, rgb(${lighterR}, ${lighterG}, ${lighterB}) 0%, rgb(${r}, ${g}, ${b}) 100%)`;
+        modalLeft.style.borderRight = '1px solid rgba(255, 255, 255, 0.12)';
+        
+        if (thumbStrip) {
+            thumbStrip.style.background = 'rgba(15, 23, 42, 0.65)';
+            thumbStrip.style.borderTop = '1px solid rgba(255, 255, 255, 0.12)';
+        }
+    } else if (brightness > 220) {
+        // Very light / white color (e.g. White Frost #F4F1EA, Silver #E2E8F0)
+        modalLeft.style.background = `radial-gradient(circle at center, #ffffff 0%, rgb(${r}, ${g}, ${b}) 100%)`;
+        modalLeft.style.borderRight = '1px solid #e2e8f0';
+        
+        if (thumbStrip) {
+            thumbStrip.style.background = 'rgba(255, 255, 255, 0.85)';
+            thumbStrip.style.borderTop = '1px solid rgba(226, 232, 240, 0.8)';
+        }
+    } else {
+        // Midtone / Vibrant color (e.g. Blush Pink #E58879, Blue Frost #23499D, Mocha #6B4E41, Purple #A68DAF)
+        let lighterR = Math.min(255, r + 55);
+        let lighterG = Math.min(255, g + 55);
+        let lighterB = Math.min(255, b + 55);
+        
+        modalLeft.style.background = `radial-gradient(circle at 50% 40%, rgb(${lighterR}, ${lighterG}, ${lighterB}) 0%, rgb(${r}, ${g}, ${b}) 100%)`;
+        modalLeft.style.borderRight = '1px solid rgba(0, 0, 0, 0.08)';
+        
+        if (thumbStrip) {
+            thumbStrip.style.background = 'rgba(255, 255, 255, 0.85)';
+            thumbStrip.style.borderTop = '1px solid rgba(226, 232, 240, 0.8)';
+        }
+    }
+}
+
 function openVariationModal(variationData, targetFragId) {
     currentVariation = variationData;
     selectedBoxId = null;
@@ -1122,6 +1352,10 @@ function openVariationModal(variationData, targetFragId) {
     quantity = 1;
 
     if (!variationData || !variationData.items || variationData.items.length === 0) return;
+
+    // Dynamically update popup backdrop theme matching the database color HEX
+    let hexColor = variationData.color_hex || (colorsData && colorsData[variationData.color_id] ? colorsData[variationData.color_id].color_hex : null);
+    applyDynamicModalTheme(hexColor);
 
     // Default to target fragrance or first available fragrance
     let activeItem = variationData.items[0];
@@ -1168,7 +1402,7 @@ function renderFragranceOptions(items, activeFragId) {
         tile.className = 'fragrance-option-tile' + (isActive ? ' active' : '');
         
         let varImg = getImageUrl(item);
-        let iconHtml = `<img src="${escapeHtml(varImg)}" style="width: 28px; height: 28px; object-fit: cover; border-radius: 4px;" alt="${escapeHtml(item.fragrance_name)}">`;
+        let iconHtml = `<img src="${escapeHtml(varImg)}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" alt="${escapeHtml(item.fragrance_name)}">`;
 
         tile.innerHTML = `
             ${iconHtml}
@@ -1251,7 +1485,46 @@ function switchFragranceItem(productData) {
     document.getElementById('modalFragranceValue').innerText = productData.fragrance_name || 'Luxury Scent';
     document.getElementById('modalDesc').innerText = productData.description || ('Artisanal candle in a luminous ' + colorNameText.toLowerCase() + ' vessel.');
 
+    updateSelectedScentCard(productData.fragrance_id, productData.fragrance_name);
     updateDisplay();
+}
+
+function updateSelectedScentCard(fragId, fragName) {
+    const scentCard = document.getElementById('selectedScentCard');
+    const titleEl   = document.getElementById('scentCardTitle');
+    const notesEl   = document.getElementById('scentCardNotes');
+    
+    if (!scentCard || !titleEl || !notesEl) return;
+    
+    titleEl.innerText = fragName || 'Luxury Scent';
+    
+    let desc = (typeof fragranceDescriptionsData !== 'undefined' && fragranceDescriptionsData[fragId]) ? fragranceDescriptionsData[fragId] : '';
+    desc = desc.trim();
+    
+    if (!desc) {
+        scentCard.style.display = 'none';
+        return;
+    }
+    
+    scentCard.style.display = 'block';
+    
+    if (desc.includes('|') || desc.includes('TOP:') || desc.includes('MID:') || desc.includes('BASE:')) {
+        let parts = desc.split('|').map(p => p.trim()).filter(Boolean);
+        let html = '';
+        parts.forEach(part => {
+            let colonIdx = part.indexOf(':');
+            if (colonIdx !== -1) {
+                let label = part.substring(0, colonIdx).trim();
+                let val = part.substring(colonIdx + 1).trim();
+                html += `<div class="scent-note-row"><strong>${escapeHtml(label.toUpperCase())}:</strong> ${escapeHtml(val.toUpperCase())}</div>`;
+            } else {
+                html += `<div class="scent-note-row">${escapeHtml(part.toUpperCase())}</div>`;
+            }
+        });
+        notesEl.innerHTML = html;
+    } else {
+        notesEl.innerHTML = `<div class="scent-note-row">${escapeHtml(desc.toUpperCase())}</div>`;
+    }
 }
 
 function renderThumbnails() {

@@ -18,15 +18,41 @@ function get_db_connection()
         }
         $conn->set_charset('utf8mb4');
 
-        // Ensure colors table has single/double/triple wick image columns across environments
+        // Ensure schema columns are synchronized across all environments
         static $schemaChecked = false;
         if (!$schemaChecked) {
             $schemaChecked = true;
+
+            // 1. Ensure colors table wick image columns
             $res = $conn->query("SHOW COLUMNS FROM colors LIKE 'single_wick_image'");
             if ($res && $res->num_rows === 0) {
                 @$conn->query("ALTER TABLE colors ADD COLUMN single_wick_image VARCHAR(255) DEFAULT NULL");
                 @$conn->query("ALTER TABLE colors ADD COLUMN double_wick_image VARCHAR(255) DEFAULT NULL");
                 @$conn->query("ALTER TABLE colors ADD COLUMN triple_wick_image VARCHAR(255) DEFAULT NULL");
+            }
+
+            // 2. Ensure products table fragrance_images column and fragrance_id type
+            $res_p_img = $conn->query("SHOW COLUMNS FROM products LIKE 'fragrance_images'");
+            if ($res_p_img && $res_p_img->num_rows === 0) {
+                @$conn->query("ALTER TABLE products ADD COLUMN fragrance_images TEXT DEFAULT NULL AFTER image");
+            }
+
+            $res_p_fid = $conn->query("SHOW COLUMNS FROM products LIKE 'fragrance_id'");
+            if ($res_p_fid && $row = $res_p_fid->fetch_assoc()) {
+                if (strpos(strtolower($row['Type']), 'varchar') === false) {
+                    @$conn->query("ALTER TABLE products MODIFY COLUMN fragrance_id VARCHAR(255) DEFAULT NULL");
+                }
+            }
+
+            // 3. Ensure fragrances table additional columns
+            $res_f_sku = $conn->query("SHOW COLUMNS FROM fragrances LIKE 'sku'");
+            if ($res_f_sku && $res_f_sku->num_rows === 0) {
+                @$conn->query("ALTER TABLE fragrances ADD COLUMN sku VARCHAR(50) DEFAULT NULL AFTER fragrance_name");
+                @$conn->query("ALTER TABLE fragrances ADD COLUMN fragrance_image VARCHAR(255) DEFAULT NULL");
+                @$conn->query("ALTER TABLE fragrances ADD COLUMN scent_note_image VARCHAR(255) DEFAULT NULL");
+                @$conn->query("ALTER TABLE fragrances ADD COLUMN fragrance_description TEXT DEFAULT NULL");
+                @$conn->query("ALTER TABLE fragrances ADD COLUMN status TINYINT(1) DEFAULT 1");
+                @$conn->query("ALTER TABLE fragrances ADD COLUMN sort_order INT(11) DEFAULT 0");
             }
         }
     }

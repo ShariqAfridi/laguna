@@ -739,8 +739,8 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
             <p style="color: var(--muted); margin-top: 4px;">Upload custom pictures for each selected fragrance variation.</p>
         </div>
         <div class="header-actions">
-            <a href="<?php echo $base; ?>/admin/list_product" class="btn-back">← Back</a>
-            <button type="button" onclick="submitForm()" class="btn-primary">+ Save Product Variations</button>
+            <a href="<?= base_url('/admin/list_product') ?>" class="btn-back">← Back</a>
+            <button type="button" onclick="submitForm()" class="btn-primary">✓ Save Product Variation</button>
         </div>
     </div>
 

@@ -6,4 +6,6 @@ error_log
 *.avi
 *.mov
 *.zip
+*.sql
+
 

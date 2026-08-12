@@ -263,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     WHERE product_id = ?
                 ");
                 $u_stmt->bind_param(
-                    "sssssiissssssi",
+                    "sssssisssssssi",
                     $p_name,
                     $final_sku,
                     $description,
@@ -780,7 +780,7 @@ $val_image = $_POST['existing_image'] ?? ($edit_data['image'] ?? '');
             <p style="color: var(--muted); margin-top: 4px;">Update product variation details and per-fragrance picture uploads.</p>
         </div>
         <div class="header-actions">
-            <a href="<?php echo $base; ?>/admin/list_product" class="btn-back">← Back</a>
+            <a href="<?= base_url('/admin/list_product') ?>" class="btn-back">← Back</a>
             <button type="button" onclick="submitForm()" class="btn-primary">✓ Update Product Variation</button>
         </div>
     </div>
