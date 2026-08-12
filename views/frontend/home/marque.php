@@ -70,21 +70,21 @@
         <div class="lvb-marquee-track">
             <!-- Group 1 -->
             <div class="lvb-marquee-group">
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
             </div>
             <!-- Group 2 (Identical duplicate for 100% gapless seamless loop) -->
             <div class="lvb-marquee-group">
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
-                <span class="lvb-marquee-text">Free shipping on orders over $50</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
+                <span class="lvb-marquee-text">Free shipping on orders over $75</span><span class="lvb-marquee-dot"></span>
             </div>
         </div>
     </div>
