@@ -1001,9 +1001,11 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
 
     .step-nav-top {
       display: flex;
-      justify-content: flex-start;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 32px;
       width: 100%;
+      gap: 12px;
     }
 
     .btn-back {
@@ -1037,16 +1039,18 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       background: var(--teal);
       color: #fff;
       border: none;
-      padding: 16px 36px;
+      padding: 14px 34px;
       font-family: var(--sans);
       font-size: 11px;
       letter-spacing: 0.18em;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
-      border-radius: 30px;
-      transition: background 0.2s;
+      border-radius: 999px;
+      text-transform: uppercase;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
     }
-    .btn-next:hover { background: var(--teal-light); }
+    .btn-next:hover { background: var(--teal-light); box-shadow: 0 4px 14px rgba(27,77,79,0.25); }
     .btn-next:disabled { background: #ccc; cursor: not-allowed; }
 
     .btn-skip-box {
@@ -1323,6 +1327,9 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       <p class="step-label">STEP 01</p>
       <h1 class="step-title">Choose your vessel.</h1>
       <p class="step-desc">The silhouette and size of your candle. All vessels include a black bamboo lid.</p>
+      <div class="step-nav-top" style="justify-content: flex-end;">
+        <button class="btn-next" onclick="goNext(2)">CONTINUE</button>
+      </div>
       <div class="vessel-grid" id="vesselGrid">
         <?php if (!empty($categoriesList)): ?>
           <?php
@@ -1371,7 +1378,6 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
           <p style="color:#6b7280; font-size:14px; grid-column:1/-1;">No active vessel categories available right now.</p>
         <?php endif; ?>
       </div>
-      <div class="step-nav"><span></span><button class="btn-next" onclick="goNext(2)">CONTINUE</button></div>
     </div>
 
     <!-- STEP 2: COLOR -->
@@ -1383,13 +1389,10 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
         <button class="btn-back" onclick="goBack(1)">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5"/></svg> BACK
         </button>
+        <button class="btn-next" onclick="goNext(3)">CONTINUE</button>
       </div>
       <div class="color-grid" id="colorGrid">
         <!-- Color cards will be dynamically rendered by JavaScript -->
-      </div>
-      <div class="step-nav">
-        <span></span>
-        <button class="btn-next" onclick="goNext(3)">CONTINUE</button>
       </div>
     </div>
 
@@ -1402,6 +1405,7 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
         <button class="btn-back" onclick="goBack(2)">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5"/></svg> BACK
         </button>
+        <button class="btn-next" id="fragNextBtn" onclick="handleFragranceNext()">CONTINUE</button>
       </div>
       <div class="fragrance-grid" id="fragranceGrid">
         <!-- Dynamic Fragrance Cards Rendered via JS -->
@@ -1414,10 +1418,6 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
         </div>
         <div id="selectedFragDetailDesc" style="font-size:13px; color:#475569; line-height:1.6; white-space:pre-line;"></div>
       </div>
-      <div class="step-nav">
-        <span></span>
-        <button class="btn-next" id="fragNextBtn" onclick="handleFragranceNext()">CONTINUE</button>
-      </div>
     </div>
 
     <!-- STEP 4: BOX (OPTIONAL) - hidden for Vessel E -->
@@ -1429,6 +1429,10 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
         <button class="btn-back" onclick="goBack(3)">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5"/></svg> BACK
         </button>
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <button class="btn-skip-box" onclick="checkoutWithoutPackaging()">CHECKOUT WITHOUT PACKAGING</button>
+          <button class="btn-next" onclick="openReview()">REVIEW ORDER</button>
+        </div>
       </div>
       <div class="box-grid" id="boxGrid">
         <!-- Box cards are dynamically rendered by JavaScript -->
