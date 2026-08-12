@@ -256,29 +256,30 @@ if (count($collectionProducts) < 6) {
 .lvc-collection .lvc-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 24px;
-  max-width: 1320px;
+  gap: 14px;
+  max-width: 96%;
   margin: 0 auto;
 }
 
 .lvc-collection .lvc-card {
-  flex: 0 0 calc(33.333% - 16px);
+  flex: 0 0 calc(16.666% - 12px);
   background: white;
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
 }
 
 .lvc-collection .lvc-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
+  transform: translateY(-5px);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.1);
 }
 
 .lvc-collection .lvc-img-container {
-  aspect-ratio: 1 / 1.05;
+  height: 270px;
+  aspect-ratio: 1 / 1.4;
   background: #f0f4f6;
   overflow: hidden;
   position: relative;
@@ -299,7 +300,7 @@ if (count($collectionProducts) < 6) {
 }
 
 .lvc-collection .lvc-info {
-  padding: 18px 20px;
+  padding: 14px 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -309,13 +310,13 @@ if (count($collectionProducts) < 6) {
 .lvc-collection .lvc-text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .lvc-collection .lvc-p-name {
   font-family: 'Cormorant Garamond', 'Times New Roman', serif;
   font-weight: 500;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   color: #1a2b3c;
   line-height: 1.2;
 }
@@ -323,35 +324,39 @@ if (count($collectionProducts) < 6) {
 .lvc-collection .lvc-p-desc {
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
   font-weight: 500;
-  font-size: 11px;
-  letter-spacing: 1px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
   color: #8492a6;
 }
 
 .lvc-collection .lvc-price {
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   color: #1a2b3c;
 }
 
 /* Tablet */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .lvc-collection .lvc-card {
-    flex: 0 0 calc(50% - 12px);
+    flex: 0 0 calc(33.333% - 10px);
   }
   
-  .lvc-collection .lvc-main-title {
-    font-size: 2.5rem;
+  .lvc-collection .lvc-img-container {
+    height: 280px;
   }
 }
 
 /* Mobile */
 @media (max-width: 600px) {
   .lvc-collection .lvc-card {
-    flex: 0 0 100%;
+    flex: 0 0 calc(50% - 7px);
   }
   
+  .lvc-collection .lvc-img-container {
+    height: 220px;
+  }
+
   .lvc-collection .lvc-main-title {
     font-size: 2rem;
   }
