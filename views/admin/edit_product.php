@@ -1025,6 +1025,7 @@ $val_fragrance_ids = $_POST['fragrances'] ?? ($edit_data['fragrance_ids'] ?? [])
 
 <script>
 const existingImgUrl = <?= json_encode($img_preview_url ?: '') ?>;
+const existingFragranceImagesMap = <?= json_encode($edit_data['fragrance_images_map'] ?? (object)[]) ?>;
 
 document.addEventListener('DOMContentLoaded', function () {
     updateAllSummaries();
@@ -1069,8 +1070,19 @@ function onFragranceSelectionChange() {
             box.className = 'fragrance-upload-box';
             box.setAttribute('data-fid', fid);
             
+            let customUploadedImg = existingFragranceImagesMap[fid] || '';
             let previewSrc = 'https://placehold.co/100x100?text=' + encodeURIComponent(fname);
-            if (defaultImg && defaultImg.trim() !== '') {
+
+            if (customUploadedImg && customUploadedImg.trim() !== '') {
+                let cleanPath = customUploadedImg.trim();
+                if (cleanPath.startsWith('http')) {
+                    previewSrc = cleanPath;
+                } else if (cleanPath.includes('uploads/')) {
+                    previewSrc = '<?php echo base_url('/public/'); ?>' + cleanPath.replace(/^\/+/, '');
+                } else {
+                    previewSrc = '<?php echo base_url('/public/'); ?>' + cleanPath.replace(/^\/+/, '');
+                }
+            } else if (defaultImg && defaultImg.trim() !== '') {
                 let cleanImg = defaultImg.trim();
                 if (cleanImg.startsWith('http')) {
                     previewSrc = cleanImg;
@@ -1086,9 +1098,7 @@ function onFragranceSelectionChange() {
             box.innerHTML = `
                 <div class="fragrance-upload-title">🏷️ ${escapeHtml(fname)}</div>
                 <img id="frag_prev_${fid}" src="${previewSrc}" class="fragrance-img-preview" alt="${escapeHtml(fname)}">
-                <?php if (!empty($val_image)): ?>
-                    <input type="hidden" name="existing_fragrance_image_${fid}" value="${escapeHtml(existingImgUrl)}">
-                <?php endif; ?>
+                <input type="hidden" name="existing_fragrance_image_${fid}" value="${escapeHtml(customUploadedImg || '')}">
                 <input type="file" name="fragrance_image_${fid}" accept="image/*" onchange="previewIndividualFragranceImage(this, ${fid})" style="font-size: 11px; width: 100%;">
             `;
             container.appendChild(box);

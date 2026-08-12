@@ -97,10 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Ensure at least one image is available (either main image or per-fragrance image)
-    if (empty($main_image) && empty($uploaded_fragrance_images)) {
-        $error_message = "Please upload a main product image or individual fragrance pictures.";
-    }
+    // Optional fallback image check (products can be created with default vessel image if no image uploaded)
 
     // ── BASIC FIELD VALIDATION ────────────────────────────────────────
     if (empty($error_message)) {
