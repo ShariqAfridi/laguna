@@ -22,6 +22,8 @@ if (!$box) {
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $sku             = strtoupper(trim($_POST['sku'] ?? ''));
+    $vessel_code     = strtoupper(trim($_POST['vessel_code'] ?? ''));
     $box_name        = trim($_POST['box_name'] ?? '');
     $box_dimensions  = $box['box_dimensions'] ?? '';
     $box_price       = floatval($_POST['box_price'] ?? 0);
@@ -40,8 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($error_message) && !empty($box_name)) {
-        $update_stmt = $conn->prepare("UPDATE boxes SET box_name=?, box_image=?, box_dimensions=?, box_price=?, box_description=?, status=?, sort_order=? WHERE box_id=?");
-        $update_stmt->bind_param("sssdsiii", $box_name, $box_image, $box_dimensions, $box_price, $box_description, $status, $sort_order, $id);
+        $update_stmt = $conn->prepare("UPDATE boxes SET sku=?, vessel_code=?, box_name=?, box_image=?, box_dimensions=?, box_price=?, box_description=?, status=?, sort_order=? WHERE box_id=?");
+        $update_stmt->bind_param("sssssdsiii", $sku, $vessel_code, $box_name, $box_image, $box_dimensions, $box_price, $box_description, $status, $sort_order, $id);
 
         if ($update_stmt->execute()) {
             echo "<script>window.location.href='" . base_url('/admin/boxes') . "';</script>";
@@ -71,6 +73,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post" enctype="multipart/form-data">
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:20px;">
                 
+                <div>
+                    <label class="admin-label">Box Code (SKU) *</label>
+                    <input type="text" name="sku" class="admin-input" value="<?= htmlspecialchars($box['sku'] ?? ''); ?>" placeholder="e.g. B01B, B01W, B02B, B02W" required style="text-transform:uppercase;">
+                </div>
+
+                <div>
+                    <label class="admin-label">Associated Vessel *</label>
+                    <select name="vessel_code" class="admin-select" required>
+                        <option value="C" <?= ($box['vessel_code'] ?? '') === 'C' ? 'selected' : ''; ?>>Vessel C (10 oz)</option>
+                        <option value="D" <?= ($box['vessel_code'] ?? '') === 'D' ? 'selected' : ''; ?>>Vessel D (14 oz)</option>
+                        <option value="E" <?= ($box['vessel_code'] ?? '') === 'E' ? 'selected' : ''; ?>>Vessel E (16 oz - No boxes)</option>
+                        <option value="" <?= empty($box['vessel_code']) ? 'selected' : ''; ?>>None / General</option>
+                    </select>
+                </div>
+
                 <div>
                     <label class="admin-label">Box Name *</label>
                     <input type="text" name="box_name" class="admin-input" value="<?= htmlspecialchars($box['box_name']); ?>" required>

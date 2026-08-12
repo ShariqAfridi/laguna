@@ -89,6 +89,12 @@ $result = $conn->query("SELECT * FROM boxes $whereSql ORDER BY sort_order ASC, b
                         </td>
                         <td>
                             <strong style="color:#111827; font-size:15px;"><?= htmlspecialchars($row['box_name']); ?></strong>
+                            <?php if (!empty($row['sku'])): ?>
+                                <span style="display:inline-block; margin-left:6px; padding:2px 8px; background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; border-radius:4px; font-size:11px; font-weight:600; font-family:monospace; text-transform:uppercase;"><?= htmlspecialchars($row['sku']); ?></span>
+                            <?php endif; ?>
+                            <?php if (!empty($row['vessel_code'])): ?>
+                                <span style="display:inline-block; margin-left:4px; padding:2px 8px; background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; border-radius:4px; font-size:11px; font-weight:600;">Vessel <?= htmlspecialchars($row['vessel_code']); ?></span>
+                            <?php endif; ?>
                             <?php if (!empty($row['box_description'])): ?>
                                 <div style="font-size:12px; color:#6b7280; margin-top:2px; max-width:320px;"><?= htmlspecialchars($row['box_description']); ?></div>
                             <?php endif; ?>

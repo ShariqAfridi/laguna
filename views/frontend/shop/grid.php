@@ -84,7 +84,7 @@ if (!$showVesselSelection) {
         }
 
         $boxes = [];
-        $box_result = $conn->query("SELECT box_id, box_name FROM boxes ORDER BY box_id");
+        $box_result = $conn->query("SELECT box_id, sku, vessel_code, box_name, box_price FROM boxes WHERE status = 1 ORDER BY box_id");
         if ($box_result) {
             while ($row = $box_result->fetch_assoc()) {
                 $boxes[$row['box_id']] = $row;
@@ -1565,19 +1565,46 @@ function getImageUrl(product) {
     return 'https://placehold.co/600x600?text=No+Image';
 }
 
+function getProductVesselCode(product) {
+    if (!product) return 'C';
+    if (product.sku && typeof product.sku === 'string') {
+        const firstLetter = product.sku.trim().charAt(0).toUpperCase();
+        if (['C', 'D', 'E'].includes(firstLetter)) {
+            return firstLetter;
+        }
+    }
+    return 'C';
+}
+
 function renderBoxOptions() {
     const c = document.getElementById('boxOptions');
     if (!c) return;
     c.innerHTML = '';
     
-    let boxesToUse = (boxesData && Object.keys(boxesData).length > 0) ? boxesData : {
-        5: { box_id: 5, box_name: 'White Cubic Box', box_price: 6.00 },
-        6: { box_id: 6, box_name: 'Black Cubic Box', box_price: 6.00 }
-    };
-    let ids = Object.keys(boxesToUse).sort(function(a,b){return parseInt(a)-parseInt(b);});
+    let vesselCode = getProductVesselCode(currentProduct);
+    
+    let filteredBoxes = {};
+    if (boxesData && Object.keys(boxesData).length > 0) {
+        Object.keys(boxesData).forEach(function(bid) {
+            const b = boxesData[bid];
+            if (b && b.vessel_code && b.vessel_code.toUpperCase() === vesselCode) {
+                filteredBoxes[bid] = b;
+            }
+        });
+    }
+
+    let ids = Object.keys(filteredBoxes).sort(function(a,b){ return parseInt(a) - parseInt(b); });
+
+    if (ids.length === 0) {
+        c.innerHTML = '<div style="grid-column: 1 / -1; padding: 12px 16px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; font-size: 13px; text-align: center; font-weight: 500;">No packaging box options available for Vessel ' + escapeHtml(vesselCode) + '</div>';
+        selectedBoxId = null;
+        boxPrice = 0;
+        updateDisplay();
+        return;
+    }
 
     ids.forEach(function(bid) {
-        const box = boxesToUse[bid]; if (!box) return;
+        const box = filteredBoxes[bid]; if (!box) return;
         const price = parseFloat(box.box_price || 6);
         const tile = document.createElement('div');
         tile.className = 'option-tile' + (selectedBoxId === parseInt(bid) ? ' active' : '');
@@ -1610,11 +1637,11 @@ function getFullProductSKU(boxId) {
     let baseSKU = currentProduct.sku;
     let boxCode = '';
     if (boxId) {
-        if (boxesData && boxesData[boxId]) {
+        if (boxesData && boxesData[boxId] && boxesData[boxId].sku) {
+            boxCode = boxesData[boxId].sku;
+        } else if (boxesData && boxesData[boxId]) {
             const bName = (boxesData[boxId].box_name || '').toLowerCase();
-            boxCode = boxesData[boxId].box_sku || (bName.includes('black') ? 'B01B' : 'B01W');
-        } else {
-            boxCode = (parseInt(boxId) === 6) ? 'B01B' : 'B01W';
+            boxCode = bName.includes('black') ? 'B01B' : 'B01W';
         }
     }
     return baseSKU + boxCode;

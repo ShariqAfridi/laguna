@@ -62,29 +62,21 @@
     <div class="lvb-marquee-container">
         <div class="lvb-marquee-track">
             <div class="lvb-marquee-item">
-                Percentage of every order supports california coast preservation
-                <span class="lvb-marquee-dot"></span>
                 Free shipping on orders over $75
             </div>
             
             <div class="lvb-marquee-item">
                 <span class="lvb-marquee-dot" style="margin-left: 0; margin-right: 40px;"></span>
-                Percentage of every order supports california coast preservation
-                <span class="lvb-marquee-dot"></span>
                 Free shipping on orders over $75
             </div>
 
             <div class="lvb-marquee-item">
                 <span class="lvb-marquee-dot" style="margin-left: 0; margin-right: 40px;"></span>
-                Percentage of every order supports california coast preservation
-                <span class="lvb-marquee-dot"></span>
                 Free shipping on orders over $75
             </div>
             
             <div class="lvb-marquee-item">
                 <span class="lvb-marquee-dot" style="margin-left: 0; margin-right: 40px;"></span>
-                Percentage of every order supports california coast preservation
-                <span class="lvb-marquee-dot"></span>
                 Free shipping on orders over $75
             </div>
         </div>
