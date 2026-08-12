@@ -1,6 +1,6 @@
 <?php
 /**
- * collection.php — THE COLLECTION Section synced with database products & Quick View Modal
+ * collection.php — THE COLLECTION Section synced with database products & Quick View Modal (identical to Shop Page)
  */
 if (!isset($base)) {
     $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
@@ -134,7 +134,7 @@ foreach ($products as $p) {
             'color_hex' => $colorHex,
             'vessel_name' => 'Vessel ' . $vesselCode,
             'vessel_code' => strtolower($vesselCode),
-            'image_url' => $varImg,
+            'image_url' => $varImg, // Main Product Vessel Image
             'price' => $priceVal,
             'items' => []
         ];
@@ -178,7 +178,8 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
     <?php foreach ($homepageVariations as $var): 
         $firstItem = !empty($var['items']) ? $var['items'][0] : null;
         $fragranceSubtitle = $firstItem ? strtoupper($firstItem['fragrance_name']) : (count($var['items']) . ' FRAGRANCES AVAILABLE');
-        $cardImage = !empty($firstItem['image_url']) ? $firstItem['image_url'] : $var['image_url'];
+        // ALWAYS use the main product image for the card on the homepage
+        $cardImage = $var['image_url'];
     ?>
       <div class="lvc-card" 
            style="cursor: pointer;" 
@@ -200,7 +201,7 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
   </div>
 </section>
 
-<!-- Homepage Quick View Product Modal -->
+<!-- Homepage Quick View Product Modal (Exactly identical to Shop Page modal) -->
 <div class="modal-overlay" id="productModal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeModal()">✕</button>
@@ -274,7 +275,9 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
 </div>
 
 <style>
-/* Scoped styles - no global leaks */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+/* Homepage Collection Section Styling */
 .lvc-collection {
   display: block;
   width: 100%;
@@ -434,319 +437,422 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
   }
 }
 
-/* Quick View Modal Overlay Styles */
+/* EXACT SHOP PAGE MODAL STYLES */
 .modal-overlay {
-    display: none;
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 99999;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: none;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    z-index: 99999;
+    padding: 24px;
     box-sizing: border-box;
 }
 
 .modal-content {
     background: #ffffff;
-    border-radius: 20px;
-    width: 100%;
-    max-width: 900px;
+    width: 92%;
+    max-width: 960px;
     max-height: 90vh;
     display: flex;
-    overflow: hidden;
+    border-radius: 24px;
     position: relative;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    box-shadow: 0 25px 60px -15px rgba(0, 75, 102, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.2);
     animation: modalFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes modalFadeUp {
-    from { opacity: 0; transform: translateY(20px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; transform: scale(0.96) translateY(16px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .modal-left {
-    width: 50%;
-    background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%);
-    padding: 30px;
+    width: 48%;
+    flex: 0 0 48%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%);
     position: relative;
     border-right: 1px solid #e2e8f0;
-    transition: background 0.3s ease;
+    padding: 16px;
+    gap: 12px;
+    box-sizing: border-box;
 }
 
 .modal-image-container {
+    flex: 1;
     width: 100%;
-    height: 320px;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     position: relative;
+    border-radius: 16px;
+    min-height: 300px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.03);
 }
 
 .modal-image-container img {
-    max-width: 100%;
+    width: 100%;
+    height: 100%;
     max-height: 100%;
-    object-fit: contain;
-    filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.15));
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    border-radius: 16px;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .thumbnail-strip {
     position: absolute;
     bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
     display: flex;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.85);
-    padding: 4px 8px;
+    padding: 5px 10px;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 999px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    max-width: 90%;
 }
 
 .thumbnail-item {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.6);
     cursor: pointer;
-    border: 2px solid transparent;
-    opacity: 0.6;
+    object-fit: cover;
     transition: all 0.2s ease;
+    background: white;
+    padding: 2px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
-.thumbnail-item.active, .thumbnail-item:hover {
-    opacity: 1;
-    border-color: #004b66;
+.thumbnail-item:hover {
     transform: scale(1.1);
+    border-color: #ffffff;
+}
+.thumbnail-item.active {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 2.5px #004b66, 0 4px 12px rgba(0, 0, 0, 0.35);
+    transform: scale(1.08);
 }
 
 .selected-scent-card {
-    margin-top: 15px;
-    width: 100%;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    border-radius: 12px;
-    padding: 12px 14px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    margin: 0;
+    padding: 14px 18px;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
 }
 
 .scent-card-tag {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 1.5px;
-    color: #64748b;
-    margin-bottom: 2px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #004b66;
+    margin-bottom: 4px;
 }
 
 .scent-card-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 700;
     color: #0f172a;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
+    font-family: inherit;
 }
 
 .scent-card-notes {
     font-size: 11px;
-    color: #475569;
-    line-height: 1.4;
+    line-height: 1.6;
+    color: #334155;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-weight: 500;
 }
 
-.scent-note-row {
-    margin-bottom: 2px;
+.scent-note-row strong {
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: 0.5px;
 }
 
 .modal-right {
-    width: 50%;
-    padding: 30px;
-    overflow-y: auto;
+    width: 52%;
+    flex: 0 0 52%;
+    padding: 32px 36px;
     display: flex;
     flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+}
+
+.modal-right::-webkit-scrollbar,
+#fragranceOptionsContainer::-webkit-scrollbar {
+    width: 5px;
+}
+.modal-right::-webkit-scrollbar-track,
+#fragranceOptionsContainer::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+.modal-right::-webkit-scrollbar-thumb,
+#fragranceOptionsContainer::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+.modal-right::-webkit-scrollbar-thumb:hover,
+#fragranceOptionsContainer::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 .modal-close {
     position: absolute;
-    top: 16px; right: 16px;
-    background: #f1f5f9;
-    border: none;
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    font-size: 14px;
+    right: 18px;
+    top: 18px;
     cursor: pointer;
+    font-size: 14px;
+    z-index: 20;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(6px);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #475569;
-    z-index: 10;
+    border: 1px solid rgba(0, 0, 0, 0.08);
     transition: all 0.2s ease;
+    color: #475569;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
-.modal-close:hover { background: #e2e8f0; color: #0f172a; }
+.modal-close:hover {
+    background: #004b66;
+    color: #ffffff;
+    border-color: #004b66;
+    transform: rotate(90deg);
+}
 
 .modal-header h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 24px;
+    font-family: 'Cinzel', 'Cormorant Garamond', serif;
     font-weight: 600;
+    font-size: 28px;
     color: #0f172a;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    line-height: 1.25;
+    letter-spacing: 0.3px;
 }
 
 .modal-desc {
     font-size: 13px;
     color: #64748b;
-    margin-bottom: 16px;
-    line-height: 1.5;
+    line-height: 1.6;
 }
+
+.modal-divider { border: none; border-top: 1px solid #f1f5f9; margin: 4px 0; }
 
 .modal-specs-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px 16px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 20px;
     background: #f8fafc;
-    padding: 12px 14px;
-    border-radius: 10px;
-    margin-bottom: 16px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid #f1f5f9;
 }
 
 .info-row {
     display: flex;
     flex-direction: column;
+    gap: 2px;
 }
-
 .info-label {
     font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1px;
+    font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 1.4px;
     color: #94a3b8;
 }
-
 .info-value {
-    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
     font-weight: 600;
-    color: #1e293b;
-}
-
-.modal-divider {
-    border: none;
-    border-top: 1px solid #f1f5f9;
-    margin: 12px 0;
+    color: #0f172a;
 }
 
 .section-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: #64748b;
+    margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
-.section-label span {
-    font-weight: 400;
-    color: #94a3b8;
-}
+.section-label span { font-weight: 600; text-transform: none; letter-spacing: 0; font-size: 12px; color: #004b66; background: #e0f2fe; padding: 2px 10px; border-radius: 12px; }
 
 .fragrance-option-tile {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    gap: 12px;
+    border: 1.5px solid #e2e8f0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+}
+.fragrance-option-tile:hover {
+    border-color: #004b66;
+    background: #f8fafc;
+    transform: translateY(-1px);
+}
+.fragrance-option-tile.active {
+    border-color: #004b66;
+    background: #f0f7fa;
+    box-shadow: 0 4px 14px rgba(0, 75, 102, 0.12);
+}
+.fragrance-tile-title { font-size: 13px; font-weight: 600; color: #0f172a; }
+.fragrance-tile-sku { font-size: 10px; color: #64748b; font-family: monospace; margin-top: 1px; }
+
+.option-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+.option-tile {
+    border: 1.5px solid #e2e8f0;
+    padding: 10px 14px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
+    background: white;
 }
-.fragrance-option-tile:hover { border-color: #cbd5e1; background: #f8fafc; }
-.fragrance-option-tile.active { border-color: #004b66; background: #f0fdf4; }
+.option-tile:hover { border-color: #004b66; background: #f8fafc; }
+.option-tile.active { border-color: #004b66; background: #f0f7fa; box-shadow: 0 4px 12px rgba(0, 75, 102, 0.1); }
+.tile-title { font-size: 13px; font-weight: 600; color: #0f172a; display: block; }
+.tile-sub   { font-size: 11px; color: #64748b; margin-top: 3px; font-weight: 500; display: block; }
 
-.fragrance-tile-title { font-size: 13px; font-weight: 600; color: #0f172a; }
-.fragrance-tile-sku { font-size: 10px; color: #64748b; }
-
-.option-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
-
-.option-tile {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 8px 10px;
-    cursor: pointer;
+.qty-total-block {
     display: flex;
     flex-direction: column;
-    transition: all 0.2s ease;
+    gap: 12px;
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid #f1f5f9;
 }
-.option-tile:hover { border-color: #cbd5e1; background: #f8fafc; }
-.option-tile.active { border-color: #004b66; background: #f0fdf4; }
+.row-between { display: flex; justify-content: space-between; align-items: center; }
 
-.tile-title { font-size: 12px; font-weight: 600; color: #0f172a; }
-.tile-sub { font-size: 10px; color: #64748b; }
-
-.qty-total-block { margin-top: auto; padding-top: 10px; }
-
-.row-between {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
+.total-label {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+}
+.total-price {
+    font-family: 'Cinzel', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #004b66;
 }
 
 .qty-input {
     display: flex;
     align-items: center;
     border: 1px solid #cbd5e1;
-    border-radius: 6px;
+    border-radius: 999px;
     overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 .qty-input button {
-    background: #f8fafc;
     border: none;
-    width: 28px; height: 28px;
-    font-size: 14px;
+    background: none;
+    width: 36px;
+    height: 36px;
     cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+    color: #0f172a;
 }
-.qty-input button:hover { background: #e2e8f0; }
-.qty-input span { padding: 0 10px; font-size: 13px; font-weight: 600; }
-
-.total-label { font-size: 14px; font-weight: 600; color: #0f172a; }
-.total-price { font-size: 18px; font-weight: 700; color: #004b66; }
+.qty-input button:hover { background: #004b66; color: #ffffff; }
+.qty-input span {
+    min-width: 36px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+}
 
 .add-to-cart-btn {
-    width: 100%;
-    padding: 14px;
-    background: #004b66;
-    color: #ffffff;
+    background: linear-gradient(135deg, #004b66 0%, #00364a 100%);
+    color: white;
     border: none;
-    border-radius: 10px;
-    font-size: 14px;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 15px;
     font-weight: 600;
+    letter-spacing: 0.5px;
     cursor: pointer;
-    margin-top: 10px;
-    transition: background 0.2s ease;
+    width: 100%;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 20px -4px rgba(0, 75, 102, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
-.add-to-cart-btn:hover { background: #00364a; }
+.add-to-cart-btn:hover {
+    background: linear-gradient(135deg, #003d54 0%, #002838 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -4px rgba(0, 75, 102, 0.45);
+}
+.add-to-cart-btn:active { transform: translateY(0); }
 
 .stock-status { font-size: 12px; color: #ef4444; margin-top: 6px; text-align: center; }
 
 .cart-success {
     position: fixed;
-    bottom: 24px; right: 24px;
+    bottom: 24px;
+    right: 24px;
     background: #10b981;
-    color: #ffffff;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 13px;
+    color: white;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 14px;
     font-weight: 600;
-    box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
-    z-index: 999999;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+    z-index: 3000;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
 }
 
 @media (max-width: 820px) {
     .modal-content { flex-direction: column; max-width: 95%; max-height: 92vh; overflow-y: auto; }
-    .modal-left  { width: 100%; height: 300px; border-right: none; border-bottom: 1px solid #e2e8f0; }
-    .modal-right { width: 100%; padding: 20px; }
+    .modal-left  { width: 100%; height: 340px; border-right: none; border-bottom: 1px solid #e2e8f0; }
+    .modal-right { width: 100%; padding: 24px 20px 28px; }
+    .thumbnail-item { width: 44px; height: 44px; }
 }
 </style>
 
@@ -915,7 +1021,7 @@ function switchFragranceItem(productData) {
         currentBasePrice = 29.00;
     }
 
-    document.getElementById('modalTitle').innerText = productData.product_name || (productData.fragrance_name + ' Candle');
+    document.getElementById('modalTitle').innerText = productData.color_name || productData.product_name || (productData.fragrance_name + ' Candle');
     
     imageUrls = [];
     const candleImg = getImageUrl(productData);
@@ -946,14 +1052,16 @@ function switchFragranceItem(productData) {
     document.getElementById('modalSizeValue').innerText = sizeLabel + (sizeDetails ? ' (' + sizeDetails + ')' : '');
 
     let colorNameText = 'Standard';
-    if (productData.color_id) {
+    if (currentVariation && currentVariation.color_name) {
+        colorNameText = currentVariation.color_name;
+    } else if (productData.color_id) {
         let cId = Array.isArray(productData.color_id) ? productData.color_id[0] : productData.color_id;
         if (colorsData[cId]) colorNameText = colorsData[cId].color_name;
     }
 
     document.getElementById('modalColorValue').innerText = colorNameText.replace(/Â·|Â/g, '·').trim();
     document.getElementById('modalFragranceValue').innerText = productData.fragrance_name || 'Luxury Scent';
-    document.getElementById('modalDesc').innerText = productData.description || ('Artisanal handcrafted candle in a luminous ' + colorNameText.toLowerCase() + ' vessel.');
+    document.getElementById('modalDesc').innerText = productData.description || ('Handcrafted candle in a luminous ' + colorNameText.toLowerCase() + ' vessel.');
 
     updateSelectedScentCard(productData.fragrance_id, productData.fragrance_name);
     updateDisplay();
