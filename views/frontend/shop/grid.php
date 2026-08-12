@@ -8,12 +8,29 @@ $targetProductId   = isset($_GET['product_id']) ? (int)$_GET['product_id'] : (is
 $selectedColor     = isset($_GET['color']) ? (int)$_GET['color'] : 0;
 $selectedFragrance = isset($_GET['fragrance']) ? (int)$_GET['fragrance'] : 0;
 
-// Fetch active categories to construct valid vessels map
+// Fetch active categories to construct valid vessels map and size details
 $categoriesMap = [];
-$catQuery = $conn->query("SELECT id, category_name, LOWER(sku) AS sku, wick_type FROM categories WHERE status = 1");
+$catQuery = $conn->query("SELECT id, category_name, LOWER(sku) AS sku, wick_type, dimensions_subtitle, burn_time_badge FROM categories WHERE status = 1");
 if ($catQuery) {
     while ($row = $catQuery->fetch_assoc()) {
         if (!empty($row['sku'])) {
+            $dims = $row['dimensions_subtitle'] ?? '';
+            $diam = '';
+            if (preg_match('/^(\d+(?:\.\d+)?(?:["\']|inch)?)/i', trim($dims), $m)) {
+                $diam = $m[1];
+                if (strpos($diam, '"') === false && strpos($diam, "'") === false) {
+                    $diam .= '"';
+                }
+            } elseif (!empty($dims)) {
+                $diam = $dims;
+            }
+
+            $burn = strtoupper(trim($row['burn_time_badge'] ?? ''));
+            $burn = str_replace(['HOURS', 'HOUR'], 'HRS', $burn);
+            
+            $detailsParts = array_filter([$diam, $burn]);
+            $row['size_details'] = !empty($detailsParts) ? implode(' · ', $detailsParts) : '';
+
             $categoriesMap[$row['sku']] = $row;
         }
     }
@@ -1276,6 +1293,7 @@ let colorsData = <?= json_encode($colors) ?>;
 let fragrancesData = <?= json_encode($fragrances) ?>;
 let fragranceDescriptionsData = <?= json_encode($fragrance_descriptions) ?>;
 let boxesData = <?= json_encode($boxes) ?>;
+let categoriesData = <?= json_encode($categoriesMap) ?>;
 
 function waitForLVBCart(callback) {
     if (typeof LVBCart !== 'undefined' && LVBCart && typeof LVBCart.addItem === 'function') {
@@ -1459,21 +1477,11 @@ function switchFragranceItem(productData) {
     
     document.getElementById('modalSKU').innerText = getFullProductSKU(selectedBoxId);
 
-    let sizeLabel = 'Vessel ' + (selectedVessel ? selectedVessel.toUpperCase() : 'C');
-    let sizeDetails = '3" · 45 HRS';
+    let vesselCode = getProductVesselCode(currentProduct).toLowerCase();
+    let catObj = (categoriesData && categoriesData[vesselCode]) ? categoriesData[vesselCode] : (categoriesData ? categoriesData['c'] : null);
 
-    if (currentSizeId && sizesData[currentSizeId]) {
-        const sObj = sizesData[currentSizeId];
-        sizeLabel = sObj.size_name || sizeLabel;
-        let dims = sObj.size_details || '';
-        if (dims.includes('DIAMETER')) {
-            const m = dims.match(/(\d+(?:\.\d+)?["'])/);
-            if (m) dims = m[1];
-        }
-        const burn = sObj.burn_time_badge ? sObj.burn_time_badge.toUpperCase().replace('HOURS', 'HRS').trim() : '';
-        const parts = [dims, burn].filter(Boolean);
-        if (parts.length > 0) sizeDetails = parts.join(' · ');
-    }
+    let sizeLabel = catObj ? catObj.category_name : ('Vessel ' + vesselCode.toUpperCase());
+    let sizeDetails = catObj ? catObj.size_details : '3" · 45 HRS';
 
     document.getElementById('modalSizeValue').innerText = sizeLabel + (sizeDetails ? ' (' + sizeDetails + ')' : '');
 
@@ -1672,21 +1680,11 @@ if (addCartBtn) {
     addCartBtn.onclick = function() {
         if (!currentProduct) return;
 
-        let sizeLabel = 'Vessel ' + (selectedVessel ? selectedVessel.toUpperCase() : 'C');
-        let sizeDetails = '3" · 45 HRS';
+        let vesselCode = getProductVesselCode(currentProduct).toLowerCase();
+        let catObj = (categoriesData && categoriesData[vesselCode]) ? categoriesData[vesselCode] : (categoriesData ? categoriesData['c'] : null);
 
-        if (currentSizeId && sizesData[currentSizeId]) {
-            const sObj = sizesData[currentSizeId];
-            sizeLabel = sObj.size_name || sizeLabel;
-            let dims = sObj.size_details || '';
-            if (dims.includes('DIAMETER')) {
-                const m = dims.match(/(\d+(?:\.\d+)?["'])/);
-                if (m) dims = m[1];
-            }
-            const burn = sObj.burn_time_badge ? sObj.burn_time_badge.toUpperCase().replace('HOURS', 'HRS').trim() : '';
-            const parts = [dims, burn].filter(Boolean);
-            if (parts.length > 0) sizeDetails = parts.join(' · ');
-        }
+        let sizeLabel = catObj ? catObj.category_name : ('Vessel ' + vesselCode.toUpperCase());
+        let sizeDetails = catObj ? catObj.size_details : '3" · 45 HRS';
         const selectedSizeName = sizeLabel + (sizeDetails ? ' (' + sizeDetails + ')' : '');
 
         let boxName = null;

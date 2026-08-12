@@ -18,6 +18,34 @@ if (!function_exists('lvc_base_url')) {
     }
 }
 
+// Fetch active categories to construct valid vessels map and size details
+$categoriesMap = [];
+$catQuery = $conn->query("SELECT id, category_name, LOWER(sku) AS sku, wick_type, dimensions_subtitle, burn_time_badge FROM categories WHERE status = 1");
+if ($catQuery) {
+    while ($row = $catQuery->fetch_assoc()) {
+        if (!empty($row['sku'])) {
+            $dims = $row['dimensions_subtitle'] ?? '';
+            $diam = '';
+            if (preg_match('/^(\d+(?:\.\d+)?(?:["\']|inch)?)/i', trim($dims), $m)) {
+                $diam = $m[1];
+                if (strpos($diam, '"') === false && strpos($diam, "'") === false) {
+                    $diam .= '"';
+                }
+            } elseif (!empty($dims)) {
+                $diam = $dims;
+            }
+
+            $burn = strtoupper(trim($row['burn_time_badge'] ?? ''));
+            $burn = str_replace(['HOURS', 'HOUR'], 'HRS', $burn);
+            
+            $detailsParts = array_filter([$diam, $burn]);
+            $row['size_details'] = !empty($detailsParts) ? implode(' · ', $detailsParts) : '';
+
+            $categoriesMap[$row['sku']] = $row;
+        }
+    }
+}
+
 // 1. Fetch Sizes
 $sizes = [];
 $sRes = $conn->query("SELECT * FROM sizes");
@@ -871,6 +899,7 @@ let colorsData = <?= json_encode($colors) ?>;
 let fragrancesData = <?= json_encode($fragrances) ?>;
 let fragranceDescriptionsData = <?= json_encode($fragrance_descriptions) ?>;
 let boxesData = <?= json_encode($boxes) ?>;
+let categoriesData = <?= json_encode($categoriesMap) ?>;
 
 function waitForLVBCart(callback) {
     if (typeof LVBCart !== 'undefined' && LVBCart && typeof LVBCart.addItem === 'function') {
@@ -1021,7 +1050,7 @@ function switchFragranceItem(productData) {
         currentBasePrice = 29.00;
     }
 
-    document.getElementById('modalTitle').innerText = productData.color_name || productData.product_name || (productData.fragrance_name + ' Candle');
+    document.getElementById('modalTitle').innerText = (currentVariation && currentVariation.color_name) ? currentVariation.color_name : (productData.color_name || productData.product_name || 'Candle');
     
     imageUrls = [];
     const candleImg = getImageUrl(productData);
@@ -1032,22 +1061,11 @@ function switchFragranceItem(productData) {
     
     document.getElementById('modalSKU').innerText = getFullProductSKU(selectedBoxId);
 
-    let vesselCode = getProductVesselCode(currentProduct);
-    let sizeLabel = 'Vessel ' + vesselCode;
-    let sizeDetails = '3" · 45 HRS';
+    let vesselCode = getProductVesselCode(currentProduct).toLowerCase();
+    let catObj = (categoriesData && categoriesData[vesselCode]) ? categoriesData[vesselCode] : (categoriesData ? categoriesData['c'] : null);
 
-    if (currentSizeId && sizesData[currentSizeId]) {
-        const sObj = sizesData[currentSizeId];
-        sizeLabel = sObj.size_name || sizeLabel;
-        let dims = sObj.size_details || '';
-        if (dims.includes('DIAMETER')) {
-            const m = dims.match(/(\d+(?:\.\d+)?["'])/);
-            if (m) dims = m[1];
-        }
-        const burn = sObj.burn_time_badge ? sObj.burn_time_badge.toUpperCase().replace('HOURS', 'HRS').trim() : '';
-        const parts = [dims, burn].filter(Boolean);
-        if (parts.length > 0) sizeDetails = parts.join(' · ');
-    }
+    let sizeLabel = catObj ? catObj.category_name : ('Vessel ' + vesselCode.toUpperCase());
+    let sizeDetails = catObj ? catObj.size_details : '3" · 45 HRS';
 
     document.getElementById('modalSizeValue').innerText = sizeLabel + (sizeDetails ? ' (' + sizeDetails + ')' : '');
 
@@ -1238,22 +1256,11 @@ if (addCartBtn) {
     addCartBtn.onclick = function() {
         if (!currentProduct) return;
 
-        let vesselCode = getProductVesselCode(currentProduct);
-        let sizeLabel = 'Vessel ' + vesselCode;
-        let sizeDetails = '3" · 45 HRS';
+        let vesselCode = getProductVesselCode(currentProduct).toLowerCase();
+        let catObj = (categoriesData && categoriesData[vesselCode]) ? categoriesData[vesselCode] : (categoriesData ? categoriesData['c'] : null);
 
-        if (currentSizeId && sizesData[currentSizeId]) {
-            const sObj = sizesData[currentSizeId];
-            sizeLabel = sObj.size_name || sizeLabel;
-            let dims = sObj.size_details || '';
-            if (dims.includes('DIAMETER')) {
-                const m = dims.match(/(\d+(?:\.\d+)?["'])/);
-                if (m) dims = m[1];
-            }
-            const burn = sObj.burn_time_badge ? sObj.burn_time_badge.toUpperCase().replace('HOURS', 'HRS').trim() : '';
-            const parts = [dims, burn].filter(Boolean);
-            if (parts.length > 0) sizeDetails = parts.join(' · ');
-        }
+        let sizeLabel = catObj ? catObj.category_name : ('Vessel ' + vesselCode.toUpperCase());
+        let sizeDetails = catObj ? catObj.size_details : '3" · 45 HRS';
         const selectedSizeName = sizeLabel + (sizeDetails ? ' (' + sizeDetails + ')' : '');
 
         let boxName = null;
