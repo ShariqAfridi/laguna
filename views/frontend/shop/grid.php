@@ -529,22 +529,14 @@ if (!empty($boxes)) {
     .product-grid,
     .products-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 24px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 28px;
         margin-bottom: 80px;
     }
 
-    @media (max-width: 1024px) {
+    @media (max-width: 640px) {
         .product-grid,
-        .products-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    }
-    @media (max-width: 768px) {
-        .product-grid,
-        .products-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-    }
-    @media (max-width: 480px) {
-        .product-grid,
-        .products-grid { grid-template-columns: 1fr; }
+        .products-grid { grid-template-columns: 1fr; gap: 20px; }
     }
 
     .product-card {
@@ -988,46 +980,7 @@ if (!empty($boxes)) {
         <a href="<?php echo $base; ?>/shop" class="back-btn">← Back to Vessels</a>
     </div>
 
-    <!-- SHOP FILTERS -->
-    <div class="shop-filter-bar">
-        <div class="filter-group">
-            <label class="filter-label" for="filterColor">🎨 Color</label>
-            <select id="filterColor" class="shop-filter-select" onchange="applyShopFilters()">
-                <option value="">All Colors</option>
-                <?php foreach ($colors as $cId => $cData): ?>
-                    <?php if (isset($colorVariations[$cId])): ?>
-                        <option value="<?= $cId ?>" <?= ($selectedColor == $cId) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($cData['color_name']) ?>
-                        </option>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </select>
-        </div>
 
-        <div class="filter-group">
-            <label class="filter-label" for="filterFragrance">🌸 Fragrance</label>
-            <select id="filterFragrance" class="shop-filter-select" onchange="applyShopFilters()">
-                <option value="">All Fragrances</option>
-                <?php foreach ($fragrances as $fId => $fName): ?>
-                    <option value="<?= $fId ?>" <?= ($selectedFragrance == $fId) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($fName) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <div class="filter-status-col">
-            <div class="filter-count" id="filterCountDisplay">
-                Showing <?= count($colorVariations) ?> <?= count($colorVariations) === 1 ? 'variation' : 'variations' ?>
-            </div>
-
-            <?php if ($selectedColor > 0 || $selectedFragrance > 0): ?>
-                <a href="<?= base_url('/shop?vessel=' . urlencode($selectedVessel)) ?>" class="reset-filter-btn">
-                    ✕ Clear Filters
-                </a>
-            <?php endif; ?>
-        </div>
-    </div>
 
     <!-- VARIATION PRODUCTS GRID -->
     <div class="product-grid">
