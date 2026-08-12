@@ -1437,13 +1437,6 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
       <div class="box-grid" id="boxGrid">
         <!-- Box cards are dynamically rendered by JavaScript -->
       </div>
-      <div class="step-nav">
-        <span></span>
-        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-          <button class="btn-skip-box" onclick="checkoutWithoutPackaging()">CHECKOUT WITHOUT PACKAGING</button>
-          <button class="btn-next" onclick="openReview()">REVIEW ORDER</button>
-        </div>
-      </div>
     </div>
 
   </div><!-- end .builder-main -->
