@@ -906,7 +906,7 @@ textarea { resize: vertical; min-height: 80px; }
                 <div class="delivery-name">Standard Shipping</div>
                 <div class="delivery-desc">5–8 business days · Tracked</div>
             </div>
-            <div class="delivery-price" id="standardShippingPrice"><?php echo ($subtotal >= 75) ? 'FREE' : '$12.00'; ?></div>
+            <div class="delivery-price" id="standardShippingPrice"><?php echo ($subtotal >= 75) ? '<span style="color:#059669; font-weight:700;">FREE</span>' : '$12.00'; ?></div>
         </label>
 
         <label class="delivery-option" id="shippingExpress">
@@ -1344,7 +1344,7 @@ textarea { resize: vertical; min-height: 80px; }
         const stdPriceEl = document.getElementById('standardShippingPrice');
         if (stdPriceEl) {
             if (subtotal >= 75) {
-                stdPriceEl.innerHTML = '<span style="color:#059669; font-weight:700;">FREE (Waived)</span>';
+                stdPriceEl.innerHTML = '<span style="color:#059669; font-weight:700;">FREE</span>';
             } else {
                 stdPriceEl.textContent = '$12.00';
             }
