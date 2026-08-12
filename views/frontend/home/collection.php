@@ -256,30 +256,32 @@ if (count($collectionProducts) < 6) {
 .lvc-collection .lvc-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  max-width: 94%;
+  gap: 24px;
+  max-width: 1320px;
   margin: 0 auto;
 }
 
 .lvc-collection .lvc-card {
-  flex: 0 0 calc(16.66% - 12px);
+  flex: 0 0 calc(33.333% - 16px);
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 .lvc-collection .lvc-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
 }
 
 .lvc-collection .lvc-img-container {
-  aspect-ratio: 1 / 1.1;
+  aspect-ratio: 1 / 1.05;
   background: #f0f4f6;
   overflow: hidden;
+  position: relative;
 }
 
 .lvc-collection .lvc-img-container img {
@@ -289,18 +291,19 @@ if (count($collectionProducts) < 6) {
   object-position: center;
   background: #faf9f6;
   display: block;
-  transition: transform 0.4s ease;
+  transition: transform 0.5s ease;
 }
 
 .lvc-collection .lvc-card:hover .lvc-img-container img {
-  transform: scale(1.05);
+  transform: scale(1.06);
 }
 
 .lvc-collection .lvc-info {
-  padding: 15px;
+  padding: 18px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: #ffffff;
 }
 
 .lvc-collection .lvc-text {
@@ -311,30 +314,31 @@ if (count($collectionProducts) < 6) {
 
 .lvc-collection .lvc-p-name {
   font-family: 'Cormorant Garamond', 'Times New Roman', serif;
-  font-weight: 400;
-  font-size: 1rem;
+  font-weight: 500;
+  font-size: 1.2rem;
   color: #1a2b3c;
+  line-height: 1.2;
 }
 
 .lvc-collection .lvc-p-desc {
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
-  font-weight: 400;
-  font-size: 10px;
-  letter-spacing: 0.5px;
-  color: #94a3b8;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #8492a6;
 }
 
 .lvc-collection .lvc-price {
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
-  font-weight: 400;
-  font-size: 13px;
+  font-weight: 600;
+  font-size: 15px;
   color: #1a2b3c;
 }
 
 /* Tablet */
 @media (max-width: 1024px) {
   .lvc-collection .lvc-card {
-    flex: 0 0 calc(33.33% - 10px);
+    flex: 0 0 calc(50% - 12px);
   }
   
   .lvc-collection .lvc-main-title {
@@ -345,7 +349,7 @@ if (count($collectionProducts) < 6) {
 /* Mobile */
 @media (max-width: 600px) {
   .lvc-collection .lvc-card {
-    flex: 0 0 calc(50% - 7px);
+    flex: 0 0 100%;
   }
   
   .lvc-collection .lvc-main-title {
