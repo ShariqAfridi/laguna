@@ -1083,7 +1083,7 @@ textarea { resize: vertical; min-height: 80px; }
                     <?php if ($subtotal >= 75): ?>
                         <strong>🎉 Congratulations! You've unlocked FREE Shipping!</strong>
                     <?php else: ?>
-                        Add $<?php echo number_format(75 - $subtotal, 2); ?> more for free shipping
+                        Spend <strong>$<?php echo number_format(75 - $subtotal, 2); ?></strong> more to unlock <strong>FREE Shipping</strong>!
                     <?php endif; ?>
                 </span>
                 <div class="shipping-bar">
@@ -1404,7 +1404,8 @@ textarea { resize: vertical; min-height: 80px; }
                         fillEl.style.backgroundColor = '';
                     }
                     if (progText) {
-                        progText.textContent = 'Add $' + (75 - subtotal).toFixed(2) + ' more for free shipping';
+                        const remaining = (75 - subtotal).toFixed(2);
+                        progText.innerHTML = 'Spend <strong>$' + remaining + '</strong> more to unlock <strong>FREE Shipping</strong>!';
                     }
                 }
             }
