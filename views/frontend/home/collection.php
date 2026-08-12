@@ -278,8 +278,7 @@ if (count($collectionProducts) < 6) {
 }
 
 .lvc-collection .lvc-img-container {
-  height: 270px;
-  aspect-ratio: 1 / 1.4;
+  height: 320px;
   background: #f0f4f6;
   overflow: hidden;
   position: relative;
@@ -289,7 +288,7 @@ if (count($collectionProducts) < 6) {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: bottom center;
   background: #faf9f6;
   display: block;
   transition: transform 0.5s ease;
