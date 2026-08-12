@@ -413,28 +413,36 @@
             <div class="lvh-marquee-container">
                 <div class="lvh-marquee-track" id="marqueeTrack">
                     <?php
-                    $heroCandlesSpec = [
-                        ['file' => '00-11.png', 'code' => '00-11', 'coming_soon' => false],
-                        ['file' => '00-12.png', 'code' => '00-12', 'coming_soon' => false],
-                        ['file' => '00-14.png', 'code' => '00-14', 'coming_soon' => false],
-                        ['file' => '00-06.png', 'code' => '00-06', 'coming_soon' => false],
-                        ['file' => '00-02.png', 'code' => '00-02', 'coming_soon' => true],
-                        ['file' => '00-09.png', 'code' => '00-09', 'coming_soon' => false],
-                        ['file' => '00-13.png', 'code' => '00-13', 'coming_soon' => false],
-                        ['file' => '00-07.png', 'code' => '00-07', 'coming_soon' => false],
-                        ['file' => '00-03.png', 'code' => '00-03', 'coming_soon' => false],
-                        ['file' => '00-15.png', 'code' => '00-15', 'coming_soon' => true],
-                    ];
+                    $heroDir = __DIR__ . '/../../../public/uploads/hero-products';
+                    $heroFiles = [];
+                    if (is_dir($heroDir)) {
+                        $files = scandir($heroDir);
+                        foreach ($files as $f) {
+                            if ($f !== '.' && $f !== '..' && preg_match('/\.(png|jpg|jpeg|webp)$/i', $f)) {
+                                $heroFiles[] = $f;
+                            }
+                        }
+                        natsort($heroFiles);
+                        $heroFiles = array_values($heroFiles);
+                    }
+
+                    if (empty($heroFiles)) {
+                        for ($i = 1; $i <= 14; $i++) {
+                            $num = sprintf('%02d', $i);
+                            $heroFiles[] = $num . '.png';
+                        }
+                    }
 
                     for ($set = 0; $set < 2; $set++):
-                        foreach ($heroCandlesSpec as $candle):
-                            $imgRel = 'public/uploads/hero-products/' . $candle['file'];
+                        foreach ($heroFiles as $fileName):
+                            $imgRel = 'public/uploads/hero-products/' . $fileName;
                             $imgUrl = base_url('/' . rawurlencode($imgRel));
                             $imgUrl = str_replace('%2F', '/', $imgUrl);
+                            $code = pathinfo($fileName, PATHINFO_FILENAME);
                     ?>
                         <div class="lvh-marquee-item">
                             <div class="lvh-candle-img-wrapper">
-                                <img class="lvh-candle-img" src="<?= htmlspecialchars($imgUrl); ?>" alt="Candle <?= htmlspecialchars($candle['code']); ?>" loading="lazy">
+                                <img class="lvh-candle-img" src="<?= htmlspecialchars($imgUrl); ?>" alt="Candle <?= htmlspecialchars($code); ?>" loading="lazy">
                             </div>
                         </div>
                     <?php 
