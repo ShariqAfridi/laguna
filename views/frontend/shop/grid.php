@@ -236,9 +236,11 @@ if (!empty($boxes)) {
     .vessel-card img { 
         width: 100%;
         height: 380px; 
-        object-fit: cover;
+        object-fit: contain;
         object-position: center;
         background: #faf9f6;
+        padding: 16px;
+        box-sizing: border-box;
         display: block;
     }
 

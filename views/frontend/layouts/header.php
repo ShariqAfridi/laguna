@@ -146,9 +146,9 @@ if (!isset($base)) {
 
     /* CART ICON */
     .cart-wrapper {
-      flex: 1;
       display: flex;
-      justify-content: flex-end;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
       transition: opacity 0.2s;
     }
@@ -210,7 +210,9 @@ if (!isset($base)) {
   </a>
 
   <nav class="nav-links">
+    <a href="<?php echo $base; ?>/">Home</a>
     <a href="<?php echo $base; ?>/about">About</a>
+    <a href="<?php echo $base; ?>/shop">Shop</a>
     <a href="<?php echo $base; ?>/contact">Contact</a>
   </nav>
 
@@ -325,7 +327,7 @@ if (!isset($base)) {
     }
   </style>
 
-  <div style="display:flex; align-items:center; gap:20px;">
+  <div style="flex:1; display:flex; align-items:center; justify-content:flex-end; gap:20px;">
     <!-- Search Icon Button -->
     <button class="user-dropdown-trigger" id="desktopSearchBtn" aria-label="Search Products" title="Search Products" style="background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; justify-content:center; color:inherit; outline:none;">
       <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">

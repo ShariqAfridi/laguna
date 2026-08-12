@@ -243,7 +243,9 @@ if (!isset($base)) {
 <!-- Slide-down mobile nav menu -->
 <div class="mobile-menu-container" id="mobileMenuPanel">
     <div class="mobile-nav-links">
+        <a href="<?php echo $base; ?>/">Home</a>
         <a href="<?php echo $base; ?>/about">About</a>
+        <a href="<?php echo $base; ?>/shop">Shop</a>
         <a href="<?php echo $base; ?>/contact">Contact</a>
     </div>
 </div>
