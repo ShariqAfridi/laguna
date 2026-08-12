@@ -548,7 +548,7 @@ if (!empty($boxes)) {
         border: 1px solid #e8eef2;
     }
     .product-card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,75,102,0.08); }
-    .product-image { width: 100%; aspect-ratio: 1/1; object-fit: cover; object-position: center; background: #faf9f6; display: block; }
+    .product-image { width: 100%; aspect-ratio: 1/1; object-fit: cover; object-position: bottom; background: #faf9f6; display: block; }
     .product-info { padding: 16px 14px 14px; }
     .product-name {
         font-family: 'Cormorant Garamond', serif;
