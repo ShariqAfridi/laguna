@@ -436,7 +436,9 @@
                     for ($set = 0; $set < 2; $set++):
                         foreach ($heroFiles as $fileName):
                             $imgRel = 'public/uploads/hero-products/' . $fileName;
-                            $imgUrl = base_url('/' . rawurlencode($imgRel));
+                            $imgPath = $heroDir . '/' . $fileName;
+                            $version = file_exists($imgPath) ? filemtime($imgPath) : time();
+                            $imgUrl = base_url('/' . rawurlencode($imgRel)) . '?v=' . $version;
                             $imgUrl = str_replace('%2F', '/', $imgUrl);
                             $code = pathinfo($fileName, PATHINFO_FILENAME);
                     ?>
