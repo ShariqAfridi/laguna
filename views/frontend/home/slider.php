@@ -310,13 +310,13 @@
         
         @media (min-width: 1024px) {
             .lvh-marquee-item {
-                width: 190px;
+                width: 220px;
             }
             .lvh-candle-img-wrapper {
-                height: 210px;
+                height: 250px;
             }
             .lvh-candle-img {
-                max-height: 210px;
+                max-height: 250px;
             }
             .lvh-marquee-track {
                 gap: 56px;
