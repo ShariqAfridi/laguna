@@ -110,7 +110,22 @@ $result = $conn->query("SELECT * FROM categories $whereSql ORDER BY sort_order A
                             <?= !empty($row['burn_time_badge']) ? htmlspecialchars($row['burn_time_badge']) : '-'; ?>
                         </td>
                         <td>
-                            <?= !empty($row['wick_type']) ? '🕯 ' . htmlspecialchars($row['wick_type']) : '-'; ?>
+                            <?php
+                            $wType = $row['wick_type'] ?? '';
+                            $skuVal = strtoupper($row['sku'] ?? '');
+                            $wIcons = '🕯';
+                            if (stripos($wType, 'triple') !== false || $skuVal === 'E') {
+                                $wIcons = '🕯🕯🕯';
+                            } elseif (stripos($wType, 'double') !== false || $skuVal === 'D') {
+                                $wIcons = '🕯🕯';
+                            } elseif (stripos($wType, 'single') !== false || $skuVal === 'C') {
+                                $wIcons = '🕯';
+                            } elseif (preg_match('/(\d+)/', $wType, $m)) {
+                                $count = (int)$m[1];
+                                $wIcons = str_repeat('🕯', min(max($count, 1), 5));
+                            }
+                            ?>
+                            <?= !empty($wType) ? $wIcons . ' ' . htmlspecialchars($wType) : '-'; ?>
                         </td>
                         <td>
                             <?php if (($row['status'] ?? 1) == 1): ?>
