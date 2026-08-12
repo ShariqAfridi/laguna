@@ -798,7 +798,6 @@ function build_page_url($p) {
                         <th>Vessel &amp; Price</th>
                         <th>Wick</th>
                         <th>Colors</th>
-                        <th>Packaging</th>
                         <th>Stock</th>
                         <th>Actions</th>
                     </tr>
@@ -979,31 +978,6 @@ function build_page_url($p) {
                                     }
                                 } else {
                                     echo '<span style="color: var(--muted); font-size: 12px;">No colors</span>';
-                                }
-                                ?>
-                            </td>
-                            
-                            <!-- Packaging Column -->
-                            <td>
-                                <?php
-                                if (!empty($box_ids) && is_array($box_ids)) {
-                                    foreach ($box_ids as $box_id) {
-                                        $box_name = '';
-                                        $bq = $conn->prepare('SELECT box_name FROM boxes WHERE box_id = ?');
-                                        $bq->bind_param('i', $box_id);
-                                        $bq->execute();
-                                        $bres = $bq->get_result();
-                                        if ($brow = $bres->fetch_assoc()) {
-                                            $box_name = $brow['box_name'];
-                                        }
-                                        $bq->close();
-
-                                        if ($box_name) {
-                                            echo '<span class="badge">📦 ' . htmlspecialchars($box_name) . '</span>';
-                                        }
-                                    }
-                                } else {
-                                    echo '<span style="color: var(--muted); font-size: 12px;">No packaging</span>';
                                 }
                                 ?>
                             </td>

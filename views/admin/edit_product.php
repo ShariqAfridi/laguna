@@ -862,9 +862,9 @@ $val_fragrance_ids = $_POST['fragrances'] ?? ($edit_data['fragrance_ids'] ?? [])
                 </div>
             </div>
 
-            <!-- Colors & Boxes -->
+            <!-- Colors -->
             <div class="card">
-                <h3><span class="icon">🎨</span> Vessel Color &amp; Packaging</h3>
+                <h3><span class="icon">🎨</span> Vessel Color</h3>
 
                 <div class="form-group">
                     <label>Vessel Color</label>
@@ -884,27 +884,6 @@ $val_fragrance_ids = $_POST['fragrances'] ?? ($edit_data['fragrance_ids'] ?? [])
                     </div>
                     <div class="summary-row" id="colorSummary">
                         <span class="summary-empty">No colors selected</span>
-                    </div>
-                </div>
-
-                <hr class="section-divider">
-
-                <div class="form-group">
-                    <label>Box / Packaging</label>
-                    <div class="chip-group" id="boxChips">
-                        <?php foreach ($boxes_arr as $b): ?>
-                            <input type="checkbox" name="boxes[]"
-                                   id="box-<?= $b['box_id'] ?>"
-                                   value="<?= $b['box_id'] ?>"
-                                   onchange="updateAllSummaries()"
-                                   <?= in_array($b['box_id'], (array)$val_boxes) ? 'checked' : '' ?>>
-                            <label for="box-<?= $b['box_id'] ?>">
-                                📦 <?= htmlspecialchars($b['box_name']) ?>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
-                    <div class="summary-row" id="boxSummary">
-                        <span class="summary-empty">No packaging selected</span>
                     </div>
                 </div>
             </div>
@@ -1134,7 +1113,6 @@ function previewImage(input) {
 function updateAllSummaries() {
     updateChipSummary('fragranceChips', 'fragranceSummary', 'No fragrances selected');
     updateChipSummary('colorChips',     'colorSummary',     'No colors selected');
-    updateChipSummary('boxChips',       'boxSummary',       'No packaging selected');
 }
 
 function updateChipSummary(chipsId, summaryId, emptyText) {

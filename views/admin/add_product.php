@@ -94,6 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($opt['success']) {
                 $uploaded_fragrance_images[$fid] = $opt['path'];
             }
+        } elseif (!empty($_POST['existing_fragrance_image_' . $fid])) {
+            $uploaded_fragrance_images[$fid] = trim($_POST['existing_fragrance_image_' . $fid]);
         }
     }
 
@@ -136,6 +138,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($selected_fragrance_ids as $fid) {
             if (isset($uploaded_fragrance_images[$fid])) {
                 $fragrance_images_map[(string)$fid] = $uploaded_fragrance_images[$fid];
+            } elseif (!empty($_POST['existing_fragrance_image_' . $fid])) {
+                $fragrance_images_map[(string)$fid] = trim($_POST['existing_fragrance_image_' . $fid]);
             } elseif ($main_image) {
                 $fragrance_images_map[(string)$fid] = $main_image;
             }
@@ -697,6 +701,29 @@ $val_colors       = $_POST['colors'] ?? ($duplicate_info ? (json_decode($duplica
 $val_boxes        = $_POST['boxes']  ?? ($duplicate_info ? (json_decode($duplicate_info['box_id'] ?? '[]', true) ?: []) : []);
 $val_wick_type    = $_POST['wick_type'] ?? ($duplicate_info ? ($duplicate_info['wick_type'] ?? 'single') : 'single');
 
+$dup_frag_ids = [];
+if ($duplicate_info && !empty($duplicate_info['fragrance_id'])) {
+    $raw_fids = $duplicate_info['fragrance_id'];
+    if (is_string($raw_fids) && strpos($raw_fids, '[') !== false) {
+        $dup_frag_ids = json_decode($raw_fids, true) ?: [];
+    } elseif (is_array($raw_fids)) {
+        $dup_frag_ids = $raw_fids;
+    } elseif (is_numeric($raw_fids)) {
+        $dup_frag_ids = [(int)$raw_fids];
+    }
+}
+$val_fragrances = $_POST['fragrances'] ?? $dup_frag_ids;
+
+$dup_frag_images = [];
+if ($duplicate_info && !empty($duplicate_info['fragrance_images'])) {
+    $raw_fimgs = $duplicate_info['fragrance_images'];
+    if (is_string($raw_fimgs) && strpos($raw_fimgs, '{') !== false) {
+        $dup_frag_images = json_decode($raw_fimgs, true) ?: [];
+    } elseif (is_array($raw_fimgs)) {
+        $dup_frag_images = $raw_fimgs;
+    }
+}
+
 $dup_sizes        = $duplicate_info ? (json_decode($duplicate_info['size_id'] ?? '[]', true) ?: []) : [];
 $val_size_id      = $_POST['size_id'] ?? (!empty($dup_sizes) ? $dup_sizes[0] : '');
 
@@ -799,7 +826,7 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
                                    data-name="<?= htmlspecialchars($f['fragrance_name']) ?>"
                                    data-image="<?= htmlspecialchars($f['fragrance_image'] ?? '') ?>"
                                    onchange="onFragranceSelectionChange(); updateAllSummaries();"
-                                   <?= (!empty($duplicate_info['fragrance_id']) && $duplicate_info['fragrance_id'] == $f['fragrance_id']) ? 'checked' : '' ?>>
+                                   <?= (in_array((int)$f['fragrance_id'], array_map('intval', $val_fragrances))) ? 'checked' : '' ?>>
                             <label for="frag-<?= $f['fragrance_id'] ?>">
                                 🏷️ <?= htmlspecialchars($f['fragrance_name']) ?>
                             </label>
@@ -817,9 +844,9 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
                 </div>
             </div>
 
-            <!-- Colors & Boxes -->
+            <!-- Colors -->
             <div class="card">
-                <h3><span class="icon">🎨</span> Vessel Color &amp; Packaging</h3>
+                <h3><span class="icon">🎨</span> Vessel Color</h3>
 
                 <div class="form-group">
                     <label>Vessel Color <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(select color)</small></label>
@@ -842,31 +869,6 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
                         </div>
                         <div class="summary-row" id="colorSummary">
                             <span class="summary-empty">No colors selected</span>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <hr class="section-divider">
-
-                <div class="form-group">
-                    <label>Box / Packaging <small style="text-transform:none;letter-spacing:0;font-weight:400;color:#94a3b8">(select multiple)</small></label>
-                    <?php if (empty($boxes_arr)): ?>
-                        <div class="empty-state">No box types found. Please add boxes first.</div>
-                    <?php else: ?>
-                        <div class="chip-group" id="boxChips">
-                            <?php foreach ($boxes_arr as $b): ?>
-                                <input type="checkbox" name="boxes[]"
-                                       id="box-<?= $b['box_id'] ?>"
-                                       value="<?= $b['box_id'] ?>"
-                                       onchange="updateAllSummaries()"
-                                       <?= in_array($b['box_id'], (array)$val_boxes) ? 'checked' : '' ?>>
-                                <label for="box-<?= $b['box_id'] ?>">
-                                    📦 <?= htmlspecialchars($b['box_name']) ?>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="summary-row" id="boxSummary">
-                            <span class="summary-empty">No packaging selected</span>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -1005,6 +1007,8 @@ $val_image        = $_POST['existing_image'] ?? ($duplicate_info['image'] ?? '')
 </div>
 
 <script>
+let dupFragranceImages = <?= json_encode($dup_frag_images) ?>;
+
 document.addEventListener('DOMContentLoaded', function () {
     updateAllSummaries();
     onFragranceSelectionChange();
@@ -1050,8 +1054,19 @@ function onFragranceSelectionChange() {
             box.className = 'fragrance-upload-box';
             box.setAttribute('data-fid', fid);
             
+            let customImg = (dupFragranceImages && dupFragranceImages[fid]) ? dupFragranceImages[fid] : null;
             let previewSrc = 'https://placehold.co/100x100?text=' + encodeURIComponent(fname);
-            if (defaultImg && defaultImg.trim() !== '') {
+            
+            if (customImg && customImg.trim() !== '') {
+                let cleanImg = customImg.trim();
+                if (cleanImg.startsWith('http')) {
+                    previewSrc = cleanImg;
+                } else if (cleanImg.includes('uploads/')) {
+                    previewSrc = '<?php echo base_url('/public/'); ?>' + cleanImg.replace(/^\/+/, '');
+                } else {
+                    previewSrc = '<?php echo base_url('/'); ?>' + cleanImg.replace(/^\/+/, '');
+                }
+            } else if (defaultImg && defaultImg.trim() !== '') {
                 let cleanImg = defaultImg.trim();
                 if (cleanImg.startsWith('http')) {
                     previewSrc = cleanImg;
@@ -1065,6 +1080,7 @@ function onFragranceSelectionChange() {
             box.innerHTML = `
                 <div class="fragrance-upload-title">🏷️ ${escapeHtml(fname)}</div>
                 <img id="frag_prev_${fid}" src="${previewSrc}" class="fragrance-img-preview" alt="${escapeHtml(fname)}">
+                <input type="hidden" name="existing_fragrance_image_${fid}" value="${escapeHtml(customImg || '')}">
                 <input type="file" name="fragrance_image_${fid}" accept="image/*" onchange="previewIndividualFragranceImage(this, ${fid})" style="font-size: 11px; width: 100%;">
             `;
             container.appendChild(box);
@@ -1116,7 +1132,6 @@ function previewImage(input) {
 function updateAllSummaries() {
     updateChipSummary('fragranceChips', 'fragranceSummary', 'No fragrances selected');
     updateChipSummary('colorChips',     'colorSummary',     'No colors selected');
-    updateChipSummary('boxChips',       'boxSummary',       'No packaging selected');
 }
 
 function updateChipSummary(chipsId, summaryId, emptyText) {
