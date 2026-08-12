@@ -98,7 +98,7 @@ class Order {
         if (strtolower($deliveryType) === 'express') {
             $shipping = 18.00;
         } else {
-            $shipping = ($subtotal >= 50) ? 0.00 : 9.00;
+            $shipping = ($subtotal >= 50) ? 0.00 : 12.00;
         }
 
         $taxRate = 0.08;

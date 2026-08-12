@@ -20,7 +20,7 @@ foreach ($cart as $item) {
     $totalItems += $item['qty'];
     $subtotal += $item['price'] * $item['qty'];
 }
-$shipping = ($subtotal >= 50) ? 0 : 0.00;
+$shipping = ($subtotal >= 50) ? 0 : 12.00;
 $tax = round($subtotal * 0.08, 2); // 8% tax
 $total = $subtotal + $shipping + $tax;
 
@@ -906,7 +906,7 @@ textarea { resize: vertical; min-height: 80px; }
                 <div class="delivery-name">Standard Shipping</div>
                 <div class="delivery-desc">5–8 business days · Tracked</div>
             </div>
-            <div class="delivery-price" id="standardShippingPrice">$0.00</div>
+            <div class="delivery-price" id="standardShippingPrice"><?php echo ($subtotal >= 50) ? 'FREE' : '$12.00'; ?></div>
         </label>
 
         <label class="delivery-option" id="shippingExpress">
@@ -1078,10 +1078,16 @@ textarea { resize: vertical; min-height: 80px; }
             </div>
 
             <!-- Shipping Progress -->
-            <div class="shipping-progress" id="shippingProgress" style="<?php echo ($subtotal >= 50) ? 'display:none;' : ''; ?>">
-                <span id="shippingProgressText">Add $<?php echo number_format(50 - $subtotal, 2); ?> more for free shipping</span>
+            <div class="shipping-progress" id="shippingProgress" style="<?php echo ($totalItems === 0) ? 'display:none;' : ''; ?>">
+                <span id="shippingProgressText">
+                    <?php if ($subtotal >= 50): ?>
+                        <strong>🎉 Congratulations! You've unlocked FREE Shipping!</strong>
+                    <?php else: ?>
+                        Add $<?php echo number_format(50 - $subtotal, 2); ?> more for free shipping
+                    <?php endif; ?>
+                </span>
                 <div class="shipping-bar">
-                    <div class="shipping-fill" id="shippingFill" style="width:<?php echo min(100, ($subtotal / 50) * 100); ?>%"></div>
+                    <div class="shipping-fill" id="shippingFill" style="width:<?php echo min(100, ($subtotal / 50) * 100); ?>%; <?php echo ($subtotal >= 50) ? 'background-color:#059669;' : ''; ?>"></div>
                 </div>
             </div>
 
@@ -1327,13 +1333,22 @@ textarea { resize: vertical; min-height: 80px; }
             if (discountLine) discountLine.style.display = 'none';
         }
 
-        const baseShipping = (count === 0) ? 0 : (expressShipping ? 18.00 : (subtotal >= 50 ? 0 : 0.00));
+        const baseShipping = (count === 0) ? 0 : (expressShipping ? 18.00 : (subtotal >= 50 ? 0 : 12.00));
         const tax = (count === 0) ? 0 : subtotal * 0.08;
         const total = (count === 0) ? 0 : Math.max(0, subtotal + baseShipping + tax - discountAmount);
 
         // Update DOM
         const countLabel = document.getElementById('itemCountLabel');
         if (countLabel) countLabel.textContent = `(${count} ${count === 1 ? 'item' : 'items'})`;
+
+        const stdPriceEl = document.getElementById('standardShippingPrice');
+        if (stdPriceEl) {
+            if (subtotal >= 50) {
+                stdPriceEl.innerHTML = '<span style="color:#059669; font-weight:700;">FREE (Waived)</span>';
+            } else {
+                stdPriceEl.textContent = '$12.00';
+            }
+        }
 
         const subtotalEl = document.getElementById('subtotalDisplay');
         if (subtotalEl) subtotalEl.textContent = '$' + subtotal.toFixed(2);
@@ -1367,16 +1382,31 @@ textarea { resize: vertical; min-height: 80px; }
         // Shipping progress
         const progress = document.getElementById('shippingProgress');
         if (progress) {
-            if (count === 0 || subtotal >= 50 || expressShipping) {
+            if (count === 0 || expressShipping) {
                 progress.style.display = 'none';
             } else {
                 progress.style.display = 'block';
-                const pct = Math.min(100, (subtotal / 50) * 100);
                 const fillEl = document.getElementById('shippingFill');
-                if (fillEl) fillEl.style.width = pct + '%';
                 const progText = document.getElementById('shippingProgressText');
-                if (progText) progText.textContent = 
-                    'Add $' + (50 - subtotal).toFixed(2) + ' more for free shipping';
+
+                if (subtotal >= 50) {
+                    if (fillEl) {
+                        fillEl.style.width = '100%';
+                        fillEl.style.backgroundColor = '#059669';
+                    }
+                    if (progText) {
+                        progText.innerHTML = '<strong>🎉 Congratulations! You\'ve unlocked FREE Shipping!</strong>';
+                    }
+                } else {
+                    const pct = Math.min(100, (subtotal / 50) * 100);
+                    if (fillEl) {
+                        fillEl.style.width = pct + '%';
+                        fillEl.style.backgroundColor = '';
+                    }
+                    if (progText) {
+                        progText.textContent = 'Add $' + (50 - subtotal).toFixed(2) + ' more for free shipping';
+                    }
+                }
             }
         }
 
