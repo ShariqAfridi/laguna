@@ -68,18 +68,19 @@
             width: 100%;
             max-width: 1280px;
             margin: 0 auto;
-            padding: 0 24px;
-            padding-top: 5rem;
+            padding: 90px 24px 30px 24px;
+            flex: 1;
+            justify-content: center;
         }
         
         @media (min-width: 1280px) {
             .lvh-content-wrapper {
-                padding-top: 4rem;
+                padding-top: 80px;
             }
         }
         @media (max-height: 800px) and (min-width: 1024px) {
             .lvh-content-wrapper {
-                padding-top: 2.8rem;
+                padding-top: 60px;
             }
         }
         
@@ -102,7 +103,7 @@
         .lvh-main-title {
             font-family: 'Arial Rounded MT Bold', 'Arial Rounded MT', 'Helvetica Rounded', Arial, sans-serif;
             font-weight: 400;
-            font-size: clamp(44px, 10vw, 98px);
+            font-size: clamp(44px, 8vw, 84px);
             line-height: 0.95;
             letter-spacing: 0.02em;
             color: #ffffff;
@@ -182,20 +183,22 @@
         
         /* ---------- INFINITE SCROLLING MARQUEE (HOME PAGE CANDLES STRIP CONCEPT) ---------- */
         .lvh-marquee-section {
-            padding: 40px 0 50px 0;
-            margin-top: 0;
+            padding: 24px 0 28px 0;
+            margin-top: auto;
             z-index: 15;
-            background: #ffffff;
+            background: rgba(6, 29, 43, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             position: relative;
             width: 100%;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-bottom: none;
         }
         
         .lvh-strip-header-container {
             text-align: center;
             max-width: 900px;
-            margin: 0 auto 36px auto;
+            margin: 0 auto 20px auto;
             padding: 0 20px;
         }
 
@@ -206,15 +209,15 @@
             line-height: 1.3;
             letter-spacing: 3px;
             text-transform: uppercase;
-            color: #1a2b3c;
-            margin-bottom: 6px;
+            color: #ffffff;
+            margin-bottom: 4px;
         }
 
         .lvh-strip-subtitle {
             font-family: 'Inter', sans-serif;
             font-weight: 400;
             font-size: 14px;
-            color: #5a6d7a;
+            color: rgba(255, 255, 255, 0.85);
             letter-spacing: 0.5px;
         }
         
@@ -223,7 +226,7 @@
             width: 100%;
             overflow: hidden;
             pointer-events: auto;
-            padding: 10px 0;
+            padding: 5px 0;
             margin: 0;
         }
         
@@ -253,7 +256,7 @@
 
         .lvh-candle-img-wrapper {
             width: 100%;
-            height: 220px;
+            height: 200px;
             display: flex;
             align-items: flex-end;
             justify-content: center;
@@ -261,14 +264,15 @@
 
         .lvh-candle-img {
             max-width: 100%;
-            max-height: 220px;
+            max-height: 200px;
             object-fit: contain;
             display: block;
             margin: 0 auto;
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
         }
 
         .lvh-candle-meta {
-            margin-top: 10px;
+            margin-top: 8px;
             text-align: center;
             min-height: 24px;
             display: flex;
@@ -281,20 +285,20 @@
             font-family: 'Inter', sans-serif;
             font-weight: 700;
             font-size: 11px;
-            color: #1a2b3c;
+            color: #ffffff;
             letter-spacing: 1.5px;
             text-transform: uppercase;
         }
      
         @media (min-width: 768px) {
             .lvh-marquee-item {
-                width: 180px;
+                width: 170px;
             }
             .lvh-candle-img-wrapper {
-                height: 220px;
+                height: 200px;
             }
             .lvh-candle-img {
-                max-height: 220px;
+                max-height: 200px;
             }
             .lvh-marquee-track {
                 gap: 52px;
@@ -303,13 +307,13 @@
         
         @media (min-width: 1024px) {
             .lvh-marquee-item {
-                width: 200px;
+                width: 190px;
             }
             .lvh-candle-img-wrapper {
-                height: 240px;
+                height: 210px;
             }
             .lvh-candle-img {
-                max-height: 240px;
+                max-height: 210px;
             }
             .lvh-marquee-track {
                 gap: 56px;
@@ -341,10 +345,10 @@
                 min-height: 100vh;
             }
             .lvh-content-wrapper {
-                padding-top: 3.5rem;
+                padding-top: 3rem;
             }
             .lvh-main-title {
-                font-size: 48px;
+                font-size: 44px;
                 line-height: 1.05;
             }
             .lvh-tagline-text {
@@ -364,7 +368,7 @@
                 font-size: 12px;
             }
             .lvh-marquee-section {
-                padding: 30px 0 40px 0;
+                padding: 20px 0 24px 0;
             }
         }
         
@@ -395,13 +399,8 @@
                 <a href="<?php echo $base; ?>/accessories" class="lvh-btn-modern lvh-btn-outline">Accessories</a>
             </div>
         </div>
-        
-        <!-- Bottom Gradient -->
-        <div class="lvh-bottom-gradient"></div>
-     
-    </section>
-       
-        <!-- INFINITE SCROLLING MARQUEE (HOME PAGE CANDLES STRIP CONCEPT) -->
+
+        <!-- INFINITE SCROLLING MARQUEE (HOME PAGE CANDLES STRIP CONCEPT) INSIDE BOTTOM OF HERO SECTION -->
         <div class="lvh-marquee-section">
             <div class="lvh-strip-header-container">
                 <h2 class="lvh-strip-title">PERSONALIZED ENGRAVING AVAILABLE</h2>
@@ -442,6 +441,11 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Bottom Gradient -->
+        <div class="lvh-bottom-gradient"></div>
+     
+    </section>
         
     <script>
         (function() {
