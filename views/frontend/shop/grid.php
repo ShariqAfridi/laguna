@@ -126,22 +126,18 @@ if (!$showVesselSelection) {
             }
             $row['image_url'] = $image_path ?: 'https://placehold.co/600x600?text=No+Image';
 
-            $fragrance_id = is_numeric($row['fragrance_id']) ? $row['fragrance_id'] : 0;
-            $row['fragrance_name'] = $fragrances[$fragrance_id] ?? 'Luxury Candle';
-            
-            // Get fragrance image dynamically from DB
-            $fragrance_image_name = '';
-            if ($fragrance_id > 0 && !empty($fragrance_details[$fragrance_id])) {
-                $fImg = trim($fragrance_details[$fragrance_id]);
-                if (strpos($fImg, 'http') === 0) {
-                    $fragrance_image_name = $fImg;
-                } elseif (strpos($fImg, 'uploads/') !== false) {
-                    $fragrance_image_name = base_url('/public/' . ltrim($fImg, '/'));
-                } else {
-                    $fragrance_image_name = base_url('/' . ltrim($fImg, '/'));
-                }
+            $f_dec = json_decode($row['fragrance_id'], true);
+            if (is_array($f_dec)) {
+                $row['fragrance_ids'] = array_map('intval', $f_dec);
+            } elseif (is_numeric($row['fragrance_id']) && $row['fragrance_id'] > 0) {
+                $row['fragrance_ids'] = [(int)$row['fragrance_id']];
+            } else {
+                $row['fragrance_ids'] = [];
             }
-            $row['fragrance_image'] = $fragrance_image_name;
+
+            $fi_dec = json_decode($row['fragrance_images'], true);
+            $row['fragrance_images_map'] = is_array($fi_dec) ? $fi_dec : [];
+
             $products[] = $row;
         }
     }
@@ -939,7 +935,47 @@ if (!empty($boxes)) {
                 'items' => []
             ];
         }
-        $colorVariations[$primaryColorId]['items'][] = $p;
+
+        $f_ids = !empty($p['fragrance_ids']) ? $p['fragrance_ids'] : [0];
+        foreach ($f_ids as $fid) {
+            $item = $p;
+            $item['fragrance_id'] = $fid;
+            $item['fragrance_name'] = $fragrances[$fid] ?? 'Luxury Candle';
+            
+            // Fragrance master image from fragrances table
+            $item['fragrance_image'] = '';
+            if ($fid > 0 && !empty($fragrance_details[$fid])) {
+                $fImg = trim($fragrance_details[$fid]);
+                if (strpos($fImg, 'http') === 0) {
+                    $item['fragrance_image'] = $fImg;
+                } elseif (strpos($fImg, 'uploads/') !== false) {
+                    $item['fragrance_image'] = base_url('/public/' . ltrim($fImg, '/'));
+                } else {
+                    $item['fragrance_image'] = base_url('/' . ltrim($fImg, '/'));
+                }
+            }
+
+            // Custom picture uploaded for this specific fragrance variation
+            $f_key = (string)$fid;
+            if (isset($p['fragrance_images_map'][$f_key]) && !empty($p['fragrance_images_map'][$f_key])) {
+                $custom_img = $p['fragrance_images_map'][$f_key];
+                if (strpos($custom_img, 'http') === 0) {
+                    $item['image'] = $custom_img;
+                } elseif (strpos($custom_img, 'uploads/') !== false) {
+                    $item['image'] = 'uploads/products/' . basename($custom_img);
+                } else {
+                    $item['image'] = $custom_img;
+                }
+            }
+
+            // Dynamic variation SKU: Vessel SKU + Color SKU + Fragrance SKU
+            $vessel_letter = strtoupper($selectedVessel);
+            $color_num = sprintf('%02d', $primaryColorId);
+            $frag_num = sprintf('%02d', $fid);
+            $item['sku'] = $vessel_letter . $color_num . $frag_num;
+
+            $colorVariations[$primaryColorId]['items'][] = $item;
+        }
     }
     ?>
     

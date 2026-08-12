@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Construct JSON map of fragrance images
+        // Construct JSON map of fragrance images & JSON array of selected fragrance IDs
         $fragrance_images_map = [];
         foreach ($selected_fragrance_ids as $fid) {
             if (isset($uploaded_fragrance_images[$fid])) {
@@ -144,117 +144,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         $fragrance_images_json = json_encode($fragrance_images_map);
+        $fragrance_ids_json    = json_encode(array_values($selected_fragrance_ids));
 
-        $inserted_count = 0;
+        // Compute base SKU
+        if (!empty($user_sku)) {
+            $final_sku = strtoupper($user_sku);
+        } else {
+            $first_frag_sku = '00';
+            if (!empty($selected_fragrance_ids)) {
+                $ffid = $selected_fragrance_ids[0];
+                if (!empty($fragrance_map[$ffid]['sku'])) {
+                    $first_frag_sku = $fragrance_map[$ffid]['sku'];
+                } else {
+                    $first_frag_sku = sprintf('%02d', $ffid);
+                }
+            }
+            $final_sku = strtoupper($vessel_sku . $color_sku . $first_frag_sku);
+        }
+
+        // Compute product name
+        if (empty($base_product_name)) {
+            if (count($selected_fragrance_ids) === 1 && isset($fragrance_map[$selected_fragrance_ids[0]])) {
+                $p_name = $fragrance_map[$selected_fragrance_ids[0]]['fragrance_name'] . ' Candle';
+            } else {
+                $p_name = 'Custom Candle';
+            }
+        } else {
+            $p_name = $base_product_name;
+        }
+
+        $primary_image = $main_image;
+        if (empty($primary_image) && !empty($uploaded_fragrance_images)) {
+            $primary_image = reset($uploaded_fragrance_images);
+        }
+
+        $size_ids_json   = json_encode([$selected_size]);
+        $size_prices_str = number_format((float)$single_price, 2, '.', '');
+        $size_qtys_str   = (string)$single_qty;
+        $total_qty       = $single_qty;
+
         $conn->begin_transaction();
 
         try {
-            foreach ($selected_fragrance_ids as $fid) {
-                $frag_info = $fragrance_map[$fid] ?? null;
-                $frag_name = $frag_info['fragrance_name'] ?? 'Scent';
-                $frag_sku  = !empty($frag_info['sku']) ? $frag_info['sku'] : sprintf('%02d', $fid);
+            // Check if product with this SKU already exists
+            $check = $conn->prepare("SELECT product_id FROM products WHERE sku = ?");
+            $check->bind_param("s", $final_sku);
+            $check->execute();
+            $cres = $check->get_result();
 
-                // Determine specific image for this product variation
-                $variation_image = $uploaded_fragrance_images[$fid] ?? ($main_image ?: '');
+            if ($cres && $row = $cres->fetch_assoc()) {
+                $existing_id = (int)$row['product_id'];
+                $check->close();
 
-                // Compute product name for this fragrance variation
-                if (!empty($base_product_name) && count($selected_fragrance_ids) === 1) {
-                    $p_name = $base_product_name;
-                } elseif (!empty($base_product_name)) {
-                    $p_name = $base_product_name . ' (' . $frag_name . ')';
-                } else {
-                    $p_name = $frag_name . ' Candle';
-                }
-
-                // Compute final SKU
-                $final_sku = strtoupper($vessel_sku . $color_sku . $frag_sku);
-
-                $size_ids_json   = json_encode([$selected_size]);
-                $size_prices_str = number_format((float)$single_price, 2, '.', '');
-                $size_qtys_str   = (string)$single_qty;
-                $total_qty       = $single_qty;
-
-                // Check if product with this SKU already exists
-                $check = $conn->prepare("SELECT product_id FROM products WHERE sku = ?");
-                $check->bind_param("s", $final_sku);
-                $check->execute();
-                $cres = $check->get_result();
-
-                if ($cres && $row = $cres->fetch_assoc()) {
-                    // Update existing variation
-                    $existing_id = (int)$row['product_id'];
-                    $check->close();
-
-                    $u_stmt = $conn->prepare("
-                        UPDATE products SET 
-                            product_name = ?,
-                            description = ?,
-                            image = ?,
-                            fragrance_images = ?,
-                            qty = ?,
-                            fragrance_id = ?,
-                            color_id = ?,
-                            size_id = ?,
-                            size_prices = ?,
-                            size_qtys = ?,
-                            box_id = ?,
-                            wick_type = ?,
-                            updated_at = NOW()
-                        WHERE product_id = ?
-                    ");
-                    $u_stmt->bind_param(
-                        "ssssiissssssi",
-                        $p_name,
-                        $description,
-                        $variation_image,
-                        $fragrance_images_json,
-                        $total_qty,
-                        $fid,
-                        $colors_json,
-                        $size_ids_json,
-                        $size_prices_str,
-                        $size_qtys_str,
-                        $boxes_json,
-                        $wick_type,
-                        $existing_id
-                    );
-                    $u_stmt->execute();
-                    $u_stmt->close();
-                } else {
-                    $check->close();
-                    // Insert new variation
-                    $i_stmt = $conn->prepare("
-                        INSERT INTO products
-                            (product_name, sku, description, image, fragrance_images, qty,
-                             fragrance_id, color_id, size_id, size_prices, size_qtys, box_id, wick_type,
-                             created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-                    ");
-                    $i_stmt->bind_param(
-                        "sssssiissssss",
-                        $p_name,
-                        $final_sku,
-                        $description,
-                        $variation_image,
-                        $fragrance_images_json,
-                        $total_qty,
-                        $fid,
-                        $colors_json,
-                        $size_ids_json,
-                        $size_prices_str,
-                        $size_qtys_str,
-                        $boxes_json,
-                        $wick_type
-                    );
-                    $i_stmt->execute();
-                    $i_stmt->close();
-                }
-                $inserted_count++;
+                $u_stmt = $conn->prepare("
+                    UPDATE products SET 
+                        product_name = ?,
+                        description = ?,
+                        image = ?,
+                        fragrance_images = ?,
+                        qty = ?,
+                        fragrance_id = ?,
+                        color_id = ?,
+                        size_id = ?,
+                        size_prices = ?,
+                        size_qtys = ?,
+                        box_id = ?,
+                        wick_type = ?,
+                        updated_at = NOW()
+                    WHERE product_id = ?
+                ");
+                $u_stmt->bind_param(
+                    "ssssisssssssi",
+                    $p_name,
+                    $description,
+                    $primary_image,
+                    $fragrance_images_json,
+                    $total_qty,
+                    $fragrance_ids_json,
+                    $colors_json,
+                    $size_ids_json,
+                    $size_prices_str,
+                    $size_qtys_str,
+                    $boxes_json,
+                    $wick_type,
+                    $existing_id
+                );
+                $u_stmt->execute();
+                $u_stmt->close();
+            } else {
+                $check->close();
+                $i_stmt = $conn->prepare("
+                    INSERT INTO products
+                        (product_name, sku, description, image, fragrance_images, qty,
+                         fragrance_id, color_id, size_id, size_prices, size_qtys, box_id, wick_type,
+                         created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ");
+                $i_stmt->bind_param(
+                    "sssssisssssss",
+                    $p_name,
+                    $final_sku,
+                    $description,
+                    $primary_image,
+                    $fragrance_images_json,
+                    $total_qty,
+                    $fragrance_ids_json,
+                    $colors_json,
+                    $size_ids_json,
+                    $size_prices_str,
+                    $size_qtys_str,
+                    $boxes_json,
+                    $wick_type
+                );
+                $i_stmt->execute();
+                $i_stmt->close();
             }
 
             $conn->commit();
             $show_success = true;
-            $success_message = "$inserted_count fragrance variation product(s) saved successfully with fragrance-specific images! Redirecting...";
+            $success_message = "Product saved successfully with " . count($selected_fragrance_ids) . " fragrance variation(s)! Redirecting...";
             echo '<script>setTimeout(function(){ window.location.href = "' . base_url('/admin/list_product') . '"; }, 1200);</script>';
 
         } catch (Exception $e) {

@@ -862,9 +862,35 @@ function build_page_url($p) {
                                         SKU: <?= htmlspecialchars($row['sku']) ?>
                                     </div>
                                 <?php endif; ?>
-                                <?php if (!empty($row['fragrance_name'])): ?>
-                                    <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">
-                                        🏷️ <?= htmlspecialchars($row['fragrance_name']) ?>
+                                <?php 
+                                static $fragrances_map_cache = null;
+                                if ($fragrances_map_cache === null) {
+                                    $fragrances_map_cache = [];
+                                    $res_f_all = $conn->query("SELECT fragrance_id, fragrance_name FROM fragrances");
+                                    if ($res_f_all) {
+                                        while ($rf = $res_f_all->fetch_assoc()) {
+                                            $fragrances_map_cache[(int)$rf['fragrance_id']] = $rf['fragrance_name'];
+                                        }
+                                    }
+                                }
+
+                                $f_dec = json_decode($row['fragrance_id'], true);
+                                $f_names = [];
+                                if (is_array($f_dec)) {
+                                    foreach ($f_dec as $fid) {
+                                        if (isset($fragrances_map_cache[(int)$fid])) {
+                                            $f_names[] = $fragrances_map_cache[(int)$fid];
+                                        }
+                                    }
+                                } elseif (is_numeric($row['fragrance_id']) && isset($fragrances_map_cache[(int)$row['fragrance_id']])) {
+                                    $f_names[] = $fragrances_map_cache[(int)$row['fragrance_id']];
+                                } elseif (!empty($row['fragrance_name'])) {
+                                    $f_names[] = $row['fragrance_name'];
+                                }
+                                ?>
+                                <?php if (!empty($f_names)): ?>
+                                    <div style="font-size: 11px; color: #004b66; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 6px; display: inline-block; margin-top: 4px; font-weight: 500;">
+                                        🏷️ <?= htmlspecialchars(implode(' · ', $f_names)) ?>
                                     </div>
                                 <?php endif; ?>
                             </td>
