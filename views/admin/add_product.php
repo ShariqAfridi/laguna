@@ -154,16 +154,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $frag_name = $frag_info['fragrance_name'] ?? 'Scent';
                 $frag_sku  = !empty($frag_info['sku']) ? $frag_info['sku'] : sprintf('%02d', $fid);
 
-                // Update fragrances master table if a custom image was uploaded for this fragrance
-                if (isset($uploaded_fragrance_images[$fid])) {
-                    $u_frag = $conn->prepare("UPDATE fragrances SET fragrance_image = ? WHERE fragrance_id = ?");
-                    $u_frag->bind_param("si", $uploaded_fragrance_images[$fid], $fid);
-                    $u_frag->execute();
-                    $u_frag->close();
-                }
-
-                // Determine specific image for this fragrance
-                $variation_image = $uploaded_fragrance_images[$fid] ?? ($main_image ?: ($frag_info['fragrance_image'] ?? ''));
+                // Determine specific image for this product variation
+                $variation_image = $uploaded_fragrance_images[$fid] ?? ($main_image ?: '');
 
                 // Compute product name for this fragrance variation
                 if (!empty($base_product_name) && count($selected_fragrance_ids) === 1) {

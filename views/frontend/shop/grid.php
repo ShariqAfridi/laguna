@@ -1175,8 +1175,10 @@ function renderFragranceOptions(items, activeFragId) {
         const isActive = (parseInt(item.fragrance_id) === parseInt(activeFragId));
         tile.className = 'fragrance-option-tile' + (isActive ? ' active' : '');
         
-        let varImg = getImageUrl(item);
-        let iconHtml = `<img src="${escapeHtml(varImg)}" style="width: 28px; height: 28px; object-fit: cover; border-radius: 4px;" alt="${escapeHtml(item.fragrance_name)}">`;
+        let iconHtml = '<div style="font-size: 16px;">🏷️</div>';
+        if (item.fragrance_image && item.fragrance_image.trim() !== '') {
+            iconHtml = `<img src="${escapeHtml(item.fragrance_image)}" style="width: 24px; height: 24px; object-fit: cover; border-radius: 4px;" alt="${escapeHtml(item.fragrance_name)}">`;
+        }
 
         tile.innerHTML = `
             ${iconHtml}
