@@ -958,14 +958,15 @@ if (!empty($boxes)) {
             // Custom picture uploaded for this specific fragrance variation
             $f_key = (string)$fid;
             if (isset($p['fragrance_images_map'][$f_key]) && !empty($p['fragrance_images_map'][$f_key])) {
-                $custom_img = $p['fragrance_images_map'][$f_key];
+                $custom_img = trim($p['fragrance_images_map'][$f_key]);
                 if (strpos($custom_img, 'http') === 0) {
                     $item['image'] = $custom_img;
-                } elseif (strpos($custom_img, 'uploads/') !== false) {
-                    $item['image'] = 'uploads/products/' . basename($custom_img);
+                    $item['image_url'] = $custom_img;
                 } else {
-                    $item['image'] = $custom_img;
+                    $item['image'] = 'uploads/products/' . basename($custom_img);
+                    $item['image_url'] = base_url('/public/uploads/products/' . basename($custom_img));
                 }
+                $item['fragrance_image'] = $item['image_url'];
             }
 
             // Dynamic variation SKU: Vessel SKU + Color SKU + Fragrance SKU
@@ -1186,13 +1187,15 @@ function openVariationModal(variationData, targetFragId) {
 
 function getImageUrl(item) {
     if (!item) return 'https://placehold.co/600x600?text=No+Image';
+    if (item.image_url && typeof item.image_url === 'string' && item.image_url.trim() !== '') {
+        return item.image_url.trim();
+    }
     if (item.image && typeof item.image === 'string' && item.image.trim() !== '') {
         let img = item.image.trim();
         if (img.startsWith('http')) return img;
         if (img.includes('uploads/')) return '<?= base_url('/public/') ?>' + img.replace(/^\/+/, '');
         return '<?= $base ?>/img/' + img.replace(/^\/+/, '');
     }
-    if (item.image_url) return item.image_url;
     return 'https://placehold.co/600x600?text=No+Image';
 }
 
@@ -1211,10 +1214,8 @@ function renderFragranceOptions(items, activeFragId) {
         const isActive = (parseInt(item.fragrance_id) === parseInt(activeFragId));
         tile.className = 'fragrance-option-tile' + (isActive ? ' active' : '');
         
-        let iconHtml = '<div style="font-size: 16px;">🏷️</div>';
-        if (item.fragrance_image && item.fragrance_image.trim() !== '') {
-            iconHtml = `<img src="${escapeHtml(item.fragrance_image)}" style="width: 24px; height: 24px; object-fit: cover; border-radius: 4px;" alt="${escapeHtml(item.fragrance_name)}">`;
-        }
+        let varImg = getImageUrl(item);
+        let iconHtml = `<img src="${escapeHtml(varImg)}" style="width: 28px; height: 28px; object-fit: cover; border-radius: 4px;" alt="${escapeHtml(item.fragrance_name)}">`;
 
         tile.innerHTML = `
             ${iconHtml}
