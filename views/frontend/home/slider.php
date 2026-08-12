@@ -14,15 +14,15 @@
         /* ---------- RESET / GLOBAL SCOPING (no leaks) ---------- */
         .laguna-vibe-marquee-hero {
             all: initial;
-            display: block;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             position: relative;
             width: 100%;
-            height: 100svh;
-            min-height: 660px;
+            height: 100vh;
+            min-height: 720px;
             overflow: hidden;
             isolation: isolate;
-            contain: layout style paint;
-            align-content: center;
         }
         
         .laguna-vibe-marquee-hero *,
@@ -51,8 +51,8 @@
             inset: 0;
             background: linear-gradient(to bottom, 
                         rgba(6, 29, 43, 0.35) 0%, 
-                        rgba(6, 29, 43, 0.25) 40%, 
-                        rgba(6, 29, 43, 0.9) 100%);
+                        rgba(6, 29, 43, 0.15) 50%, 
+                        rgba(6, 29, 43, 0.8) 100%);
             pointer-events: none;
             z-index: 1;
         }
@@ -68,7 +68,7 @@
             width: 100%;
             max-width: 1280px;
             margin: 0 auto;
-            padding: 90px 24px 30px 24px;
+            padding: 90px 24px 180px 24px;
             flex: 1;
             justify-content: center;
         }
@@ -76,11 +76,13 @@
         @media (min-width: 1280px) {
             .lvh-content-wrapper {
                 padding-top: 80px;
+                padding-bottom: 190px;
             }
         }
         @media (max-height: 800px) and (min-width: 1024px) {
             .lvh-content-wrapper {
-                padding-top: 60px;
+                padding-top: 50px;
+                padding-bottom: 170px;
             }
         }
         
@@ -181,18 +183,19 @@
             transform: scale(1.02);
         }
         
-        /* ---------- INFINITE SCROLLING MARQUEE (HOME PAGE CANDLES STRIP CONCEPT) ---------- */
+        /* ---------- INFINITE SCROLLING MARQUEE (ALIGNED FLUSH TO BOTTOM OF HERO VIDEO) ---------- */
         .lvh-marquee-section {
-            padding: 24px 0 28px 0;
-            margin-top: auto;
-            z-index: 15;
-            background: rgba(6, 29, 43, 0.45);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            position: relative;
+            position: absolute;
+            bottom: 0;
+            left: 0;
             width: 100%;
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            border-bottom: none;
+            padding: 10px 0 16px 0;
+            z-index: 15;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
         }
         
         .lvh-strip-header-container {
