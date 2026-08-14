@@ -88,7 +88,7 @@ if ($bRes && $bRes->num_rows > 0) {
 }
 
 // 5. Fetch Products & Build Variations
-$pRes = $conn->query("SELECT * FROM products WHERE (qty > 0 OR qty IS NULL) ORDER BY product_id ASC");
+$pRes = $conn->query("SELECT * FROM products ORDER BY product_id ASC");
 $products = [];
 if ($pRes && $pRes->num_rows > 0) {
     while ($row = $pRes->fetch_assoc()) {
@@ -206,21 +206,35 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
     <?php foreach ($homepageVariations as $var): 
         $firstItem = !empty($var['items']) ? $var['items'][0] : null;
         $fragranceSubtitle = $firstItem ? strtoupper($firstItem['fragrance_name']) : (count($var['items']) . ' FRAGRANCES AVAILABLE');
-        // ALWAYS use the main product image for the card on the homepage
         $cardImage = $var['image_url'];
+        
+        $varStock = 0;
+        foreach ($var['items'] as $vi) {
+            $varStock += intval($vi['qty'] ?? 0);
+        }
+        $isOutOfStock = ($varStock <= 0);
     ?>
-      <div class="lvc-card" 
+      <div class="lvc-card <?= $isOutOfStock ? 'is-out-of-stock' : '' ?>" 
            style="cursor: pointer;" 
            onclick="openVariationModal(<?= htmlspecialchars(json_encode($var), ENT_QUOTES, 'UTF-8') ?>)">
-        <div class="lvc-img-container">
+        <div class="lvc-img-container" style="position: relative;">
           <img src="<?php echo htmlspecialchars($cardImage); ?>" 
                alt="<?php echo htmlspecialchars($var['color_name']); ?>" 
                onerror="this.src='https://placehold.co/400x500/14222b/FFFFFF?text=LVB+Candle'">
+          <?php if ($isOutOfStock): ?>
+            <span class="lvc-badge-outofstock"><i class="fas fa-times-circle"></i> Out of Stock</span>
+          <?php endif; ?>
         </div>
         <div class="lvc-info">
           <div class="lvc-text">
             <span class="lvc-p-name"><?php echo htmlspecialchars($var['color_name']); ?></span>
-            <span class="lvc-p-desc"><?php echo htmlspecialchars($fragranceSubtitle); ?></span>
+            <span class="lvc-p-desc">
+              <?php if ($isOutOfStock): ?>
+                <span style="color:#b91c1c; font-weight:700;">OUT OF STOCK</span>
+              <?php else: ?>
+                <?php echo htmlspecialchars($fragranceSubtitle); ?>
+              <?php endif; ?>
+            </span>
           </div>
           <span class="lvc-price">$<?php echo number_format($var['price'], 0); ?></span>
         </div>
@@ -383,6 +397,28 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
 .lvc-collection .lvc-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.1);
+}
+
+.lvc-collection .lvc-card.is-out-of-stock img {
+  filter: grayscale(35%);
+  opacity: 0.85;
+}
+
+.lvc-badge-outofstock {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(185, 28, 28, 0.9);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 .lvc-collection .lvc-img-container {
@@ -853,6 +889,14 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
     box-shadow: 0 12px 24px -4px rgba(0, 75, 102, 0.45);
 }
 .add-to-cart-btn:active { transform: translateY(0); }
+.add-to-cart-btn.btn-disabled,
+.add-to-cart-btn:disabled {
+    background: #94a3b8 !important;
+    cursor: not-allowed !important;
+    opacity: 0.65;
+    box-shadow: none !important;
+    transform: none !important;
+}
 
 .stock-status { font-size: 12px; color: #ef4444; margin-top: 6px; text-align: center; }
 
@@ -988,6 +1032,13 @@ function openVariationModal(variationData, targetFragId) {
     document.getElementById('productModal').style.display = 'flex';
 }
 
+function getProductStock(item) {
+    if (!item) return 0;
+    if (item.qty !== undefined && item.qty !== null) return parseInt(item.qty);
+    if (item.quantity !== undefined && item.quantity !== null) return parseInt(item.quantity);
+    return 100;
+}
+
 function getImageUrl(item) {
     if (!item) return 'https://placehold.co/600x600?text=No+Image';
     if (item.image_url && typeof item.image_url === 'string' && item.image_url.trim() !== '') {
@@ -1014,10 +1065,15 @@ function renderFragranceOptions(items, activeFragId) {
         let varImg = getImageUrl(item);
         let iconHtml = `<img src="${escapeHtml(varImg)}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" alt="${escapeHtml(item.fragrance_name)}">`;
 
+        let itemStock = getProductStock(item);
+        let stockTag = itemStock <= 0 
+            ? `<span style="font-size: 10px; font-weight: 700; color: #b91c1c; background: #fee2e2; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">Out of Stock</span>`
+            : '';
+
         tile.innerHTML = `
             ${iconHtml}
             <div style="flex: 1;">
-                <div class="fragrance-tile-title">${escapeHtml(item.fragrance_name)}</div>
+                <div class="fragrance-tile-title">${escapeHtml(item.fragrance_name)} ${stockTag}</div>
                 <div class="fragrance-tile-sku">SKU: ${escapeHtml(item.sku)}</div>
             </div>
             <div style="font-size: 12px; font-weight: 600; color: #004b66;">$${parseFloat(item.size_prices || 29).toFixed(2)}</div>
@@ -1082,6 +1138,13 @@ function switchFragranceItem(productData) {
     document.getElementById('modalDesc').innerText = productData.description || ('Handcrafted candle in a luminous ' + colorNameText.toLowerCase() + ' vessel.');
 
     updateSelectedScentCard(productData.fragrance_id, productData.fragrance_name);
+    
+    const stockQty = getProductStock(productData);
+    if (stockQty <= 0) {
+        quantity = 0;
+    } else if (quantity < 1) {
+        quantity = 1;
+    }
     updateDisplay();
 }
 
@@ -1233,18 +1296,60 @@ function getFullProductSKU(boxId) {
 }
 
 function updateModalQty(delta) {
+    const stockQty = getProductStock(currentProduct);
+    if (stockQty <= 0) {
+        quantity = 0;
+        updateDisplay();
+        return;
+    }
     const newQty = quantity + delta;
-    if (newQty >= 1) {
+    if (newQty >= 1 && newQty <= stockQty) {
         quantity = newQty;
         updateDisplay();
+        const warningEl = document.getElementById('stockWarning');
+        if (warningEl) {
+            warningEl.innerHTML = (stockQty <= 5) ? `<div style="color:#d97706; font-size:12px; font-weight:600; margin-top:6px; text-align:center;"><i class="fas fa-fire"></i> Only ${stockQty} left in stock — order soon!</div>` : '';
+        }
+    } else if (newQty > stockQty) {
+        const warningEl = document.getElementById('stockWarning');
+        if (warningEl) {
+            warningEl.innerHTML = `<div style="color:#ef4444; font-size:12px; font-weight:600; margin-top:6px; text-align:center;">Maximum available stock is ${stockQty} units</div>`;
+        }
     }
 }
 
 function updateDisplay() {
+    const stockQty = getProductStock(currentProduct);
     const total = (currentBasePrice + boxPrice) * quantity;
     document.getElementById('modalQty').innerText = quantity;
     document.getElementById('modalTotal').innerHTML = '$' + total.toFixed(2);
-    document.getElementById('btnPrice').innerHTML = '$' + total.toFixed(2);
+    
+    const addCartBtn = document.getElementById('addToCartAction');
+    const warningEl = document.getElementById('stockWarning');
+
+    if (stockQty <= 0) {
+        if (addCartBtn) {
+            addCartBtn.disabled = true;
+            addCartBtn.classList.add('btn-disabled');
+            addCartBtn.innerHTML = '<i class="fas fa-ban"></i> Out of Stock';
+        }
+        if (warningEl) {
+            warningEl.innerHTML = '<div style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:8px 12px; border-radius:8px; font-weight:600; font-size:12px; margin-top:8px; text-align:center;"><i class="fas fa-times-circle"></i> This scent is currently out of stock.</div>';
+        }
+    } else {
+        if (addCartBtn) {
+            addCartBtn.disabled = false;
+            addCartBtn.classList.remove('btn-disabled');
+            addCartBtn.innerHTML = 'Add To Cart · <span id="btnPrice">$' + total.toFixed(2) + '</span>';
+        }
+        if (warningEl) {
+            if (stockQty <= 5) {
+                warningEl.innerHTML = `<div style="color:#d97706; font-size:12px; font-weight:600; margin-top:6px; text-align:center;"><i class="fas fa-fire"></i> Only ${stockQty} left in stock — order soon!</div>`;
+            } else {
+                warningEl.innerHTML = '';
+            }
+        }
+    }
 }
 
 function closeModal() {
@@ -1255,6 +1360,12 @@ const addCartBtn = document.getElementById('addToCartAction');
 if (addCartBtn) {
     addCartBtn.onclick = function() {
         if (!currentProduct) return;
+
+        const stockQty = getProductStock(currentProduct);
+        if (stockQty <= 0) {
+            alert('Sorry, this product is currently out of stock.');
+            return;
+        }
 
         let vesselCode = getProductVesselCode(currentProduct).toLowerCase();
         let catObj = (categoriesData && categoriesData[vesselCode]) ? categoriesData[vesselCode] : (categoriesData ? categoriesData['c'] : null);
@@ -1283,6 +1394,7 @@ if (addCartBtn) {
                     price: currentBasePrice + boxPrice,
                     image: getImageUrl(currentProduct),
                     qty: quantity,
+                    stock: stockQty,
                     product_id: currentProduct.product_id,
                     size_id: currentSizeId,
                     size_name: selectedSizeName,

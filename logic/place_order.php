@@ -44,6 +44,32 @@ if (empty($cart)) {
     return_order_error("Your cart is empty. Please add items before checking out.", $is_ajax);
 }
 
+// ====================== VALIDATE STOCK ======================
+foreach ($cart as $cItem) {
+    $pId = intval($cItem['product_id'] ?? $cItem['id'] ?? 0);
+    $reqQty = intval($cItem['qty'] ?? 1);
+    $pName = $cItem['name'] ?? 'Selected product';
+
+    if ($pId > 0) {
+        $stCheck = $conn->prepare("SELECT qty, product_name FROM products WHERE product_id = ?");
+        if ($stCheck) {
+            $stCheck->bind_param("i", $pId);
+            $stCheck->execute();
+            $pRow = $stCheck->get_result()->fetch_assoc();
+            $stCheck->close();
+
+            if ($pRow) {
+                $avail = intval($pRow['qty'] ?? 0);
+                if ($avail <= 0) {
+                    return_order_error("Sorry, '" . htmlspecialchars($pRow['product_name']) . "' is currently Out of Stock.", $is_ajax);
+                } elseif ($reqQty > $avail) {
+                    return_order_error("Sorry, only " . $avail . " units of '" . htmlspecialchars($pRow['product_name']) . "' are available in stock.", $is_ajax);
+                }
+            }
+        }
+    }
+}
+
 // ====================== CUSTOMER DATA ======================
 $first_name     = trim($_POST['first_name'] ?? '');
 $last_name      = trim($_POST['last_name'] ?? '');
@@ -169,6 +195,16 @@ foreach ($cart as $item) {
         $order_id, $product_id, $product_name, $scent, $qty, $price, $item_total
     );
     $stmt_item->execute();
+
+    // Decrement stock quantity
+    if ($product_id > 0) {
+        $decStmt = $conn->prepare("UPDATE products SET qty = GREATEST(0, qty - ?) WHERE product_id = ?");
+        if ($decStmt) {
+            $decStmt->bind_param("ii", $qty, $product_id);
+            $decStmt->execute();
+            $decStmt->close();
+        }
+    }
 
     $items_html .= "
         <tr>

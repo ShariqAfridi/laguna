@@ -321,6 +321,11 @@
       return;
     }
 
+    if (item.stock !== undefined && item.stock !== null && parseInt(item.stock) <= 0) {
+      alert('Sorry, "' + (item.name || 'this item') + '" is currently out of stock.');
+      return;
+    }
+
     if (!item.id) {
       if (item.product_id) {
         item.id = 'prod_' + item.product_id + (item.size_id ? '_size' + item.size_id : '') + (item.box_id ? '_box' + item.box_id : '') + (item.sku ? '_' + item.sku : '');
@@ -342,14 +347,26 @@
       if (items[i].id === item.id) { existing = items[i]; break; }
     }
     
+    var addQty = item.qty || 1;
+    var maxStock = (item.stock !== undefined && item.stock !== null) ? parseInt(item.stock) : (existing && existing.stock !== undefined ? parseInt(existing.stock) : 999);
+
     if (existing) {
-      existing.qty += (item.qty || 1);
+      if (existing.qty + addQty > maxStock) {
+        existing.qty = maxStock;
+        alert('Maximum available stock for this item is ' + maxStock + ' units.');
+      } else {
+        existing.qty += addQty;
+      }
       if (item.sku && !existing.sku) {
         existing.sku = item.sku;
       }
+      if (item.stock !== undefined) {
+        existing.stock = parseInt(item.stock);
+      }
     } else {
       items.push({ 
-        qty: item.qty || 1, 
+        qty: Math.min(addQty, maxStock), 
+        stock: maxStock,
         image: item.image || '', 
         sku: item.sku || item.id,
         scent: item.scent || '', 
@@ -383,6 +400,12 @@
   function updateQty(id, delta) {
     for (var i = 0; i < items.length; i++) {
       if (items[i].id === id) {
+        if (delta > 0 && items[i].stock !== undefined && items[i].stock !== null) {
+          if (items[i].qty + delta > parseInt(items[i].stock)) {
+            alert('Maximum available stock is ' + items[i].stock + ' units.');
+            return;
+          }
+        }
         items[i].qty += delta;
         if (items[i].qty <= 0) { 
           removeItem(id); 

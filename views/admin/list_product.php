@@ -990,9 +990,20 @@ function build_page_url($p) {
                                     $total_qty_display = array_sum($size_qtys);
                                 }
                                 ?>
-                                <span class="badge" style="background: #dbeafe; color: #1e40af;">
-                                    <?= number_format($total_qty_display) ?> units
-                                </span>
+                                <?php if ($total_qty_display <= 0): ?>
+                                    <span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 700; border: 1px solid #fca5a5; padding: 4px 10px; border-radius: 20px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                                        <i class="fas fa-times-circle"></i> Out of Stock
+                                    </span>
+                                    <div style="font-size: 10px; color: #991b1b; margin-top: 3px; font-weight: 600;">0 units</div>
+                                <?php elseif ($total_qty_display <= 10): ?>
+                                    <span class="badge" style="background: #fef3c7; color: #92400e; font-weight: 600; border: 1px solid #fde68a; padding: 4px 10px; border-radius: 20px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                                        <i class="fas fa-exclamation-triangle"></i> Low (<?= number_format($total_qty_display) ?>)
+                                    </span>
+                                <?php else: ?>
+                                    <span class="badge" style="background: #dcfce7; color: #15803d; font-weight: 600; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                                        <i class="fas fa-check-circle"></i> In Stock (<?= number_format($total_qty_display) ?>)
+                                    </span>
+                                <?php endif; ?>
                             </td>
                             
                             <!-- Actions Column -->

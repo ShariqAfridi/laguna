@@ -149,9 +149,20 @@ $accessories = $conn->query($query);
                                 $<?= number_format((float) ($row['price'] ?? 0), 2) ?>
                             </td>
                             <td>
-                                <span style="background:#f3f4f6; padding:4px 10px; border-radius:12px; font-weight:600; font-size:12px; color:#374151;">
-                                    <?= (int) ($row['quantity'] ?? 0) ?> in stock
-                                </span>
+                                <?php $accQty = (int) ($row['quantity'] ?? 0); ?>
+                                <?php if ($accQty <= 0): ?>
+                                    <span style="background:#fee2e2; border:1px solid #fca5a5; padding:4px 10px; border-radius:12px; font-weight:700; font-size:12px; color:#b91c1c; display:inline-flex; align-items:center; gap:4px;">
+                                        <i class="fas fa-times-circle"></i> Out of Stock
+                                    </span>
+                                <?php elseif ($accQty <= 5): ?>
+                                    <span style="background:#fef3c7; border:1px solid #fde68a; padding:4px 10px; border-radius:12px; font-weight:600; font-size:12px; color:#92400e; display:inline-flex; align-items:center; gap:4px;">
+                                        <i class="fas fa-exclamation-triangle"></i> Low (<?= $accQty ?>)
+                                    </span>
+                                <?php else: ?>
+                                    <span style="background:#dcfce7; border:1px solid #bbf7d0; padding:4px 10px; border-radius:12px; font-weight:600; font-size:12px; color:#15803d; display:inline-flex; align-items:center; gap:4px;">
+                                        <i class="fas fa-check-circle"></i> <?= $accQty ?> in stock
+                                    </span>
+                                <?php endif; ?>
                             </td>
                             <td style="text-align:right;">
                                 <a href="<?= base_url('/admin/edit_accessory?id=' . $row['accessory_id']) ?>" class="admin-btn-edit">

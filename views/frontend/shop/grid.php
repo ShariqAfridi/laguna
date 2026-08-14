@@ -567,8 +567,26 @@ if (!empty($boxes)) {
         border-radius: 8px;
         overflow: hidden;
         border: 1px solid #e8eef2;
+        position: relative;
     }
     .product-card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,75,102,0.08); }
+    .product-card.is-out-of-stock .product-image { filter: grayscale(35%); opacity: 0.88; }
+    .product-badge-outofstock {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(185, 28, 28, 0.9);
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 20px;
+        backdrop-filter: blur(4px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        z-index: 2;
+    }
     .product-image { width: 100%; aspect-ratio: 1/1; object-fit: cover; object-position: bottom; background: #faf9f6; display: block; }
     .product-info { padding: 16px 14px 14px; }
     .product-name {
@@ -582,6 +600,14 @@ if (!empty($boxes)) {
     .product-detail-row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
     .product-fragrance { font-size: 11px; font-weight: 600; color: #004b66; background: #e0f2fe; padding: 3px 8px; border-radius: 12px; }
     .product-price { font-size: 14px; font-weight: 600; color: #004b66; }
+    .add-to-cart-btn.btn-disabled,
+    .add-to-cart-btn:disabled {
+        background: #94a3b8 !important;
+        cursor: not-allowed !important;
+        opacity: 0.65;
+        box-shadow: none !important;
+        transform: none !important;
+    }
 
     .no-products-message {
         grid-column: 1/-1;
@@ -1174,15 +1200,30 @@ if (!empty($boxes)) {
                 $fragCount = count($var['items']);
                 $cIdsStr = (string)$var['color_id'];
                 $firstItem = $var['items'][0];
+                
+                $varTotalStock = 0;
+                foreach ($var['items'] as $vItem) {
+                    $varTotalStock += intval($vItem['qty'] ?? 0);
+                }
+                $isVarOutOfStock = ($varTotalStock <= 0);
                 ?>
-                <div class="product-card"
+                <div class="product-card <?= $isVarOutOfStock ? 'is-out-of-stock' : '' ?>"
                      data-color-ids="<?= htmlspecialchars($cIdsStr) ?>"
                      onclick="openVariationModal(<?= htmlspecialchars(json_encode($var)) ?>)">
-                    <img class="product-image" src="<?= htmlspecialchars($var['image_url']) ?>" alt="<?= htmlspecialchars($var['vessel_name'] . ' - ' . $var['color_name']) ?>">
+                    <div style="position: relative; overflow: hidden;">
+                        <img class="product-image" src="<?= htmlspecialchars($var['image_url']) ?>" alt="<?= htmlspecialchars($var['vessel_name'] . ' - ' . $var['color_name']) ?>">
+                        <?php if ($isVarOutOfStock): ?>
+                            <span class="product-badge-outofstock"><i class="fas fa-times-circle"></i> Out of Stock</span>
+                        <?php endif; ?>
+                    </div>
                     <div class="product-info">
                         <div class="product-name"><?= htmlspecialchars($var['vessel_name'] . ' — ' . $var['color_name']) ?></div>
                         <div class="product-detail-row">
-                            <span class="product-fragrance">🌸 <?= $fragCount ?> Fragrances Available</span>
+                            <?php if ($isVarOutOfStock): ?>
+                                <span style="font-size: 11px; font-weight: 700; color: #b91c1c; background: #fee2e2; padding: 3px 8px; border-radius: 12px;">✕ Out of Stock</span>
+                            <?php else: ?>
+                                <span class="product-fragrance">🌸 <?= $fragCount ?> Fragrances Available</span>
+                            <?php endif; ?>
                             <span class="product-price">$<?= number_format($var['price'], 2) ?></span>
                         </div>
                     </div>
@@ -1406,6 +1447,13 @@ function getImageUrl(item) {
     return 'https://placehold.co/600x600?text=No+Image';
 }
 
+function getProductStock(item) {
+    if (!item) return 0;
+    if (item.qty !== undefined && item.qty !== null) return parseInt(item.qty);
+    if (item.quantity !== undefined && item.quantity !== null) return parseInt(item.quantity);
+    return 100;
+}
+
 function renderFragranceOptions(items, activeFragId) {
     const container = document.getElementById('fragranceOptionsContainer');
     const countText = document.getElementById('modalFragranceCountText');
@@ -1423,11 +1471,16 @@ function renderFragranceOptions(items, activeFragId) {
         
         let varImg = getImageUrl(item);
         let iconHtml = `<img src="${escapeHtml(varImg)}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" alt="${escapeHtml(item.fragrance_name)}">`;
+        
+        let itemStock = getProductStock(item);
+        let stockTag = itemStock <= 0 
+            ? `<span style="font-size: 10px; font-weight: 700; color: #b91c1c; background: #fee2e2; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">Out of Stock</span>`
+            : '';
 
         tile.innerHTML = `
             ${iconHtml}
             <div style="flex: 1;">
-                <div class="fragrance-tile-title">${escapeHtml(item.fragrance_name)}</div>
+                <div class="fragrance-tile-title">${escapeHtml(item.fragrance_name)} ${stockTag}</div>
                 <div class="fragrance-tile-sku">SKU: ${escapeHtml(item.sku)}</div>
             </div>
             <div style="font-size: 12px; font-weight: 600; color: #004b66;">$${parseFloat(item.size_prices || 35).toFixed(2)}</div>
@@ -1496,6 +1549,13 @@ function switchFragranceItem(productData) {
     document.getElementById('modalDesc').innerText = productData.description || ('Artisanal candle in a luminous ' + colorNameText.toLowerCase() + ' vessel.');
 
     updateSelectedScentCard(productData.fragrance_id, productData.fragrance_name);
+    
+    const stockQty = getProductStock(productData);
+    if (stockQty <= 0) {
+        quantity = 0;
+    } else if (quantity < 1) {
+        quantity = 1;
+    }
     updateDisplay();
 }
 
@@ -1656,19 +1716,60 @@ function getFullProductSKU(boxId) {
 }
 
 function updateModalQty(delta) {
+    const stockQty = getProductStock(currentProduct);
+    if (stockQty <= 0) {
+        quantity = 0;
+        updateDisplay();
+        return;
+    }
     const newQty = quantity + delta;
-    if (newQty >= 1) {
+    if (newQty >= 1 && newQty <= stockQty) {
         quantity = newQty;
         updateDisplay();
-        document.getElementById('stockWarning').innerHTML = '';
+        const warningEl = document.getElementById('stockWarning');
+        if (warningEl) {
+            warningEl.innerHTML = (stockQty <= 5) ? `<div style="color:#d97706; font-size:12px; font-weight:600; margin-top:6px; text-align:center;"><i class="fas fa-fire"></i> Only ${stockQty} left in stock — order soon!</div>` : '';
+        }
+    } else if (newQty > stockQty) {
+        const warningEl = document.getElementById('stockWarning');
+        if (warningEl) {
+            warningEl.innerHTML = `<div style="color:#ef4444; font-size:12px; font-weight:600; margin-top:6px; text-align:center;">Maximum available stock is ${stockQty} units</div>`;
+        }
     }
 }
 
 function updateDisplay() {
+    const stockQty = getProductStock(currentProduct);
     const total = (currentBasePrice + boxPrice) * quantity;
     document.getElementById('modalQty').innerText = quantity;
     document.getElementById('modalTotal').innerHTML = '$' + total.toFixed(2);
-    document.getElementById('btnPrice').innerHTML = '$' + total.toFixed(2);
+    
+    const addCartBtn = document.getElementById('addToCartAction');
+    const warningEl = document.getElementById('stockWarning');
+
+    if (stockQty <= 0) {
+        if (addCartBtn) {
+            addCartBtn.disabled = true;
+            addCartBtn.classList.add('btn-disabled');
+            addCartBtn.innerHTML = '<i class="fas fa-ban"></i> Out of Stock';
+        }
+        if (warningEl) {
+            warningEl.innerHTML = '<div style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:8px 12px; border-radius:8px; font-weight:600; font-size:12px; margin-top:8px; text-align:center;"><i class="fas fa-times-circle"></i> This scent is currently out of stock.</div>';
+        }
+    } else {
+        if (addCartBtn) {
+            addCartBtn.disabled = false;
+            addCartBtn.classList.remove('btn-disabled');
+            addCartBtn.innerHTML = 'Add To Cart · <span id="btnPrice">$' + total.toFixed(2) + '</span>';
+        }
+        if (warningEl) {
+            if (stockQty <= 5) {
+                warningEl.innerHTML = `<div style="color:#d97706; font-size:12px; font-weight:600; margin-top:6px; text-align:center;"><i class="fas fa-fire"></i> Only ${stockQty} left in stock — order soon!</div>`;
+            } else {
+                warningEl.innerHTML = '';
+            }
+        }
+    }
 }
 
 function closeModal() {
@@ -1679,6 +1780,12 @@ const addCartBtn = document.getElementById('addToCartAction');
 if (addCartBtn) {
     addCartBtn.onclick = function() {
         if (!currentProduct) return;
+
+        const stockQty = getProductStock(currentProduct);
+        if (stockQty <= 0) {
+            alert('Sorry, this product is currently out of stock.');
+            return;
+        }
 
         let vesselCode = getProductVesselCode(currentProduct).toLowerCase();
         let catObj = (categoriesData && categoriesData[vesselCode]) ? categoriesData[vesselCode] : (categoriesData ? categoriesData['c'] : null);
@@ -1707,6 +1814,7 @@ if (addCartBtn) {
                     price: currentBasePrice + boxPrice,
                     image: getImageUrl(currentProduct),
                     qty: quantity,
+                    stock: stockQty,
                     product_id: currentProduct.product_id,
                     size_id: currentSizeId,
                     size_name: selectedSizeName,
