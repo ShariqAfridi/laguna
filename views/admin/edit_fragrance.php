@@ -90,11 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" name="sku" class="admin-input" value="<?= htmlspecialchars($fragrance['sku'] ?? ''); ?>" placeholder="e.g. 02">
                 </div>
 
-<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
-
                 <div style="grid-column: 1 / -1;">
                     <label class="admin-label">Description / Scent Notes</label>
-                    <textarea name="fragrance_description" id="fragrance_description_editor" class="admin-input" rows="5" placeholder="Enter top, mid, and base scent notes or fragrance description..."><?= htmlspecialchars($fragrance['fragrance_description'] ?? ''); ?></textarea>
+                    <textarea name="fragrance_description" class="admin-input" rows="4" style="resize:vertical; line-height:1.5; font-family:inherit; min-height:90px;" placeholder="Enter top, mid, and base scent notes or fragrance description..."><?= htmlspecialchars(strip_tags($fragrance['fragrance_description'] ?? '')); ?></textarea>
                 </div>
 
                 <div>
@@ -151,18 +149,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof ClassicEditor !== 'undefined') {
-        ClassicEditor
-            .create(document.querySelector('#fragrance_description_editor'), {
-                toolbar: ['heading', '|', 'bold', 'italic', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo']
-            })
-            .catch(error => {
-                console.error(error);
-            });
-    }
-});
-</script>
 </div>
