@@ -577,6 +577,41 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
             .header-desktop {
                 display: none;
             }
+            .admin-wrapper {
+                padding: 16px 14px;
+            }
+            .admin-card {
+                padding: 20px 16px;
+                border-radius: 10px;
+                margin-bottom: 16px;
+            }
+            .admin-table-container {
+                padding: 14px 10px;
+                border-radius: 10px;
+            }
+            .admin-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                margin-bottom: 18px;
+            }
+            .admin-title {
+                font-size: 20px;
+            }
+            .admin-subtitle {
+                font-size: 13px;
+            }
+            .admin-table th, .admin-table td {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+            .status-filters {
+                gap: 6px;
+            }
+            .status-pill {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
         }
 
         /* Main content area for demo */

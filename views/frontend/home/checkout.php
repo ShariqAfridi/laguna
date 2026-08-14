@@ -786,6 +786,21 @@ textarea { resize: vertical; min-height: 80px; }
     .field-row { grid-template-columns: 1fr; gap: 0; }
     .field-row.triple { grid-template-columns: 1fr; }
     .payment-tabs { flex-direction: column; }
+    
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    select,
+    textarea {
+        font-size: 16px; /* Prevents unwanted iOS auto-zoom */
+    }
+}
+
+@media (max-width: 480px) {
+    .section-card { padding: 20px 16px; }
+    .checkout-header { padding: 14px 16px; }
+    .breadcrumb { font-size: 11px; gap: 6px; }
+    .order-summary { padding: 20px 16px; }
 }
 </style>
 </head>

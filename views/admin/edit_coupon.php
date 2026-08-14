@@ -80,6 +80,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
+<style>
+.coupon-form-layout {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 28px;
+    align-items: start;
+}
+@media (max-width: 960px) {
+    .coupon-form-layout {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
 <div class="admin-wrapper">
     <div style="margin-bottom:20px;">
         <a href="<?= base_url('/admin/coupons'); ?>" style="color:#6b7280; text-decoration:none; font-size:14px; font-weight:500; display:inline-flex; align-items:center; gap:6px;">
@@ -87,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </a>
     </div>
 
-    <div style="display:grid; grid-template-columns: 1fr 340px; gap:28px; align-items:start;">
+    <div class="coupon-form-layout">
         
         <!-- Left: Form -->
         <div class="admin-card" style="background:#ffffff; padding:30px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.05);">

@@ -163,13 +163,35 @@
     }
 
     @media (max-width: 480px) {
-        .header-mobile { padding: 14px 20px; }
+        .header-mobile { padding: 12px 16px; }
         .mobile-nav-links {
             padding: 1.2rem 1.5rem 1.8rem 1.5rem;
             gap: 1.4rem;
         }
         .mobile-nav-links a { font-size: 12px; letter-spacing: 2.16px; line-height: 16px; }
         .header-mobile .logo { font-size: 20px; letter-spacing: 4px; }
+        .logo-img {
+            height: 48px;
+            max-width: 180px;
+        }
+        .mobile-actions {
+            gap: 14px;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .header-mobile { padding: 10px 12px; }
+        .logo-img {
+            height: 40px;
+            max-width: 140px;
+        }
+        .mobile-actions {
+            gap: 10px;
+        }
+        .icon-svg {
+            width: 21px;
+            height: 21px;
+        }
     }
     .logo-link {
     display: flex;

@@ -1089,10 +1089,18 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     .modal {
       background: #fff;
       width: 480px;
+      max-width: 94vw;
       max-height: 90vh;
       overflow-y: auto;
-      border-radius: 4px;
-      padding: 36px;
+      border-radius: 8px;
+      padding: 36px 28px;
+      box-sizing: border-box;
+    }
+    @media (max-width: 480px) {
+      .modal {
+        padding: 24px 16px;
+        width: 100%;
+      }
     }
 
     .modal-candle-img {
