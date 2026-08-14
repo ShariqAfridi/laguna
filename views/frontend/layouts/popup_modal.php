@@ -252,7 +252,8 @@ if (!isset($base)) {
 
 <script>
 (function() {
-    const POPUP_DELAY_MS = 600; // 600ms natural delay after load
+    const POPUP_STORAGE_KEY = 'lvb_grand_opening_popup_seen';
+    const POPUP_DELAY_MS = 750; // 750ms natural delay after load
 
     function initPopup() {
         const overlay = document.getElementById('lvbGrandOpeningPopup');
@@ -260,15 +261,30 @@ if (!isset($base)) {
 
         if (!overlay || !closeBtn) return;
 
+        // Check if already displayed once in this session
+        try {
+            if (sessionStorage.getItem(POPUP_STORAGE_KEY)) {
+                return;
+            }
+        } catch (e) {
+            // Storage access restricted, proceed normally
+        }
+
         function showPopup() {
             overlay.classList.add('lvb-popup-active');
             document.body.style.overflow = 'hidden'; // prevent background scrolling
             closeBtn.focus();
+            try {
+                sessionStorage.setItem(POPUP_STORAGE_KEY, 'true');
+            } catch (e) {}
         }
 
         function hidePopup() {
             overlay.classList.remove('lvb-popup-active');
             document.body.style.overflow = '';
+            try {
+                sessionStorage.setItem(POPUP_STORAGE_KEY, 'true');
+            } catch (e) {}
         }
 
         // Close on close button click
@@ -291,7 +307,7 @@ if (!isset($base)) {
             }
         });
 
-        // Expose helpers to control popup anytime
+        // Expose helpers to control popup anytime (for testing or buttons)
         window.openGrandOpeningPopup = function() {
             showPopup();
         };
@@ -300,7 +316,7 @@ if (!isset($base)) {
             hidePopup();
         };
 
-        // Trigger on every load/reload
+        // Trigger once after load
         setTimeout(showPopup, POPUP_DELAY_MS);
     }
 
