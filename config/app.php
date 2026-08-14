@@ -37,7 +37,8 @@ if (!function_exists('base_url')) {
     function base_url($path = '') {
         $envAppUrl = env('APP_URL', null);
         if (!empty($envAppUrl)) {
-            return rtrim($envAppUrl, '/') . '/' . ltrim($path, '/');
+            $trimmed = rtrim($envAppUrl, '/');
+            return ($path === '' || $path === '/') ? $trimmed : ($trimmed . '/' . ltrim($path, '/'));
         }
 
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
@@ -45,7 +46,8 @@ if (!function_exists('base_url')) {
         $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
         $scriptDir = preg_replace('#/logic$#', '', $scriptDir);
         $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
-        return $protocol . $host . $base . '/' . ltrim($path, '/');
+        $fullBase = rtrim($protocol . $host . $base, '/');
+        return ($path === '' || $path === '/') ? $fullBase : ($fullBase . '/' . ltrim($path, '/'));
     }
 }
 

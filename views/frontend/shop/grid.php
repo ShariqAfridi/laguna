@@ -1,7 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../../../db.php';
-$base = function_exists('base_url') ? base_url() : '';
+$base = function_exists('base_url') ? rtrim(base_url(), '/') : '';
 
 // Get vessel, filter parameters, and target product ID from URL
 $selectedVessel    = isset($_GET['vessel']) ? strtolower($_GET['vessel']) : '';
@@ -196,7 +196,7 @@ if (!empty($boxes)) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LVB Shop — Laguna Vibe Beach</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="<?php echo $base; ?>/views/frontend/home/cart.js"></script>
+<script src="<?= function_exists('base_url') ? base_url('/views/frontend/home/cart.js') : '/views/frontend/home/cart.js' ?>"></script>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1265,7 +1265,7 @@ if (!empty($boxes)) {
             <h1><?= htmlspecialchars($vesselLabel) ?></h1>
             <div class="subtitle"><?= htmlspecialchars($wickLabel) ?> Collection</div>
         </div>
-        <a href="<?php echo $base; ?>/shop" class="back-btn">← Back to Vessels</a>
+        <a href="<?= function_exists('base_url') ? base_url('/shop') : '/shop' ?>" class="back-btn">← Back to Vessels</a>
     </div>
 
 
