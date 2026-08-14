@@ -8,6 +8,8 @@ error_reporting(E_ALL);
 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/database.php';
+$conn = \get_db_connection();
 
 // ====================== VALIDATE REQUEST ======================
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['place_order'])) {
@@ -73,10 +75,22 @@ $total    = $calc['total'];
 // ====================== GENERATE ORDER NUMBER ======================
 $order_number = 'LVB-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
 
-// Status
-$status = 'pending';
-if ($payment_method === 'stripe')  $status = 'pending_payment';
-if ($payment_method === 'paypal')  $status = 'pending_payment';
+// Status & Mock Payment Handling
+$is_mock_stripe = isset($_POST['is_mock_payment']) && $_POST['is_mock_payment'] === '1';
+$stripe_payment_intent_id = null;
+
+if ($payment_method === 'stripe') {
+    if ($is_mock_stripe || env('STRIPE_MOCK_MODE', true)) {
+        $status = 'processing'; // Mark as paid/processing in test mode
+        $stripe_payment_intent_id = 'pi_mock_' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 16));
+    } else {
+        $status = 'pending_payment';
+    }
+} elseif ($payment_method === 'paypal') {
+    $status = 'pending_payment';
+} else {
+    $status = 'processing';
+}
 
 // ====================== SAVE ORDER ======================
 $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
@@ -87,11 +101,11 @@ $stmt = $conn->prepare("
          notes, promo_code, subtotal, shipping, discount, total,
          payment_method, stripe_payment_intent_id, status, created_at)
     VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, NOW())
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
 ");
 
 $stmt->bind_param(
-    "issssssssssdddddss",
+    "isssssssssssddddsss",
     $user_id,
     $order_number,
     $full_name,
@@ -109,6 +123,7 @@ $stmt->bind_param(
     $discount,
     $total,
     $payment_method,
+    $stripe_payment_intent_id,
     $status
 );
 
@@ -488,20 +503,23 @@ $admin_email_html .= "
 </html>";
 
 // ====================== SEND EMAILS ======================
-sendMail($email, "Order Confirmed #{$order_number} — LVB Atelier", $customer_email_html);
-sendMail('admin@lagunavibe.com', "New Order #{$order_number} — LVB Atelier", $admin_email_html);
+try {
+    sendMail($email, "Order Confirmed #{$order_number} — LVB Atelier", $customer_email_html);
+    sendMail('admin@lagunavibe.com', "New Order #{$order_number} — LVB Atelier", $admin_email_html);
+} catch (\Throwable $mailErr) {
+    error_log("Order confirmation email failed: " . $mailErr->getMessage());
+}
 
 // ====================== CLEAR CLIENT CART ======================
-echo "<script>sessionStorage.removeItem('lvb_cart');sessionStorage.removeItem('cart_synced');</script>";
+echo "<script>try { sessionStorage.removeItem('lvb_cart'); sessionStorage.removeItem('cart_synced'); } catch(e){} </script>";
 
 // ====================== REDIRECT ======================
-if ($payment_method === 'stripe') {
-    header('Location: /stripe/create-checkout-session.php?order_id=' . $order_id . '&order_number=' . urlencode($order_number));
+if ($payment_method === 'stripe' && !$is_mock_stripe && !env('STRIPE_MOCK_MODE', true)) {
+    header('Location: ' . base_url('/stripe/create-checkout-session.php?order_id=' . $order_id . '&order_number=' . urlencode($order_number)));
 } elseif ($payment_method === 'paypal') {
-    // Hardcoded PayPal redirect — replace with real PayPal SDK integration
     header('Location: https://www.paypal.com/checkoutnow?token=ORDER_TOKEN_HERE');
 } else {
-    header('Location: /thankyou?order_id=' . $order_id . '&order_number=' . urlencode($order_number));
+    header('Location: ' . base_url('/thankyou?order_id=' . $order_id . '&order_number=' . urlencode($order_number)));
 }
 exit;
 ?>

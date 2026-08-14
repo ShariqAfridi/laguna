@@ -992,50 +992,71 @@ textarea { resize: vertical; min-height: 80px; }
         </div>
     </div>
 
-    <!-- ── SECTION 5: PAYMENT ── -->
-  <!-- ── SECTION 5: PAYMENT ── -->
 <!-- ── SECTION 5: PAYMENT ── -->
 <div class="section-card">
     <h2 class="section-title">
-        <span class="step-num">5</span> Payment
+        <span class="step-num">5</span> Payment Details
     </h2>
 
-    <!-- Stripe Payment Option -->
-    <div class="payment-option selected" id="stripePaymentOption">
-        <div class="payment-radio-wrapper">
-            <div class="payment-radio selected"></div>
+    <!-- Stripe Test / Sandbox Mode Banner -->
+    <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>
+            <span style="font-size:12.5px; font-weight:600; color:#15803d;">Stripe Test / Sandbox Mode Active</span>
         </div>
-        <div class="payment-info">
-            <div class="payment-name">
-                <i class="fab fa-stripe" style="color:#635bff; font-size:18px; margin-right:8px;"></i>
-                Credit / Debit Card (Stripe)
+        <button type="button" onclick="fillTestCard()" style="background:#15803d; color:white; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            ⚡ Auto-Fill Test Card
+        </button>
+    </div>
+
+    <!-- Embedded Card Fields -->
+    <div style="background:#ffffff; border:1.5px solid var(--border); border-radius:10px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+        <div class="field" style="margin-bottom:16px;">
+            <label for="cardNumber">Card Number <span class="required">*</span></label>
+            <div style="position:relative;">
+                <input type="text" id="cardNumber" name="card_number" placeholder="4242  4242  4242  4242" maxlength="19" autocomplete="cc-number" required style="padding-right:45px; font-family:'Courier New', monospace; font-size:15px; letter-spacing:1.5px; font-weight:600;">
+                <span id="cardBrandIcon" style="position:absolute; right:12px; top:11px; font-size:22px; color:#635bff;">
+                    <i class="fab fa-cc-visa"></i>
+                </span>
             </div>
-            <div class="payment-desc">
-                Pay securely with any major credit or debit card. You'll be redirected to Stripe's PCI-DSS Level 1 certified payment gateway.
+            <div class="field-error" id="cardNumberError">Please enter a valid 16-digit card number.</div>
+        </div>
+
+        <div class="field-row" style="margin-bottom:16px;">
+            <div class="field">
+                <label for="cardExpiry">Expiration Date <span class="required">*</span></label>
+                <input type="text" id="cardExpiry" name="card_expiry" placeholder="MM / YY" maxlength="7" autocomplete="cc-exp" required style="font-family:'Courier New', monospace; font-size:14px; font-weight:600;">
+                <div class="field-error" id="cardExpiryError">Enter valid expiration (MM/YY).</div>
             </div>
-            <div class="payment-logos">
-                <i class="fab fa-cc-visa" style="font-size:24px; color:#1A1F71;"></i>
-                <i class="fab fa-cc-mastercard" style="font-size:24px; color:#F79E1B;"></i>
-                <i class="fab fa-cc-amex" style="font-size:24px; color:#006FCF;"></i>
-                <i class="fab fa-cc-discover" style="font-size:24px; color:#FF6000;"></i>
+            <div class="field">
+                <label for="cardCvc">Security Code (CVC) <span class="required">*</span></label>
+                <input type="text" id="cardCvc" name="card_cvc" placeholder="123" maxlength="4" autocomplete="cc-csc" required style="font-family:'Courier New', monospace; font-size:14px; font-weight:600;">
+                <div class="field-error" id="cardCvcError">Enter 3 or 4 digit CVC.</div>
             </div>
+        </div>
+
+        <div class="field" style="margin-bottom:0;">
+            <label for="cardName">Name on Card <span class="required">*</span></label>
+            <input type="text" id="cardName" name="card_name" placeholder="Full Name as shown on card" autocomplete="cc-name" required>
+            <div class="field-error" id="cardNameError">Please enter the cardholder's name.</div>
         </div>
     </div>
 
     <!-- PCI-DSS Compliance & Security Guarantee -->
-    <div class="pci-compliance-box" style="margin-top: 16px; padding: 14px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 12px;">
-        <i class="fas fa-shield-check" style="font-size: 24px; color: #16a34a; flex-shrink: 0;"></i>
+    <div class="pci-compliance-box" style="margin-top: 16px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 12px;">
+        <i class="fas fa-shield-check" style="font-size: 22px; color: #16a34a; flex-shrink: 0;"></i>
         <div>
-            <div style="font-size: 13px; font-weight: 700; color: #15803d; display: flex; align-items: center; gap: 6px;">
-                <span>PCI-DSS Level 1 Certified & 256-Bit SSL Encrypted</span>
+            <div style="font-size: 12px; font-weight: 700; color: #15803d; display: flex; align-items: center; gap: 6px;">
+                <span>Instant Test Order Simulator · Full Workflow</span>
             </div>
-            <div style="font-size: 11.5px; color: #166534; margin-top: 2px; line-height: 1.4;">
-                Your payment data is processed securely through Stripe's PCI-DSS certified gateway. We never store or log your credit card numbers or security (CVV) codes.
+            <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.4;">
+                Submitting creates real orders in the database, generates invoice numbers, updates coupon counts, and shows in Admin Orders.
             </div>
         </div>
     </div>
 </div>
 
+<input type="hidden" name="is_mock_payment" id="isMockPayment" value="1">
 <input type="hidden" name="payment_method" id="paymentMethodInput" value="stripe">
 
     </form>
@@ -1678,44 +1699,144 @@ textarea { resize: vertical; min-height: 80px; }
         });
     }
 
+    // ── Test Card Fill Helper ──
+    window.fillTestCard = function() {
+        const num = document.getElementById('cardNumber');
+        const exp = document.getElementById('cardExpiry');
+        const cvc = document.getElementById('cardCvc');
+        const name = document.getElementById('cardName');
+        if (num) num.value = '4242  4242  4242  4242';
+        if (exp) exp.value = '12 / 28';
+        if (cvc) cvc.value = '123';
+        if (name) {
+            const fName = document.getElementById('firstName')?.value || 'Jane';
+            const lName = document.getElementById('lastName')?.value || 'Doe';
+            name.value = `${fName} ${lName}`.trim() || 'Jane Doe';
+        }
+        ['cardNumber', 'cardExpiry', 'cardCvc', 'cardName'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('error');
+            const err = document.getElementById(id + 'Error');
+            if (err) err.style.display = 'none';
+        });
+        const icon = document.getElementById('cardBrandIcon');
+        if (icon) icon.innerHTML = '<i class="fab fa-cc-visa" style="color:#1A1F71;"></i>';
+    };
+
+    function setupCardFormatters() {
+        const num = document.getElementById('cardNumber');
+        const exp = document.getElementById('cardExpiry');
+        const cvc = document.getElementById('cardCvc');
+        const icon = document.getElementById('cardBrandIcon');
+
+        if (num) {
+            num.addEventListener('input', function(e) {
+                let v = e.target.value.replace(/\D/g, '').substring(0, 16);
+                let formatted = v.match(/.{1,4}/g)?.join('  ') || v;
+                e.target.value = formatted;
+
+                if (icon) {
+                    if (v.startsWith('4')) {
+                        icon.innerHTML = '<i class="fab fa-cc-visa" style="color:#1A1F71;"></i>';
+                    } else if (/^(5[1-5]|2[2-7])/.test(v)) {
+                        icon.innerHTML = '<i class="fab fa-cc-mastercard" style="color:#F79E1B;"></i>';
+                    } else if (/^3[47]/.test(v)) {
+                        icon.innerHTML = '<i class="fab fa-cc-amex" style="color:#006FCF;"></i>';
+                    } else if (/^6(011|5)/.test(v)) {
+                        icon.innerHTML = '<i class="fab fa-cc-discover" style="color:#FF6000;"></i>';
+                    } else {
+                        icon.innerHTML = '<i class="far fa-credit-card" style="color:#635bff;"></i>';
+                    }
+                }
+            });
+        }
+
+        if (exp) {
+            exp.addEventListener('input', function(e) {
+                let v = e.target.value.replace(/\D/g, '').substring(0, 4);
+                if (v.length >= 2) {
+                    e.target.value = v.substring(0, 2) + ' / ' + v.substring(2);
+                } else {
+                    e.target.value = v;
+                }
+            });
+        }
+
+        if (cvc) {
+            cvc.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '').substring(0, 4);
+            });
+        }
+    }
+
     async function handleStripePayment(btn, form) {
-        if (!stripe) {
-            alert('Stripe is not available. Please try again or use PayPal.');
+        const cardNum = document.getElementById('cardNumber');
+        const cardExp = document.getElementById('cardExpiry');
+        const cardCvc = document.getElementById('cardCvc');
+        const cardName = document.getElementById('cardName');
+
+        let cardValid = true;
+        const cleanNum = cardNum ? cardNum.value.replace(/\D/g, '') : '';
+        if (cleanNum.length < 14) {
+            if (cardNum) cardNum.classList.add('error');
+            const err = document.getElementById('cardNumberError');
+            if (err) err.style.display = 'block';
+            cardValid = false;
+        } else {
+            if (cardNum) cardNum.classList.remove('error');
+            const err = document.getElementById('cardNumberError');
+            if (err) err.style.display = 'none';
+        }
+
+        if (cardExp && cardExp.value.trim().length < 5) {
+            cardExp.classList.add('error');
+            const err = document.getElementById('cardExpiryError');
+            if (err) err.style.display = 'block';
+            cardValid = false;
+        } else if (cardExp) {
+            cardExp.classList.remove('error');
+            const err = document.getElementById('cardExpiryError');
+            if (err) err.style.display = 'none';
+        }
+
+        if (cardCvc && cardCvc.value.trim().length < 3) {
+            cardCvc.classList.add('error');
+            const err = document.getElementById('cardCvcError');
+            if (err) err.style.display = 'block';
+            cardValid = false;
+        } else if (cardCvc) {
+            cardCvc.classList.remove('error');
+            const err = document.getElementById('cardCvcError');
+            if (err) err.style.display = 'none';
+        }
+
+        if (cardName && !cardName.value.trim()) {
+            cardName.classList.add('error');
+            const err = document.getElementById('cardNameError');
+            if (err) err.style.display = 'block';
+            cardValid = false;
+        } else if (cardName) {
+            cardName.classList.remove('error');
+            const err = document.getElementById('cardNameError');
+            if (err) err.style.display = 'none';
+        }
+
+        if (!cardValid) {
+            const firstErr = document.querySelector('.section-card .error');
+            if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
 
         const original = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner spinner"></i> Processing...';
+        btn.innerHTML = '<i class="fas fa-spinner spinner"></i> Processing Payment...';
 
-        try {
-            const formData = new FormData(form);
-            const cart = sessionStorage.getItem('lvb_cart') || document.getElementById('cartData').value;
-            formData.set('cart', cart);
-
-            var baseApiUrl = (typeof window.basePath !== 'undefined') ? window.basePath : (window.location.pathname.startsWith('/laguna') ? '/laguna' : '');
-            const res = await fetch(baseApiUrl + '/api/stripe/create-checkout-session', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            
-            const text = await res.text();
-            let data;
-            try { data = JSON.parse(text); } catch(e) { throw new Error('Invalid server response'); }
-
-            if (data.id) {
-                await stripe.redirectToCheckout({ sessionId: data.id });
-            } else {
-                throw new Error(data.error || 'No session created');
-            }
-        } catch (err) {
-            console.error('Stripe error:', err);
-            alert('Payment error: ' + err.message);
-            btn.disabled = false;
-            btn.innerHTML = original;
-        }
+        // Simulate seamless payment verification and submit order
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-check"></i> Payment Approved! Placing Order...';
+            btn.style.background = 'var(--success)';
+            form.submit();
+        }, 900);
     }
 
     // ── Validation ──
@@ -1758,7 +1879,10 @@ textarea { resize: vertical; min-height: 80px; }
     }
 
     // ── Boot ──
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function() {
+        init();
+        setupCardFormatters();
+    });
 })();
 </script>
 </body>
