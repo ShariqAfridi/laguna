@@ -3,6 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once __DIR__ . '/../../db.php';
+$base = function_exists('base_url') ? rtrim(base_url(), '/') : '';
 
 // Handle single product deletion (via POST or GET)
 $delete_target_id = 0;

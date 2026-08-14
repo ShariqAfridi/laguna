@@ -30,6 +30,7 @@ return [
         '/admin/coupons/edit'       => 'Admin\CouponController@edit',
         '/admin/coupons/delete'     => 'Admin\CouponController@delete',
         '/admin/coupons/toggle'     => 'Admin\CouponController@toggle',
+        '/admin/sizes'              => 'Admin\SizesController@index',
         '/admin/logout'             => 'Admin\AdminLoginController@logout',
     ],
     'redirects' => [
