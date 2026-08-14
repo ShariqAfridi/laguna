@@ -566,12 +566,6 @@ function statusBadgeClass($sk) {
                             <?php if (!empty($item['scent'])): ?>
                                 <span class="meta-tag" style="background:#f0fdf4; border-color:#86efac; color:#15803d; font-weight:700;"><i class="fas fa-wind" style="color:#16a34a;"></i> Scent: <?= htmlspecialchars($item['scent']) ?></span>
                             <?php endif; ?>
-                            <?php if (!empty($item['color_id'])): ?>
-                                <span class="meta-tag"><i class="fas fa-palette"></i> Color: <?= htmlspecialchars($item['color_id']) ?></span>
-                            <?php endif; ?>
-                            <?php if (!empty($item['size_id'])): ?>
-                                <span class="meta-tag"><i class="fas fa-ruler"></i> Size: <?= htmlspecialchars($item['size_id']) ?></span>
-                            <?php endif; ?>
                         </div>
 
                         <div class="product-price-row">
