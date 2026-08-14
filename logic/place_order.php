@@ -12,8 +12,23 @@ require_once __DIR__ . '/../config/database.php';
 $conn = \get_db_connection();
 
 // ====================== VALIDATE REQUEST ======================
+$is_ajax = (
+    (isset($_POST['is_ajax']) && $_POST['is_ajax'] === '1') ||
+    (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+    (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)
+);
+
+function return_order_error($msg, $is_ajax = false) {
+    if ($is_ajax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => $msg]);
+        exit;
+    }
+    die($msg);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['place_order'])) {
-    die("No order to process. Please go back and try again.");
+    return_order_error("No order to process. Please go back and try again.", $is_ajax);
 }
 
 // ====================== CART DATA ======================
@@ -26,7 +41,7 @@ if (empty($cart) && isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
     $cart = array_values($_SESSION['cart']);
 }
 if (empty($cart)) {
-    die("Your cart is empty. Please add items before checking out.");
+    return_order_error("Your cart is empty. Please add items before checking out.", $is_ajax);
 }
 
 // ====================== CUSTOMER DATA ======================
@@ -57,10 +72,10 @@ $billing_country = $same_billing ? $country : trim($_POST['billing_country'] ?? 
 
 // ====================== VALIDATION ======================
 if (!$email) {
-    die("Invalid email address. Please go back and check your email.");
+    return_order_error("Invalid email address. Please go back and check your email.", $is_ajax);
 }
 if (empty($full_name) || empty($address) || empty($city) || empty($state) || empty($zip)) {
-    die("Please fill in all required shipping fields.");
+    return_order_error("Please fill in all required shipping fields.", $is_ajax);
 }
 
 // ====================== CALCULATE TOTALS ======================
@@ -189,7 +204,7 @@ function sendMail(string $to, string $subject, string $htmlBody): bool {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
         $mail->CharSet    = 'UTF-8';
-        $mail->setFrom('noreply@lagunavibe.com', 'LVB Atelier');
+        $mail->setFrom('noreply@lagunavibe.com', 'Laguna Vibe');
         $mail->addAddress($to);
         $mail->isHTML(true);
         $mail->Subject = $subject;
@@ -252,7 +267,7 @@ $customer_email_html = "
   <!-- Header -->
   <tr>
     <td style='background:#0f4c5c;padding:40px 40px 30px;text-align:center;'>
-      <h1 style='margin:0;color:#ffffff;font-size:28px;font-family:Georgia,serif;letter-spacing:0.04em;'>LVB Atelier</h1>
+      <h1 style='margin:0;color:#ffffff;font-size:28px;font-family:Georgia,serif;letter-spacing:0.04em;'>Laguna Vibe</h1>
       <p style='margin:8px 0 0;color:rgba(255,255,255,0.75);font-size:13px;letter-spacing:0.08em;text-transform:uppercase;'>Order Confirmed &bull; Preparing Shipment</p>
     </td>
   </tr>
@@ -480,27 +495,8 @@ $admin_email_html = "
             <th style='padding:10px 12px;text-align:right;font-size:11px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;'>Total</th>
           </tr>
         </thead>
-        <tbody>";
-
-foreach ($cart as $idx => $item) {
-    $bg = ($idx % 2 === 0) ? '#ffffff' : '#f9fafb';
-    $product_name = $item['name'] ?? 'Product';
-    $scent  = $item['scent'] ?? $item['fragrance_name'] ?? $item['size_name'] ?? 'Standard';
-    $qty    = intval($item['qty'] ?? 1);
-    $price  = floatval($item['price'] ?? 0);
-    $itotal = $price * $qty;
-
-    $admin_email_html .= "
-            <tr style='background:{$bg};'>
-                <td style='padding:10px 12px;font-size:13px;border-top:1px solid #e5e7eb;'><strong>" . htmlspecialchars($product_name) . "</strong></td>
-                <td style='padding:10px 12px;font-size:13px;border-top:1px solid #e5e7eb;color:#6b7280;'>" . htmlspecialchars($scent) . "</td>
-                <td style='padding:10px 12px;font-size:13px;border-top:1px solid #e5e7eb;text-align:center;'>{$qty}</td>
-                <td style='padding:10px 12px;font-size:13px;border-top:1px solid #e5e7eb;text-align:right;'>$" . number_format($price, 2) . "</td>
-                <td style='padding:10px 12px;font-size:13px;border-top:1px solid #e5e7eb;text-align:right;font-weight:600;'>$" . number_format($itotal, 2) . "</td>
-            </tr>";
-}
-
-$admin_email_html .= "
+        <tbody>
+          " . $items_html . "
         </tbody>
         <tfoot>" . $totals_html . "</tfoot>
       </table>
@@ -534,16 +530,61 @@ $admin_email_html .= "
 
 // ====================== SEND EMAILS ======================
 try {
-    sendMail($email, "Order Confirmed #{$order_number} — LVB Atelier", $customer_email_html);
-    sendMail('admin@lagunavibe.com', "New Order #{$order_number} — LVB Atelier", $admin_email_html);
+    sendMail($email, "Order Confirmed #{$order_number} — Laguna Vibe", $customer_email_html);
+    sendMail('admin@lagunavibe.com', "New Order #{$order_number} — Laguna Vibe", $admin_email_html);
 } catch (\Throwable $mailErr) {
     error_log("Order confirmation email failed: " . $mailErr->getMessage());
+}
+
+// ====================== AJAX RESPONSE ======================
+if ($is_ajax) {
+    header('Content-Type: application/json');
+    $items_summary = [];
+    foreach ($cart as $ci) {
+        $sc = !empty($ci['scent']) ? $ci['scent'] : (!empty($ci['fragrance_name']) ? $ci['fragrance_name'] : (!empty($ci['size_name']) ? $ci['size_name'] : 'Standard'));
+        $pr = floatval($ci['price'] ?? 0);
+        $qt = intval($ci['qty'] ?? 1);
+        $items_summary[] = [
+            'product_name' => $ci['name'] ?? 'Handcrafted Candle',
+            'scent'        => $sc,
+            'quantity'     => $qt,
+            'price'        => $pr,
+            'subtotal'     => $pr * $qt,
+            'image'        => $ci['image'] ?? ''
+        ];
+    }
+
+    echo json_encode([
+        'success'         => true,
+        'order_id'        => $order_id,
+        'order_number'    => $order_number,
+        'full_name'       => $full_name,
+        'email'           => $email,
+        'phone'           => $phone,
+        'address'         => $address_full,
+        'city'            => $city,
+        'state'           => $state,
+        'zip'             => $zip,
+        'country'         => $country,
+        'full_address'    => $address_full . (!empty($city) ? ', ' . $city : '') . (!empty($state) ? ', ' . $state : '') . (!empty($zip) ? ' ' . $zip : '') . (!empty($country) ? ', ' . $country : ''),
+        'subtotal'        => $subtotal,
+        'shipping'        => $shipping,
+        'discount'        => $discount,
+        'tax'             => $tax,
+        'total'           => $total,
+        'payment_method'  => $payment_method,
+        'payment_display' => $payment_label,
+        'delivery_est'    => '3–5 business days ✨',
+        'created_at'      => $order_date,
+        'items'           => $items_summary
+    ]);
+    exit;
 }
 
 // ====================== CLEAR CLIENT CART ======================
 echo "<script>try { sessionStorage.removeItem('lvb_cart'); sessionStorage.removeItem('cart_synced'); } catch(e){} </script>";
 
-// ====================== REDIRECT ======================
+// ====================== REDIRECT (NON-AJAX FALLBACK) ======================
 if ($payment_method === 'stripe' && !$is_mock_stripe && !env('STRIPE_MOCK_MODE', true)) {
     header('Location: ' . base_url('/stripe/create-checkout-session.php?order_id=' . $order_id . '&order_number=' . urlencode($order_number)));
 } elseif ($payment_method === 'paypal') {

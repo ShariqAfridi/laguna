@@ -97,7 +97,7 @@ $customer_email = $order['email'] ?? 'your email';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Thank You | LVB Atelier</title>
+    <title>Thank You | Laguna Vibe</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -351,7 +351,7 @@ $customer_email = $order['email'] ?? 'your email';
 
             <div class="card-body">
                 <div class="thankyou-message">
-                    <p><strong>Thank you for shopping with LVB Atelier.</strong></p>
+                    <p><strong>Thank you for shopping with Laguna Vibe.</strong></p>
                     <p>We've received your order and it's being prepared with care. A confirmation email has been sent to your inbox.</p>
                 </div>
 
@@ -413,7 +413,7 @@ $customer_email = $order['email'] ?? 'your email';
 
                 <div class="support-links">
                     Need help? Email <a href="mailto:support@lagunavibe.com">support@lagunavibe.com</a> or call +1 (888) 420-1965<br>
-                    <span style="font-size: 0.7rem;">A portion of every order supports sustainable artisans. © LVB Atelier <?php echo date('Y'); ?> | ethical fragrance</span>
+                    <span style="font-size: 0.7rem;">A portion of every order supports sustainable artisans. © Laguna Vibe <?php echo date('Y'); ?> | ethical fragrance</span>
                 </div>
             </div>
         <?php endif; ?>

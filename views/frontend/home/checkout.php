@@ -49,7 +49,7 @@ $countries = [
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checkout — LVB Atelier</title>
+<title>Checkout — Laguna Vibe</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -802,13 +802,208 @@ textarea { resize: vertical; min-height: 80px; }
     .breadcrumb { font-size: 11px; gap: 6px; }
     .order-summary { padding: 20px 16px; }
 }
+/* ── Order Confirmation Popup Modal ── */
+.order-success-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    background: rgba(15, 28, 22, 0.55);
+    background-image: url('https://images.pexels.com/photos/37162119/pexels-photo-37162119.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    overflow-y: auto;
+    animation: lvbModalFadeIn 0.3s ease forwards;
+}
+
+.order-success-overlay::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 28, 22, 0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: -1;
+}
+
+@keyframes lvbModalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes lvbCardPopIn {
+    from { opacity: 0; transform: scale(0.92) translateY(16px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.thankyou-card {
+    max-width: 620px;
+    width: 100%;
+    background: #ffffff;
+    border-radius: 28px;
+    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    animation: lvbCardPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    margin: auto;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.thankyou-card .card-header {
+    background: #0F4C5C;
+    padding: 2.2rem 1.5rem 1.6rem;
+    text-align: center;
+    color: white;
+}
+
+.thankyou-card .card-header i {
+    font-size: 3.2rem;
+    color: #e9c46a;
+    margin-bottom: 0.75rem;
+    display: inline-block;
+}
+
+.thankyou-card .card-header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 2.2rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+}
+
+.thankyou-card .order-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    padding: 0.35rem 1.1rem;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+}
+
+.thankyou-card .card-body {
+    padding: 1.8rem 2rem 1.6rem;
+}
+
+.thankyou-card .thankyou-message {
+    text-align: center;
+    margin-bottom: 1.3rem;
+}
+
+.thankyou-card .thankyou-message p:first-child {
+    font-size: 1.05rem;
+    color: #1E2F3A;
+    margin-bottom: 0.35rem;
+}
+
+.thankyou-card .thankyou-message p:last-child {
+    font-size: 0.88rem;
+    color: #6D8491;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.thankyou-card .order-details {
+    background: #f8fafc;
+    border-radius: 18px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1.2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.thankyou-card .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #edf2f7;
+    font-size: 0.88rem;
+}
+
+.thankyou-card .detail-row:last-of-type {
+    border-bottom: none;
+}
+
+.thankyou-card .detail-label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.thankyou-card .detail-value {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.thankyou-card .detail-value.highlight {
+    color: #d97706;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.thankyou-card .items-preview summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.thankyou-card .items-preview summary::-webkit-details-marker {
+    display: none;
+}
+
+.thankyou-card .btn-modal-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.75rem 1.6rem;
+    border-radius: 40px;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.85rem;
+    background: #1f5446;
+    color: white;
+    border: none;
+    transition: 0.2s;
+}
+
+.thankyou-card .btn-modal-primary:hover {
+    background: #154237;
+}
+
+.thankyou-card .btn-modal-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.75rem 1.6rem;
+    border-radius: 40px;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.85rem;
+    background: white;
+    border: 1px solid #cbdcd0;
+    color: #2d5a47;
+    transition: 0.2s;
+}
+
+.thankyou-card .btn-modal-outline:hover {
+    background: #f5f1ea;
+}
+
+@media(max-width: 550px) {
+    .thankyou-card .card-body { padding: 1.3rem 1.2rem 1.5rem; }
+    .thankyou-card .card-header { padding: 1.8rem 1.2rem 1.3rem; }
+}
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <header class="checkout-header">
-    <a href="/" class="logo">LVB Atelier</a>
+    <a href="/" class="logo">Laguna Vibe</a>
     <div class="breadcrumb">
         <span>Cart</span>
         <i class="fas fa-chevron-right"></i>
@@ -1198,8 +1393,78 @@ textarea { resize: vertical; min-height: 80px; }
                 Estimated delivery: <strong id="deliveryRange">5–8 business days</strong>
             </div>
         </div>
-    </div>
+</div>
 
+<!-- ═══════════════ ORDER CONFIRMATION POPUP MODAL ═══════════════ -->
+<div id="orderSuccessModal" class="order-success-overlay" style="display: none;">
+    <div class="thankyou-card">
+        <div class="card-header">
+            <i class="fa-regular fa-circle-check"></i>
+            <h1>You're all set!</h1>
+            <div class="order-badge">
+                ORDER #<span id="succOrderNumber"></span>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="thankyou-message">
+                <p><strong>Thank you for shopping with Laguna Vibe.</strong></p>
+                <p>We've received your order and it's being prepared with care. A confirmation email has been sent to your inbox.</p>
+            </div>
+
+            <!-- ORDER DETAILS FROM DATABASE -->
+            <div class="order-details">
+                <div class="detail-row">
+                    <span class="detail-label">Order total</span>
+                    <span class="detail-value highlight" id="succTotal">$0.00</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment method</span>
+                    <span class="detail-value" id="succPayment">Credit Card (Stripe)</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Shipping to</span>
+                    <span class="detail-value" id="succAddress" style="text-align: right; max-width: 60%; word-break: break-word;"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Estimated delivery</span>
+                    <span class="detail-value" id="succDelivery">3–5 business days ✨</span>
+                </div>
+                
+                <!-- Show ordered items -->
+                <details class="items-preview" open style="margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+                    <summary style="font-size: 0.84rem; font-weight: 700; color: #0F4C5C; cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none;">
+                        <i class="fa-regular fa-receipt"></i> Ordered Items (<span id="succItemCount">1</span>)
+                    </summary>
+                    <div class="items-list" id="succItemsList" style="margin-top: 8px; max-height: 180px; overflow-y: auto;"></div>
+                </details>
+            </div>
+
+            <div class="pci-notice" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:0.8rem; padding:0.7rem 1rem; display:flex; align-items:center; gap:0.7rem; margin:1rem 0; font-size:0.78rem; color:#166534; line-height: 1.4;">
+                <i class="fa-solid fa-shield-check" style="font-size:1.2rem; color:#16a34a; flex-shrink: 0;"></i>
+                <span><strong>PCI-DSS Compliant Transaction</strong> — Processed via Stripe Level 1 PCI Gateway. Card details are fully encrypted and zero card data is retained on our servers.</span>
+            </div>
+
+            <div class="email-sent" style="background:#ecf6ef; border-radius:1rem; padding:0.75rem 1rem; display:flex; align-items:center; gap:0.7rem; margin:1rem 0; font-size:0.8rem; color:#2b5e3b; line-height: 1.4;">
+                <i class="fa-regular fa-envelope-open" style="font-size:1.2rem; flex-shrink: 0;"></i>
+                <span><strong>Instant confirmation</strong> — We've emailed your order details & receipt.<br><small style="color: #4b7a5a;">(Customer & admin copies sent to <span id="succEmail"></span>)</small></span>
+            </div>
+
+            <div class="action-buttons" style="display:flex; flex-wrap:wrap; gap:0.8rem; justify-content:center; margin:1.5rem 0 1rem;">
+                <a href="<?php echo $base; ?>/shop" class="btn-modal-primary">
+                    <i class="fa-solid fa-shop"></i> Continue shopping
+                </a>
+                <a href="<?php echo $base; ?>/contact" class="btn-modal-outline">
+                    <i class="fa-regular fa-message"></i> Support
+                </a>
+            </div>
+
+            <div class="support-links" style="text-align:center; font-size:0.72rem; color:#6f7e72; border-top:1px solid #ede3d6; padding-top:1.2rem; margin-top:0.5rem; line-height: 1.5;">
+                Need help? Email <a href="mailto:support@lagunavibe.com" style="color:#3a6b58; text-decoration:none; font-weight:500;">support@lagunavibe.com</a> or call +1 (888) 420-1965<br>
+                <span style="font-size: 0.7rem;">A portion of every order supports sustainable artisans. © Laguna Vibe <?php echo date('Y'); ?> | ethical fragrance</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://js.stripe.com/v3/"></script>
@@ -1696,16 +1961,9 @@ textarea { resize: vertical; min-height: 80px; }
 
             if (currentPayment === 'stripe') {
                 await handleStripePayment(btn, form);
-            } else if (currentPayment === 'cod') {
-                // COD — submit directly
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner spinner"></i> Placing Order...';
-                form.submit();
             } else {
-                // PayPal — hardcoded redirect for now
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner spinner"></i> Redirecting to PayPal...';
-                form.submit();
+                // COD / other payment method — process asynchronously
+                await submitOrderAsync(btn, form);
             }
         });
     }
@@ -1749,14 +2007,14 @@ textarea { resize: vertical; min-height: 80px; }
                 if (icon) {
                     if (v.startsWith('4')) {
                         icon.innerHTML = '<i class="fab fa-cc-visa" style="color:#1A1F71;"></i>';
-                    } else if (/^(5[1-5]|2[2-7])/.test(v)) {
-                        icon.innerHTML = '<i class="fab fa-cc-mastercard" style="color:#F79E1B;"></i>';
-                    } else if (/^3[47]/.test(v)) {
-                        icon.innerHTML = '<i class="fab fa-cc-amex" style="color:#006FCF;"></i>';
-                    } else if (/^6(011|5)/.test(v)) {
+                    } else if (v.startsWith('5')) {
+                        icon.innerHTML = '<i class="fab fa-cc-mastercard" style="color:#EB001B;"></i>';
+                    } else if (v.startsWith('3')) {
+                        icon.innerHTML = '<i class="fab fa-cc-amex" style="color:#007CC3;"></i>';
+                    } else if (v.startsWith('6')) {
                         icon.innerHTML = '<i class="fab fa-cc-discover" style="color:#FF6000;"></i>';
                     } else {
-                        icon.innerHTML = '<i class="far fa-credit-card" style="color:#635bff;"></i>';
+                        icon.innerHTML = '<i class="fas fa-credit-card" style="color:#cbd5e1;"></i>';
                     }
                 }
             });
@@ -1842,12 +2100,126 @@ textarea { resize: vertical; min-height: 80px; }
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner spinner"></i> Processing Payment...';
 
-        // Simulate seamless payment verification and submit order
+        // Simulate seamless payment verification and submit order asynchronously
         setTimeout(() => {
             btn.innerHTML = '<i class="fas fa-check"></i> Payment Approved! Placing Order...';
             btn.style.background = 'var(--success)';
-            form.submit();
-        }, 900);
+            submitOrderAsync(btn, form);
+        }, 800);
+    }
+
+    // ── Async Order Submission ──
+    async function submitOrderAsync(btn, form) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner spinner"></i> Confirming Order...';
+
+        const formData = new FormData(form);
+        formData.set('is_ajax', '1');
+        formData.set('place_order', '1');
+
+        const savedCart = sessionStorage.getItem('lvb_cart');
+        if (savedCart) {
+            formData.set('cart_data', savedCart);
+        } else if (Array.isArray(cart)) {
+            formData.set('cart_data', JSON.stringify(cart));
+        }
+
+        try {
+            var baseApiUrl = (typeof window.basePath !== 'undefined') ? window.basePath : (window.location.pathname.startsWith('/laguna') ? '/laguna' : '<?php echo $base; ?>');
+            const placeOrderUrl = form.action || (baseApiUrl + '/logic/place_order.php');
+            const res = await fetch(placeOrderUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const data = await res.json();
+
+            if (data && data.success) {
+                // 1. Clear cart
+                try {
+                    sessionStorage.removeItem('lvb_cart');
+                    sessionStorage.removeItem('cart_synced');
+                    localStorage.removeItem('lvb_cart');
+                } catch(e) {}
+
+                if (window.LVBCart && typeof window.LVBCart.clear === 'function') {
+                    window.LVBCart.clear();
+                }
+                cart = [];
+                renderCart();
+
+                // 2. Display order confirmation modal popup
+                displayOrderSuccessModal(data);
+
+                // 3. Update CTA button
+                btn.innerHTML = '<i class="fas fa-check"></i> Order Confirmed!';
+                btn.style.background = 'var(--success)';
+                btn.disabled = true;
+            } else {
+                alert((data && data.error) ? data.error : 'Failed to place order. Please check your details and try again.');
+                btn.disabled = false;
+                btn.innerHTML = 'Place Order →';
+                btn.style.background = '';
+            }
+        } catch (err) {
+            console.error('Order submission error:', err);
+            form.submit(); // fallback
+        }
+    }
+
+    // ── Render Order Confirmation Modal ──
+    function displayOrderSuccessModal(order) {
+        const modal = document.getElementById('orderSuccessModal');
+        if (!modal) return;
+
+        // Order Number
+        const ordNumEl = document.getElementById('succOrderNumber');
+        if (ordNumEl) ordNumEl.textContent = order.order_number || '';
+
+        // Order Total
+        const totalEl = document.getElementById('succTotal');
+        if (totalEl) totalEl.textContent = '$' + parseFloat(order.total || 0).toFixed(2);
+
+        // Payment Method Display
+        const paymentEl = document.getElementById('succPayment');
+        if (paymentEl) paymentEl.textContent = order.payment_display || 'Credit Card (Stripe)';
+
+        // Address Display
+        const addressEl = document.getElementById('succAddress');
+        if (addressEl) addressEl.textContent = order.full_address || order.address || 'Standard Delivery Address';
+
+        // Delivery Estimate
+        const deliveryEl = document.getElementById('succDelivery');
+        if (deliveryEl) deliveryEl.textContent = order.delivery_est || '3–5 business days ✨';
+
+        // Email Sent confirmation
+        const emailEl = document.getElementById('succEmail');
+        if (emailEl) emailEl.textContent = order.email || 'your email';
+
+        // Itemized ordered items
+        const itemsListEl = document.getElementById('succItemsList');
+        const itemCountEl = document.getElementById('succItemCount');
+        if (itemsListEl && Array.isArray(order.items)) {
+            if (itemCountEl) itemCountEl.textContent = order.items.length;
+            itemsListEl.innerHTML = order.items.map(item => `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px dashed #e2e8f0; font-size:13px;">
+                    <div>
+                        <strong style="color:#1E2F3A;">${esc(item.product_name)}</strong>
+                        ${item.scent ? `<br><span style="color:#0F4C5C; font-weight:600; font-size:12px;">Scent: ${esc(item.scent)}</span>` : ''}
+                        <span style="color:#64748b; font-size:12px;"> × ${item.quantity}</span>
+                    </div>
+                    <div style="font-weight:700; color:#1E2F3A;">$${parseFloat(item.subtotal || (item.price * item.quantity)).toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        // Show Modal
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // ── Validation ──

@@ -29,7 +29,7 @@ function sendMail($to, $subject, $htmlBody) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
         $mail->CharSet    = 'UTF-8';
-        $mail->setFrom('noreply@lagunavibe.com', 'LVB Atelier');
+        $mail->setFrom('noreply@lagunavibe.com', 'Laguna Vibe');
         $mail->addAddress($to);
         $mail->isHTML(true);
         $mail->Subject = $subject;
@@ -245,7 +245,7 @@ try {
   <!-- Header -->
   <tr>
     <td style='background:#0f4c5c;padding:40px 40px 30px;text-align:center;'>
-      <h1 style='margin:0;color:#ffffff;font-size:28px;font-family:Georgia,serif;letter-spacing:0.04em;'>LVB Atelier</h1>
+      <h1 style='margin:0;color:#ffffff;font-size:28px;font-family:Georgia,serif;letter-spacing:0.04em;'>Laguna Vibe</h1>
       <p style='margin:8px 0 0;color:rgba(255,255,255,0.75);font-size:13px;letter-spacing:0.08em;text-transform:uppercase;'>Order Confirmed ✓</p>
     </td>
   </tr>
@@ -353,7 +353,7 @@ try {
   <!-- Footer -->
   <tr>
     <td style='background:#f9fafb;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;'>
-      <p style='margin:0 0 6px;font-size:13px;color:#6b7280;'>LVB Atelier — Crafted with care, delivered with love.</p>
+      <p style='margin:0 0 6px;font-size:13px;color:#6b7280;'>Laguna Vibe — Crafted with care, delivered with love.</p>
       <p style='margin:0;font-size:11px;color:#9ca3af;'>A portion of every purchase supports charitable causes. ❤️</p>
     </td>
   </tr>
@@ -365,8 +365,8 @@ try {
 </html>";
 
     // Send emails
-    sendMail($email, "Order Confirmed #{$order_number} — LVB Atelier", $customer_email_html);
-    sendMail('admin@lagunavibe.com', "New Paid Order #{$order_number} — LVB Atelier", $customer_email_html);
+    sendMail($email, "Order Confirmed #{$order_number} — Laguna Vibe", $customer_email_html);
+    sendMail('admin@lagunavibe.com', "New Paid Order #{$order_number} — Laguna Vibe", $customer_email_html);
     
     // Clear cart from session
     unset($_SESSION['cart']);
