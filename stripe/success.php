@@ -18,30 +18,7 @@ if (!isset($_GET['session_id'])) {
     die("Invalid session. Please contact support.");
 }
 
-function sendMail($to, $subject, $htmlBody) {
-    $mail = new PHPMailer(true);
-    try {
-        $mail->isSMTP();
-        $mail->Host       = 'mail.lagunavibe.com';
-        $mail->SMTPAuth   = true;
-        $mail->Username   = 'noreply@lagunavibe.com';
-        $mail->Password   = '=xQHc%KEN3!@ol96';
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
-        $mail->CharSet    = 'UTF-8';
-        $mail->setFrom('noreply@lagunavibe.com', 'Laguna Vibe');
-        $mail->addAddress($to);
-        $mail->isHTML(true);
-        $mail->Subject = $subject;
-        $mail->Body    = $htmlBody;
-        $mail->AltBody = strip_tags(str_replace(['<br>', '<br/>', '<br />', '<tr>', '</p>'], "\n", $htmlBody));
-        $mail->send();
-        return true;
-    } catch (Exception $e) {
-        error_log("Mail error to {$to}: " . $e->getMessage());
-        return false;
-    }
-}
+// Email sending handled by app/Helpers/mail_helper.php via send_mail() or sendMail()
 
 try {
     // Retrieve Stripe session

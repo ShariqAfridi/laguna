@@ -193,30 +193,7 @@ if (!empty($promo_code)) {
 unset($_SESSION['cart']);
 
 // ====================== EMAIL HELPER ======================
-function sendMail(string $to, string $subject, string $htmlBody): bool {
-    $mail = new PHPMailer(true);
-    try {
-        $mail->isSMTP();
-        $mail->Host       = 'mail.lagunavibe.com';
-        $mail->SMTPAuth   = true;
-        $mail->Username   = 'noreply@lagunavibe.com';
-        $mail->Password   = 'Xx=WUW0&i+ckjZfW';
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
-        $mail->CharSet    = 'UTF-8';
-        $mail->setFrom('noreply@lagunavibe.com', 'Laguna Vibe');
-        $mail->addAddress($to);
-        $mail->isHTML(true);
-        $mail->Subject = $subject;
-        $mail->Body    = $htmlBody;
-        $mail->AltBody = strip_tags(str_replace(['<br>', '<br/>', '<br />', '</tr>', '</p>'], "\n", $htmlBody));
-        $mail->send();
-        return true;
-    } catch (Exception $e) {
-        error_log("Mail error to {$to}: " . $e->getMessage());
-        return false;
-    }
-}
+// Handled by app/Helpers/mail_helper.php via send_mail() or sendMail()
 
 // ====================== BUILD SHARED SNIPPETS ======================
 $order_date     = date('F j, Y \a\t g:i a');
