@@ -44,16 +44,6 @@ $countries = [
     'NO'=>'Norway','DK'=>'Denmark','CH'=>'Switzerland','NZ'=>'New Zealand'
 ];
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checkout — Laguna Vibe</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 :root {
     --ink: #1a1a1a;
@@ -1014,20 +1004,6 @@ textarea { resize: vertical; min-height: 80px; }
     .thankyou-card .card-header h1 { font-size: 1.85rem; }
 }
 </style>
-</head>
-<body>
-
-<!-- HEADER -->
-<header class="checkout-header">
-    <a href="<?php echo $base; ?>/" class="logo">Laguna Vibe</a>
-    <div class="breadcrumb">
-        <span>Cart</span>
-        <i class="fas fa-chevron-right"></i>
-        <span class="active">Checkout</span>
-        <i class="fas fa-chevron-right"></i>
-        <span>Confirmation</span>
-    </div>
-</header>
 
 <div class="page-wrapper">
 
@@ -2319,6 +2295,3 @@ textarea { resize: vertical; min-height: 80px; }
     });
 })();
 </script>
-<?php include __DIR__ . '/../layouts/footer.php'; ?>
-</body>
-</html>
