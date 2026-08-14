@@ -680,7 +680,7 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
 .modal-header h2 {
     font-family: 'Cinzel', 'Cormorant Garamond', serif;
     font-weight: 600;
-    font-size: 28px;
+    font-size: 20px;
     color: #0f172a;
     margin-bottom: 6px;
     line-height: 1.25;
