@@ -52,6 +52,7 @@ if (!isset($base)) {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+    cursor: pointer;
     transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1), 
                 visibility 0.38s ease;
     touch-action: pan-y;
@@ -84,6 +85,7 @@ if (!isset($base)) {
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
 }
 
 .lvb-popup-overlay.lvb-popup-active .lvb-popup-wrapper {
@@ -150,6 +152,7 @@ if (!isset($base)) {
     line-height: 0;
     overflow: hidden;
     border-radius: inherit;
+    cursor: pointer;
 }
 
 .lvb-popup-main-img {
@@ -161,6 +164,7 @@ if (!isset($base)) {
     display: block;
     border-radius: inherit;
     pointer-events: auto;
+    cursor: pointer;
 }
 
 /* ── Tablet & Small Laptops ── */
@@ -253,51 +257,46 @@ if (!isset($base)) {
 <script>
 (function() {
     const POPUP_STORAGE_KEY = 'lvb_grand_opening_popup_seen';
-    const POPUP_DELAY_MS = 750; // 750ms natural delay after load
+    const POPUP_DELAY_MS = 600; // Natural delay after load
 
     function initPopup() {
         const overlay = document.getElementById('lvbGrandOpeningPopup');
         const closeBtn = document.getElementById('lvbPopupCloseBtn');
 
-        if (!overlay || !closeBtn) return;
+        if (!overlay) return;
 
-        // Check if already displayed once in this session
+        // Check if already displayed once (persisted in localStorage and sessionStorage)
         try {
-            if (sessionStorage.getItem(POPUP_STORAGE_KEY)) {
+            if (localStorage.getItem(POPUP_STORAGE_KEY) || sessionStorage.getItem(POPUP_STORAGE_KEY)) {
                 return;
             }
         } catch (e) {
             // Storage access restricted, proceed normally
         }
 
+        function markPopupSeen() {
+            try {
+                localStorage.setItem(POPUP_STORAGE_KEY, 'true');
+                sessionStorage.setItem(POPUP_STORAGE_KEY, 'true');
+            } catch (e) {}
+        }
+
         function showPopup() {
             overlay.classList.add('lvb-popup-active');
             document.body.style.overflow = 'hidden'; // prevent background scrolling
-            closeBtn.focus();
-            try {
-                sessionStorage.setItem(POPUP_STORAGE_KEY, 'true');
-            } catch (e) {}
+            markPopupSeen();
+            if (closeBtn) closeBtn.focus();
         }
 
         function hidePopup() {
             overlay.classList.remove('lvb-popup-active');
             document.body.style.overflow = '';
-            try {
-                sessionStorage.setItem(POPUP_STORAGE_KEY, 'true');
-            } catch (e) {}
+            markPopupSeen();
         }
 
-        // Close on close button click
-        closeBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            hidePopup();
-        });
-
-        // Close when clicking overlay backdrop outside image wrapper
+        // Close when clicking ANYWHERE on the screen (backdrop, wrapper, image, or close button)
         overlay.addEventListener('click', function(e) {
-            if (e.target === overlay) {
-                hidePopup();
-            }
+            hidePopup();
         });
 
         // Close on Escape key
