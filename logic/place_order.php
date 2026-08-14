@@ -20,6 +20,7 @@ $is_ajax = (
 
 function return_order_error($msg, $is_ajax = false) {
     if ($is_ajax) {
+        if (ob_get_length()) { ob_clean(); }
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'error' => $msg]);
         exit;
@@ -551,6 +552,7 @@ try {
 
 // ====================== AJAX RESPONSE ======================
 if ($is_ajax) {
+    if (ob_get_length()) { ob_clean(); }
     header('Content-Type: application/json');
     $items_summary = [];
     foreach ($cart as $ci) {

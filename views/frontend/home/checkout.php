@@ -1019,7 +1019,7 @@ textarea { resize: vertical; min-height: 80px; }
 
 <!-- HEADER -->
 <header class="checkout-header">
-    <a href="/" class="logo">Laguna Vibe</a>
+    <a href="<?php echo $base; ?>/" class="logo">Laguna Vibe</a>
     <div class="breadcrumb">
         <span>Cart</span>
         <i class="fas fa-chevron-right"></i>
@@ -1408,8 +1408,9 @@ textarea { resize: vertical; min-height: 80px; }
                 <i class="fas fa-truck" style="color:var(--accent);"></i>
                 Estimated delivery: <strong id="deliveryRange">5–8 business days</strong>
             </div>
-        </div>
-</div>
+        </div><!-- /.summary-card -->
+    </div><!-- /.right-col -->
+</div><!-- /.page-wrapper -->
 
 <!-- ═══════════════ ORDER CONFIRMATION POPUP MODAL ═══════════════ -->
 <div id="orderSuccessModal" class="order-success-overlay" style="display: none;">
@@ -1511,16 +1512,18 @@ textarea { resize: vertical; min-height: 80px; }
 
     // ── Cart Load ──
     function loadCart() {
-        const saved = sessionStorage.getItem('lvb_cart');
+        let saved = sessionStorage.getItem('lvb_cart') || localStorage.getItem('lvb_cart');
         if (saved !== null) {
             try {
                 cart = JSON.parse(saved) || [];
-                renderCart();
-                if (cart.length > 0 && !sessionStorage.getItem('cart_synced')) {
-                    sessionStorage.setItem('cart_synced', '1');
-                    syncServer(cart);
+                if (cart && cart.length > 0) {
+                    renderCart();
+                    if (!sessionStorage.getItem('cart_synced')) {
+                        sessionStorage.setItem('cart_synced', '1');
+                        syncServer(cart);
+                    }
+                    return;
                 }
-                return;
             } catch(e) {}
         }
         // Fall through to PHP-rendered items
@@ -2134,16 +2137,16 @@ textarea { resize: vertical; min-height: 80px; }
         formData.set('is_ajax', '1');
         formData.set('place_order', '1');
 
-        const savedCart = sessionStorage.getItem('lvb_cart');
+        const savedCart = sessionStorage.getItem('lvb_cart') || localStorage.getItem('lvb_cart');
         if (savedCart) {
             formData.set('cart_data', savedCart);
-        } else if (Array.isArray(cart)) {
+        } else if (Array.isArray(cart) && cart.length > 0) {
             formData.set('cart_data', JSON.stringify(cart));
         }
 
         try {
             var baseApiUrl = (typeof window.basePath !== 'undefined') ? window.basePath : (window.location.pathname.startsWith('/laguna') ? '/laguna' : '<?php echo $base; ?>');
-            const placeOrderUrl = form.action || (baseApiUrl + '/logic/place_order.php');
+            const placeOrderUrl = baseApiUrl + '/logic/place_order.php';
             const res = await fetch(placeOrderUrl, {
                 method: 'POST',
                 body: formData,
@@ -2152,7 +2155,17 @@ textarea { resize: vertical; min-height: 80px; }
                 }
             });
 
-            const data = await res.json();
+            let data = null;
+            const rawText = await res.text();
+            try {
+                data = JSON.parse(rawText);
+            } catch (e) {
+                const jsonStart = rawText.indexOf('{');
+                const jsonEnd = rawText.lastIndexOf('}');
+                if (jsonStart !== -1 && jsonEnd !== -1) {
+                    data = JSON.parse(rawText.substring(jsonStart, jsonEnd + 1));
+                }
+            }
 
             if (data && data.success) {
                 // 1. Clear cart
@@ -2178,7 +2191,7 @@ textarea { resize: vertical; min-height: 80px; }
             } else {
                 alert((data && data.error) ? data.error : 'Failed to place order. Please check your details and try again.');
                 btn.disabled = false;
-                btn.innerHTML = 'Place Order →';
+                btn.innerHTML = 'Place Secure Order';
                 btn.style.background = '';
             }
         } catch (err) {
@@ -2306,5 +2319,6 @@ textarea { resize: vertical; min-height: 80px; }
     });
 })();
 </script>
+<?php include __DIR__ . '/../layouts/footer.php'; ?>
 </body>
 </html>

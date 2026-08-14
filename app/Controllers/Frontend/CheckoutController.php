@@ -5,7 +5,7 @@ use App\Models\Order;
 
 class CheckoutController {
     public static function index() {
-        view('frontend/checkout');
+        view('frontend/checkout', [], false);
     }
 
 

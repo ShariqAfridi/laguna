@@ -48,7 +48,7 @@ if (!function_exists('send_mail')) {
 
             $mail->Port       = $port;
             $mail->CharSet    = 'UTF-8';
-            $mail->Timeout    = 10;
+            $mail->Timeout    = 3;
 
             // Debug output capture if requested
             $mail->SMTPDebug = 2;
