@@ -24,14 +24,23 @@ class CartController {
         if (is_array($cart)) {
             foreach ($cart as $item) {
                 if (isset($item['id'])) {
+                    $scent = !empty($item['scent']) ? $item['scent'] : (!empty($item['fragrance_name']) ? $item['fragrance_name'] : 'Standard');
                     $sessionCart[$item['id']] = [
-                        'product_id' => $item['product_id'] ?? $item['id'],
-                        'id'         => $item['id'],
-                        'name'       => $item['name'],
-                        'price'      => floatval($item['price']),
-                        'qty'        => intval($item['qty']),
-                        'image'      => $item['image'] ?? '',
-                        'scent'      => $item['scent'] ?? ''
+                        'product_id'     => $item['product_id'] ?? $item['id'],
+                        'id'             => $item['id'],
+                        'name'           => $item['name'] ?? 'Product',
+                        'price'          => floatval($item['price'] ?? 0),
+                        'qty'            => intval($item['qty'] ?? 1),
+                        'image'          => $item['image'] ?? '',
+                        'scent'          => $scent,
+                        'fragrance_name' => $item['fragrance_name'] ?? $scent,
+                        'fragrance_id'   => $item['fragrance_id'] ?? null,
+                        'size_id'        => $item['size_id'] ?? null,
+                        'size_name'      => $item['size_name'] ?? null,
+                        'box_id'         => $item['box_id'] ?? null,
+                        'box_name'       => $item['box_name'] ?? null,
+                        'color_name'     => $item['color_name'] ?? null,
+                        'sku'            => $item['sku'] ?? ''
                     ];
                 }
             }

@@ -232,6 +232,7 @@
       body.innerHTML =
         '<ul class="lvb-items">' +
         items.map(function (item) {
+          var scentText = item.scent || item.fragrance_name || '';
           return '<li class="lvb-item" data-id="' + item.id + '">' +
             (item.image
               ? '<img class="lvb-img" src="' + item.image + '" alt="' + item.name + '">'
@@ -239,6 +240,8 @@
             '<div class="lvb-info">' +
               '<p class="lvb-name">' + escapeHtml(item.name) + '</p>' +
               (item.sku ? '<p class="lvb-sku">SKU: ' + escapeHtml(item.sku) + '</p>' : '') +
+              (scentText ? '<p class="lvb-scent" style="margin:2px 0 4px;font-size:11.5px;color:#004b66;font-weight:600;letter-spacing:1px;">Scent: ' + escapeHtml(scentText) + '</p>' : '') +
+              (item.size_name && !item.name.includes(item.size_name) ? '<p style="margin:0 0 6px;font-size:11px;color:#7a8e99;">' + escapeHtml(item.size_name) + '</p>' : '') +
               '<div class="lvb-controls">' +
                 '<button class="lvb-qbtn" data-act="dec" data-id="' + item.id + '">−</button>' +
                 '<span class="lvb-qnum">' + item.qty + '</span>' +

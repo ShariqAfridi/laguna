@@ -1691,10 +1691,11 @@ if (addCartBtn) {
         if (selectedBoxId && boxesData[selectedBoxId]) boxName = boxesData[selectedBoxId].box_name;
 
         const sku = getFullProductSKU(selectedBoxId);
-        let productDisplayName = currentProduct.product_name || (currentProduct.fragrance_name + ' Candle');
+        const fragranceName = currentProduct.fragrance_name || 'Luxury Scent';
+        let productDisplayName = currentProduct.product_name || (fragranceName + ' Candle');
         if (boxName) productDisplayName += ' + ' + boxName;
 
-        const uniqueItemId = 'prod_' + (currentProduct.product_id || 'item') + '_size' + currentSizeId + (selectedBoxId ? '_box' + selectedBoxId : '') + '_' + sku;
+        const uniqueItemId = 'prod_' + (currentProduct.product_id || 'item') + '_frag' + (currentProduct.fragrance_id || '0') + (selectedBoxId ? '_box' + selectedBoxId : '') + '_' + sku;
 
         waitForLVBCart(function() {
             if (typeof LVBCart !== 'undefined' && LVBCart.addItem) {
@@ -1702,7 +1703,7 @@ if (addCartBtn) {
                     id: uniqueItemId,
                     sku: sku,
                     name: productDisplayName,
-                    scent: selectedSizeName,
+                    scent: fragranceName,
                     price: currentBasePrice + boxPrice,
                     image: getImageUrl(currentProduct),
                     qty: quantity,
@@ -1712,10 +1713,10 @@ if (addCartBtn) {
                     box_id: selectedBoxId,
                     box_name: boxName,
                     fragrance_id: currentProduct.fragrance_id,
-                    fragrance_name: currentProduct.fragrance_name
+                    fragrance_name: fragranceName
                 });
                 closeModal();
-                showSuccessMessage('Added to cart (SKU: ' + sku + ')');
+                showSuccessMessage('Added ' + quantity + '× ' + fragranceName + ' to cart');
             } else {
                 console.error('LVBCart not available');
                 showSuccessMessage('Error: Cart not loaded. Please refresh the page.');

@@ -3071,7 +3071,7 @@ document.addEventListener('DOMContentLoaded', function() {
         id: sku,
         sku: sku,
         name: productDisplayName,
-        scent: sizeName,
+        scent: fragName,
         price: itemPrice,
         image: imageUrl,
         qty: state.qty || 1,

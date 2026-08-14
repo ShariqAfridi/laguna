@@ -1086,7 +1086,15 @@ textarea { resize: vertical; min-height: 80px; }
                             <img class="item-img" src="<?php echo htmlspecialchars($imgSrc); ?>" alt="<?php echo htmlspecialchars($item['name'] ?? ''); ?>">
                             <div class="item-details">
                                 <div class="item-name"><?php echo htmlspecialchars($item['name'] ?? 'Product'); ?></div>
-                                <div class="item-variant"><?php echo htmlspecialchars($item['scent'] ?? 'Standard'); ?></div>
+                                <div class="item-variant">
+                                    <?php 
+                                        $scentName = !empty($item['scent']) ? $item['scent'] : (!empty($item['fragrance_name']) ? $item['fragrance_name'] : 'Standard');
+                                        echo '<span style="font-weight:600; color:#0f4c5c;">Scent: ' . htmlspecialchars($scentName) . '</span>';
+                                        if (!empty($item['size_name']) && strpos($item['name'] ?? '', $item['size_name']) === false) {
+                                            echo ' · <span style="color:#6D8491; font-size:12px;">' . htmlspecialchars($item['size_name']) . '</span>';
+                                        }
+                                    ?>
+                                </div>
                                 <div class="item-qty-row">
                                     <button type="button" class="qty-btn" onclick="changeQty(this, -1)">−</button>
                                     <span class="qty-val"><?php echo intval($item['qty'] ?? 1); ?></span>
@@ -1280,12 +1288,15 @@ textarea { resize: vertical; min-height: 80px; }
             return;
         }
 
-        container.innerHTML = cart.map((item, idx) => `
+        container.innerHTML = cart.map((item, idx) => {
+            const scentName = item.scent || item.fragrance_name || 'Standard Scent';
+            const sizeDetail = (item.size_name && (!item.name || !item.name.includes(item.size_name))) ? ` · <span style="color:#6D8491; font-size:12px;">${esc(item.size_name)}</span>` : '';
+            return `
             <div class="cart-item" data-index="${idx}" data-price="${parseFloat(item.price)||0}">
                 <img class="item-img" src="${esc(item.image || '/img/placeholder.jpg')}" alt="${esc(item.name||'')}">
                 <div class="item-details">
                     <div class="item-name">${esc(item.name||'Product')}</div>
-                    <div class="item-variant">${esc(item.scent||'Standard')}</div>
+                    <div class="item-variant"><span style="font-weight:600; color:#0f4c5c;">Scent: ${esc(scentName)}</span>${sizeDetail}</div>
                     <div class="item-qty-row">
                         <button type="button" class="qty-btn" onclick="changeQty(this, -1)">−</button>
                         <span class="qty-val">${parseInt(item.qty)||1}</span>
@@ -1296,8 +1307,8 @@ textarea { resize: vertical; min-height: 80px; }
                     </div>
                 </div>
                 <div class="item-price">$${((parseFloat(item.price)||0) * (parseInt(item.qty)||1)).toFixed(2)}</div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
 
         updateTotals();
     }

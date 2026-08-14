@@ -18,9 +18,11 @@
         ?>
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E4EFF4; padding-bottom:12px; margin-bottom:12px;">
             <div>
-                <strong style="font-size:14px; color:#1E2F3A;"><?php echo htmlspecialchars($item['name'] ?? 'Candle'); ?> (x<?php echo intval($item['qty'] ?? 1); ?>)</strong>
-                <?php if (!empty($item['scent'])): ?>
-                    <div style="font-size:12px; color:#6D8491;"><?php echo htmlspecialchars($item['scent']); ?> Scent</div>
+                <?php 
+                    $scent = !empty($item['scent']) ? $item['scent'] : (!empty($item['fragrance_name']) ? $item['fragrance_name'] : '');
+                    if (!empty($scent)): 
+                ?>
+                    <div style="font-size:12px; color:#0F4C5C; font-weight:600;">Scent: <?php echo htmlspecialchars($scent); ?></div>
                 <?php endif; ?>
             </div>
             <div style="font-weight:600; font-size:14px;">$<?php echo number_format($itemTotal, 2); ?></div>

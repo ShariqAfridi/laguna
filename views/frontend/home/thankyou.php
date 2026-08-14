@@ -376,13 +376,19 @@ $customer_email = $order['email'] ?? 'your email';
                     
                     <!-- Show ordered items if available -->
                     <?php if (!empty($order_items)): ?>
-                    <details class="items-preview">
-                        <summary><i class="fa-regular fa-receipt"></i> View items (<?php echo count($order_items); ?>)</summary>
-                        <div class="items-list">
+                    <details class="items-preview" open>
+                        <summary><i class="fa-regular fa-receipt"></i> Ordered Items (<?php echo count($order_items); ?>)</summary>
+                        <div class="items-list" style="margin-top: 8px;">
                             <?php foreach ($order_items as $item): ?>
-                            <p>
-                                <span><?php echo htmlspecialchars($item['product_name']); ?> <?php echo !empty($item['scent']) ? '(' . htmlspecialchars($item['scent']) . ')' : ''; ?> × <?php echo $item['quantity']; ?></span>
-                                <span>$<?php echo number_format($item['subtotal'], 2); ?></span>
+                            <p style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:6px; border-bottom:1px dashed #e2e8f0;">
+                                <span>
+                                    <strong><?php echo htmlspecialchars($item['product_name']); ?></strong>
+                                    <?php if (!empty($item['scent'])): ?>
+                                        <br><span style="color:#0F4C5C; font-weight:600; font-size:12px;">Scent: <?php echo htmlspecialchars($item['scent']); ?></span>
+                                    <?php endif; ?>
+                                    <span style="color:#64748b; font-size:12px;"> × <?php echo $item['quantity']; ?></span>
+                                </span>
+                                <span style="font-weight:600; color:#1E2F3A;">$<?php echo number_format($item['subtotal'], 2); ?></span>
                             </p>
                             <?php endforeach; ?>
                         </div>
