@@ -802,32 +802,20 @@ textarea { resize: vertical; min-height: 80px; }
     .breadcrumb { font-size: 11px; gap: 6px; }
     .order-summary { padding: 20px 16px; }
 }
-/* ── Order Confirmation Popup Modal ── */
+/* ── Order Confirmation Popup Modal (Clean Normal Popup) ── */
 .order-success-overlay {
     position: fixed;
     inset: 0;
     z-index: 999999;
-    background: rgba(15, 28, 22, 0.55);
-    background-image: url('https://images.pexels.com/photos/37162119/pexels-photo-37162119.jpeg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background: rgba(15, 23, 42, 0.68);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 16px;
+    padding: 30px 16px;
     overflow-y: auto;
-    animation: lvbModalFadeIn 0.3s ease forwards;
-}
-
-.order-success-overlay::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 28, 22, 0.45);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: -1;
+    animation: lvbModalFadeIn 0.25s ease forwards;
 }
 
 @keyframes lvbModalFadeIn {
@@ -836,30 +824,55 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 @keyframes lvbCardPopIn {
-    from { opacity: 0; transform: scale(0.92) translateY(16px); }
+    from { opacity: 0; transform: scale(0.95) translateY(12px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .thankyou-card {
-    max-width: 620px;
+    max-width: 820px;
     width: 100%;
     background: #ffffff;
-    border-radius: 28px;
-    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.4);
+    border-radius: 24px;
+    box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.06);
     overflow: hidden;
-    animation: lvbCardPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: lvbCardPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     margin: auto;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
 }
 
 .thankyou-card .card-header {
     background: #0F4C5C;
-    padding: 2.2rem 1.5rem 1.6rem;
+    padding: 2.2rem 2.5rem 1.8rem;
     text-align: center;
     color: white;
+    position: relative;
 }
 
-.thankyou-card .card-header i {
+.thankyou-card .modal-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #ffffff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.thankyou-card .modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.06);
+}
+
+.thankyou-card .card-header i.header-icon {
     font-size: 3.2rem;
     color: #e9c46a;
     margin-bottom: 0.75rem;
@@ -868,7 +881,7 @@ textarea { resize: vertical; min-height: 80px; }
 
 .thankyou-card .card-header h1 {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 2.2rem;
+    font-size: 2.3rem;
     font-weight: 600;
     margin: 0 0 0.5rem;
     letter-spacing: 0.5px;
@@ -877,43 +890,43 @@ textarea { resize: vertical; min-height: 80px; }
 
 .thankyou-card .order-badge {
     display: inline-block;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.28);
     color: #ffffff;
-    padding: 0.35rem 1.1rem;
+    padding: 0.38rem 1.3rem;
     border-radius: 20px;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     letter-spacing: 1.5px;
     font-weight: 700;
 }
 
 .thankyou-card .card-body {
-    padding: 1.8rem 2rem 1.6rem;
+    padding: 2.2rem 3rem 2rem;
 }
 
 .thankyou-card .thankyou-message {
     text-align: center;
-    margin-bottom: 1.3rem;
+    margin-bottom: 1.5rem;
 }
 
 .thankyou-card .thankyou-message p:first-child {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     color: #1E2F3A;
     margin-bottom: 0.35rem;
 }
 
 .thankyou-card .thankyou-message p:last-child {
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     color: #6D8491;
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.55;
 }
 
 .thankyou-card .order-details {
     background: #f8fafc;
     border-radius: 18px;
-    padding: 1.2rem 1.4rem;
-    margin-bottom: 1.2rem;
+    padding: 1.4rem 1.8rem;
+    margin-bottom: 1.3rem;
     border: 1px solid #e2e8f0;
 }
 
@@ -921,9 +934,9 @@ textarea { resize: vertical; min-height: 80px; }
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: 0.6rem 0;
+    padding: 0.75rem 0;
     border-bottom: 1px solid #edf2f7;
-    font-size: 0.88rem;
+    font-size: 0.92rem;
 }
 
 .thankyou-card .detail-row:last-of-type {
@@ -942,7 +955,7 @@ textarea { resize: vertical; min-height: 80px; }
 
 .thankyou-card .detail-value.highlight {
     color: #d97706;
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 700;
 }
 
@@ -959,11 +972,11 @@ textarea { resize: vertical; min-height: 80px; }
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 0.75rem 1.6rem;
+    padding: 0.85rem 1.8rem;
     border-radius: 40px;
     font-weight: 600;
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     background: #1f5446;
     color: white;
     border: none;
@@ -972,17 +985,18 @@ textarea { resize: vertical; min-height: 80px; }
 
 .thankyou-card .btn-modal-primary:hover {
     background: #154237;
+    transform: translateY(-1px);
 }
 
 .thankyou-card .btn-modal-outline {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 0.75rem 1.6rem;
+    padding: 0.85rem 1.8rem;
     border-radius: 40px;
     font-weight: 600;
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     background: white;
     border: 1px solid #cbdcd0;
     color: #2d5a47;
@@ -991,11 +1005,13 @@ textarea { resize: vertical; min-height: 80px; }
 
 .thankyou-card .btn-modal-outline:hover {
     background: #f5f1ea;
+    transform: translateY(-1px);
 }
 
-@media(max-width: 550px) {
-    .thankyou-card .card-body { padding: 1.3rem 1.2rem 1.5rem; }
-    .thankyou-card .card-header { padding: 1.8rem 1.2rem 1.3rem; }
+@media(max-width: 768px) {
+    .thankyou-card .card-body { padding: 1.5rem 1.4rem 1.6rem; }
+    .thankyou-card .card-header { padding: 1.8rem 1.4rem 1.4rem; }
+    .thankyou-card .card-header h1 { font-size: 1.85rem; }
 }
 </style>
 </head>
@@ -1399,7 +1415,8 @@ textarea { resize: vertical; min-height: 80px; }
 <div id="orderSuccessModal" class="order-success-overlay" style="display: none;">
     <div class="thankyou-card">
         <div class="card-header">
-            <i class="fa-regular fa-circle-check"></i>
+            <button type="button" class="modal-close-btn" id="closeOrderModal" title="Close" aria-label="Close">&times;</button>
+            <i class="fa-regular fa-circle-check header-icon"></i>
             <h1>You're all set!</h1>
             <div class="order-badge">
                 ORDER #<span id="succOrderNumber"></span>
@@ -2261,10 +2278,31 @@ textarea { resize: vertical; min-height: 80px; }
         }[m]));
     }
 
+    // ── Modal Close Listeners ──
+    function setupModalListeners() {
+        const closeBtn = document.getElementById('closeOrderModal');
+        const modal = document.getElementById('orderSuccessModal');
+        if (closeBtn && modal) {
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+        }
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+    }
+
     // ── Boot ──
     document.addEventListener('DOMContentLoaded', function() {
         init();
         setupCardFormatters();
+        setupModalListeners();
     });
 })();
 </script>
