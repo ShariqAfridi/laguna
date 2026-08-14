@@ -824,13 +824,13 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
 .selected-box-preview-card {
     display: none;
     align-items: center;
-    gap: 14px;
-    margin-top: 12px;
-    padding: 10px 14px;
-    background: #f8fafc;
+    gap: 16px;
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f0f7fa 100%);
     border: 1.5px solid #004b66;
-    border-radius: 12px;
-    box-shadow: 0 4px 14px rgba(0, 75, 102, 0.08);
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0, 75, 102, 0.09);
     animation: fadeInBox 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes fadeInBox {
@@ -838,15 +838,19 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
     to { opacity: 1; transform: translateY(0); }
 }
 .selected-box-preview-img {
-    width: 64px;
-    height: 64px;
+    width: 110px;
+    height: 110px;
     object-fit: contain;
     background: #ffffff;
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid #e2e8f0;
-    padding: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    padding: 6px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
     flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+.selected-box-preview-img:hover {
+    transform: scale(1.04);
 }
 .selected-box-preview-info {
     flex: 1;
@@ -856,25 +860,26 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
     display: inline-block;
     font-size: 9px;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #004b66;
     background: #e0f2fe;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-bottom: 4px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    margin-bottom: 5px;
 }
 .selected-box-preview-title {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
     color: #0f172a;
     line-height: 1.25;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
+    font-family: inherit;
 }
 .selected-box-preview-sub {
-    font-size: 11.5px;
-    color: #64748b;
-    line-height: 1.3;
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.4;
 }
 
 .qty-total-block {
