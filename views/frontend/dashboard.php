@@ -553,45 +553,152 @@ function openReviewModal(prodName) {
     openModal('modalReview');
 }
 
-function openOrderModal(orderNum, date, total, status, itemsJson) {
-    document.getElementById('ordModalNum').textContent = `Order #${orderNum}`;
-    document.getElementById('ordModalSub').textContent = `Placed on ${date} • Total: $${total}`;
-    
-    let itemsHtml = '<div style="margin-bottom:16px;">';
-    let items = [];
-    try { items = JSON.parse(itemsJson); } catch(e){}
-    
-    if (items && items.length > 0) {
-        items.forEach(item => {
-            itemsHtml += `
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #F4F8FA; padding:10px 0;">
+function filterDashboardOrders(status, btn) {
+    const filters = document.querySelectorAll('.btn-lvb-filter');
+    filters.forEach(b => {
+        b.classList.remove('active');
+        b.classList.add('btn-lvb-outline');
+    });
+    if (btn) {
+        btn.classList.add('active');
+        btn.classList.remove('btn-lvb-outline');
+    }
+
+    const cards = document.querySelectorAll('.user-order-card');
+    cards.forEach(card => {
+        const cardStatus = card.getAttribute('data-status');
+        if (status === 'all' || cardStatus === status) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function openOrderModalFromBtn(btn) {
+    try {
+        const orderData = JSON.parse(btn.getAttribute('data-order'));
+        renderOrderDetailsModal(orderData);
+    } catch(e) {
+        console.error('Failed to parse order data:', e);
+    }
+}
+
+function renderOrderDetailsModal(o) {
+    document.getElementById('ordModalNum').textContent = `Order #${o.order_number}`;
+    document.getElementById('ordModalSub').textContent = `Placed on ${o.date} • Total: $${parseFloat(o.total || 0).toFixed(2)}`;
+
+    const st = (o.status || 'processing').toLowerCase();
+    const isProc = ['processing', 'shipped', 'delivered'].includes(st);
+    const isShip = ['shipped', 'delivered'].includes(st);
+    const isDel = st === 'delivered';
+
+    let trackingDesc = 'Your order has been confirmed and our artisans are hand-pouring your candles.';
+    if (st === 'shipped') trackingDesc = 'Your order is currently in transit with FedEx Express Priority.';
+    if (st === 'delivered') trackingDesc = 'Package has been delivered to your front door / porch.';
+
+    let html = `
+        <!-- Live Visual Stepper -->
+        <div style="background:#F8FBFD; border:1px solid #D6E8F0; border-radius:12px; padding:18px; margin-bottom:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-size:11px; font-weight:700; color:#1E2F3A; text-transform:uppercase; letter-spacing:1px;">Live Fulfillment Status</span>
+                <span class="badge-st badge-${st === 'delivered' ? 'del' : (st === 'shipped' ? 'ship' : 'proc')}">${st.toUpperCase()}</span>
+            </div>
+            <div class="order-timeline" style="margin:14px 0 8px;">
+                <div class="timeline-step active"><div class="timeline-dot"></div><span style="font-size:10px;">Confirmed</span></div>
+                <div class="timeline-step ${isProc ? 'active' : ''}"><div class="timeline-dot"></div><span style="font-size:10px;">Crafting</span></div>
+                <div class="timeline-step ${isShip ? 'active' : ''}"><div class="timeline-dot"></div><span style="font-size:10px;">In Transit</span></div>
+                <div class="timeline-step ${isDel ? 'active' : ''}"><div class="timeline-dot"></div><span style="font-size:10px;">Delivered</span></div>
+            </div>
+            <div style="font-size:12px; color:#475569; margin-top:10px; line-height:1.4;">
+                <strong>Tracking Reference:</strong> <span style="font-family:monospace; color:#0f4c5c; font-weight:700;">LVB-TRK-${o.order_number}</span><br>
+                <span style="color:#64748b;">${trackingDesc}</span>
+            </div>
+        </div>
+
+        <!-- Ordered Items -->
+        <div style="margin-bottom:18px;">
+            <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#1E2F3A; margin-bottom:10px;">Items in this Order</h4>
+            <div style="background:#FFFFFF; border:1px solid #EEF3F6; border-radius:10px; padding:6px 14px;">
+    `;
+
+    if (o.items && o.items.length > 0) {
+        o.items.forEach((it, idx) => {
+            const pName = it.product_name || it.name || 'Luxury Candle';
+            const qty = parseInt(it.quantity || it.qty || 1);
+            const price = parseFloat(it.price || 0);
+            const scent = it.scent || '';
+            const border = (idx < o.items.length - 1) ? 'border-bottom:1px solid #F4F8FA;' : '';
+
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; ${border}">
                     <div>
-                        <strong style="font-size:13px; color:#1E2F3A;">${item.name || item.product_name || 'Candle'}</strong>
-                        <div style="font-size:11px; color:#6D8491;">Qty: ${item.qty || item.quantity || 1} ${item.scent ? '• ' + item.scent : ''}</div>
+                        <div style="font-size:13px; font-weight:600; color:#1E2F3A;">${pName}</div>
+                        <div style="font-size:11px; color:#6D8491;">
+                            Qty: ${qty} ${scent ? ' · Scent: ' + scent : ''}
+                        </div>
                     </div>
-                    <div style="font-weight:600; font-size:13px;">$${parseFloat(item.price || 0).toFixed(2)}</div>
+                    <div style="font-size:13px; font-weight:700; color:#1E2F3A;">$${(price * qty).toFixed(2)}</div>
                 </div>
             `;
         });
     } else {
-        itemsHtml += '<p style="font-size:13px; color:#6D8491;">Pacific Breeze Luxury Candle (x1) • $48.00</p>';
+        html += '<p style="font-size:12px; color:#6D8491; padding:8px 0;">Handcrafted Scented Candle (x1)</p>';
     }
-    itemsHtml += '</div>';
 
-    itemsHtml += `
-        <div style="background:#F8FBFD; border:1px solid #D6E8F0; border-radius:10px; padding:14px; margin-bottom:16px;">
-            <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#6D8491; margin-bottom:4px;">Courier Shipment Details</div>
-            <div style="font-size:13px; font-weight:600; color:#1E2F3A;">FedEx Express • Tracking #LVB-TRK-${orderNum.replace(/[^0-9]/g, '') || '99201'}</div>
-            <div style="font-size:11px; color:#137333; margin-top:2px;">Status: In Transit • Estimated Arrival in 2 Days</div>
+    html += `
+            </div>
         </div>
-        <div style="display:flex; gap:10px;">
-            <button onclick="downloadInvoice('${orderNum}')" class="btn-lvb btn-lvb-outline" style="flex:1; font-size:10px; padding:8px;">Download Tax Invoice</button>
-            <button onclick="reorder('${orderNum}')" class="btn-lvb" style="flex:1; font-size:10px; padding:8px;">Reorder Items</button>
+
+        <!-- Shipping & Cost Breakdown -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px;">
+            <div style="background:#F8FBFD; border:1px solid #E2EDF3; border-radius:10px; padding:14px;">
+                <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#6D8491; margin-bottom:6px;">Delivery Destination</div>
+                <div style="font-size:12.5px; color:#1E2F3A; line-height:1.5;">
+                    <strong>${o.name || 'Customer'}</strong><br>
+                    ${o.address || ''}<br>
+                    ${o.city ? o.city + ', ' : ''}${o.state || ''} ${o.zip || ''}<br>
+                    ${o.country || 'US'}
+                </div>
+            </div>
+            <div style="background:#F8FBFD; border:1px solid #E2EDF3; border-radius:10px; padding:14px;">
+                <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#6D8491; margin-bottom:6px;">Payment Summary</div>
+                <div style="font-size:12px; color:#475569; line-height:1.6;">
+                    <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>$${(o.subtotal || o.total).toFixed(2)}</span></div>
+                    ${o.discount > 0 ? `<div style="display:flex; justify-content:space-between; color:#059669; font-weight:600;"><span>Promo Discount:</span><span>−$${o.discount.toFixed(2)}</span></div>` : ''}
+                    <div style="display:flex; justify-content:space-between;"><span>Shipping:</span><span>${o.shipping === 0 ? '<strong style=\"color:#059669;\">FREE</strong>' : '$' + o.shipping.toFixed(2)}</span></div>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #D6E8F0; padding-top:4px; margin-top:4px; font-weight:700; color:#1E2F3A; font-size:13px;">
+                        <span>Total Paid:</span><span>$${o.total.toFixed(2)}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Footer -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a href="${typeof window.basePath !== 'undefined' ? window.basePath : (window.location.pathname.startsWith('/laguna') ? '/laguna' : '')}/thankyou?order_id=${o.id}&order_number=${encodeURIComponent(o.order_number)}" target="_blank" class="btn-lvb btn-lvb-outline" style="flex:1; font-size:11px; padding:10px; text-decoration:none; text-align:center;">
+                <i class="fas fa-receipt"></i> Full Web Receipt
+            </a>
+            <button onclick="reorder('${o.order_number}')" class="btn-lvb" style="flex:1; font-size:11px; padding:10px; cursor:pointer;">
+                <i class="fas fa-redo"></i> Reorder Items
+            </button>
         </div>
     `;
 
-    document.getElementById('ordModalContent').innerHTML = itemsHtml;
+    document.getElementById('ordModalContent').innerHTML = html;
     openModal('modalOrderDetail');
+}
+
+function openOrderModal(orderNum, date, total, status, itemsJson) {
+    const fallbackData = {
+        order_number: orderNum,
+        date: date,
+        total: parseFloat(total || 0),
+        status: status,
+        items: []
+    };
+    try { fallbackData.items = JSON.parse(itemsJson); } catch(e){}
+    renderOrderDetailsModal(fallbackData);
 }
 
 function downloadInvoice(orderNum) {
@@ -606,7 +713,7 @@ function reorder(orderNum) {
     })
     .then(r => r.json())
     .then(res => {
-        showToast(res.message);
+        showToast(res.message || 'Items added to your bag!');
     });
 }
 

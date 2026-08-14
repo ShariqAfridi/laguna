@@ -236,6 +236,10 @@ $totals_html = "
     </tr>";
 
 // ====================== CUSTOMER EMAIL ======================
+$tracking_url = base_url('/thankyou?order_id=' . $order_id . '&order_number=' . urlencode($order_number));
+$account_orders_url = base_url('/dashboard/orders');
+$delivery_est = ($delivery_type === 'express') ? '2–3 business days (Express Priority)' : '5–8 business days (Standard)';
+
 $customer_email_html = "
 <!DOCTYPE html>
 <html>
@@ -249,7 +253,7 @@ $customer_email_html = "
   <tr>
     <td style='background:#0f4c5c;padding:40px 40px 30px;text-align:center;'>
       <h1 style='margin:0;color:#ffffff;font-size:28px;font-family:Georgia,serif;letter-spacing:0.04em;'>LVB Atelier</h1>
-      <p style='margin:8px 0 0;color:rgba(255,255,255,0.75);font-size:13px;letter-spacing:0.08em;text-transform:uppercase;'>Order Confirmed</p>
+      <p style='margin:8px 0 0;color:rgba(255,255,255,0.75);font-size:13px;letter-spacing:0.08em;text-transform:uppercase;'>Order Confirmed &bull; Preparing Shipment</p>
     </td>
   </tr>
 
@@ -258,30 +262,47 @@ $customer_email_html = "
     <td style='padding:36px 40px 24px;'>
       <h2 style='margin:0 0 12px;font-size:22px;color:#1a1a1a;'>Thank you, " . htmlspecialchars($first_name ?: $full_name) . "! 🎉</h2>
       <p style='margin:0;color:#6b7280;font-size:15px;line-height:1.7;'>
-        Your order has been received and is being prepared. We'll send you a shipping notification with tracking details once your package is on its way.
+        Your order has been successfully placed and received. Our artisans are currently preparing and packaging your handcrafted items.
       </p>
     </td>
   </tr>
 
-  <!-- Order Meta -->
+  <!-- Tracking & Order Meta Card -->
   <tr>
     <td style='padding:0 40px 24px;'>
-      <table width='100%' cellpadding='0' cellspacing='0' style='background:#f0f6f8;border-radius:10px;'>
-        <tr>
-          <td style='padding:16px 20px;'>
-            <table width='100%'>
-              <tr>
-                <td style='color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;padding-bottom:4px;'>Order Number</td>
-                <td style='color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;padding-bottom:4px;text-align:right;'>Date</td>
-              </tr>
-              <tr>
-                <td style='color:#0f4c5c;font-size:16px;font-weight:700;'>" . htmlspecialchars($order_number) . "</td>
-                <td style='color:#1a1a1a;font-size:14px;text-align:right;'>" . htmlspecialchars($order_date) . "</td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
+      <div style='background:#f0f6f8;border-radius:12px;padding:20px;border:1px solid #dbe8ec;'>
+        <table width='100%' cellpadding='0' cellspacing='0'>
+          <tr>
+            <td style='color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;padding-bottom:4px;'>Order Number</td>
+            <td style='color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;padding-bottom:4px;text-align:right;'>Order Date</td>
+          </tr>
+          <tr>
+            <td style='color:#0f4c5c;font-size:16px;font-weight:700;padding-bottom:12px;'>" . htmlspecialchars($order_number) . "</td>
+            <td style='color:#1a1a1a;font-size:13px;text-align:right;padding-bottom:12px;'>" . htmlspecialchars($order_date) . "</td>
+          </tr>
+          <tr>
+            <td style='color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;padding-bottom:4px;border-top:1px solid #dbe8ec;padding-top:10px;'>Status</td>
+            <td style='color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;padding-bottom:4px;text-align:right;border-top:1px solid #dbe8ec;padding-top:10px;'>Est. Delivery</td>
+          </tr>
+          <tr>
+            <td style='padding-top:2px;'>
+              <span style='background:#dcfce7;color:#15803d;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;'>
+                " . ucfirst($status) . "
+              </span>
+            </td>
+            <td style='color:#1a1a1a;font-size:13px;font-weight:600;text-align:right;padding-top:2px;'>" . htmlspecialchars($delivery_est) . "</td>
+          </tr>
+        </table>
+      </div>
+    </td>
+  </tr>
+
+  <!-- Live Tracking Action Button -->
+  <tr>
+    <td style='padding:0 40px 28px;text-align:center;'>
+      <a href='" . htmlspecialchars($tracking_url) . "' style='display:inline-block;background:#0f4c5c;color:#ffffff;padding:14px 32px;font-size:14px;font-weight:600;text-decoration:none;border-radius:8px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(15,76,92,0.25);'>
+        📦 Track Your Order Live
+      </a>
     </td>
   </tr>
 
@@ -310,9 +331,9 @@ $customer_email_html = "
       <table width='100%' cellpadding='0' cellspacing='0'>
         <tr>
           <td width='48%' valign='top' style='padding-right:16px;'>
-            <h3 style='margin:0 0 10px;font-size:14px;color:#1a1a1a;'>Shipping To</h3>
+            <h3 style='margin:0 0 10px;font-size:14px;color:#1a1a1a;'>Shipping Address</h3>
             <p style='margin:0;color:#6b7280;font-size:14px;line-height:1.8;'>
-              " . htmlspecialchars($full_name) . "<br>
+              <strong>" . htmlspecialchars($full_name) . "</strong><br>
               " . htmlspecialchars($address_full) . "<br>
               " . htmlspecialchars($city) . ", " . htmlspecialchars($state) . " " . htmlspecialchars($zip) . "<br>
               " . htmlspecialchars($country) . "
@@ -320,11 +341,11 @@ $customer_email_html = "
           </td>
           <td width='4%'></td>
           <td width='48%' valign='top'>
-            <h3 style='margin:0 0 10px;font-size:14px;color:#1a1a1a;'>Payment</h3>
+            <h3 style='margin:0 0 10px;font-size:14px;color:#1a1a1a;'>Payment & Contact</h3>
             <p style='margin:0;color:#6b7280;font-size:14px;line-height:1.8;'>
-              " . htmlspecialchars($payment_label) . "<br>
-              " . ($phone ? "Phone: " . htmlspecialchars($phone) . "<br>" : "") . "
-              " . htmlspecialchars($email) . "
+              <strong>Payment:</strong> " . htmlspecialchars($payment_label) . "<br>
+              " . ($phone ? "<strong>Phone:</strong> " . htmlspecialchars($phone) . "<br>" : "") . "
+              <strong>Email:</strong> " . htmlspecialchars($email) . "
             </p>
           </td>
         </tr>
@@ -341,12 +362,21 @@ $customer_email_html = "
     </td>
   </tr>" : "") . "
 
+  <!-- Account & Tracking Tip -->
+  <tr>
+    <td style='padding:0 40px 24px;'>
+      <div style='background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;font-size:13px;color:#475569;line-height:1.6;'>
+        💡 <strong>Manage Your Orders:</strong> You can log in to your <a href='" . htmlspecialchars($account_orders_url) . "' style='color:#0f4c5c;font-weight:600;text-decoration:underline;'>LVB Customer Account</a> anytime to view live tracking updates, view order history, or reorder your favorite scents.
+      </div>
+    </td>
+  </tr>
+
   <!-- Support -->
   <tr>
     <td style='padding:0 40px 36px;'>
       <div style='border-top:1px solid #e5e7eb;padding-top:24px;'>
         <p style='margin:0;color:#6b7280;font-size:13px;line-height:1.7;'>
-          Have questions? Reply to this email or contact us at
+          Have questions or need adjustments to your order? Reply directly to this email or reach us at
           <a href='mailto:support@lagunavibe.com' style='color:#0f4c5c;font-weight:600;'>support@lagunavibe.com</a>
         </p>
       </div>
@@ -356,8 +386,8 @@ $customer_email_html = "
   <!-- Footer -->
   <tr>
     <td style='background:#f9fafb;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;'>
-      <p style='margin:0 0 6px;font-size:13px;color:#6b7280;'>LVB Atelier — Crafted with care, delivered with love.</p>
-      <p style='margin:0;font-size:11px;color:#9ca3af;'>A portion of every purchase supports charitable causes. ❤️</p>
+      <p style='margin:0 0 6px;font-size:13px;color:#6b7280;'>LVB Atelier — Handcrafted Luxury Candles & Scents</p>
+      <p style='margin:0;font-size:11px;color:#9ca3af;'>A portion of every purchase supports environmental causes. ❤️</p>
     </td>
   </tr>
 
