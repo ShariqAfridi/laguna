@@ -51,10 +51,11 @@ if ($boxesResult && $boxesResult->num_rows > 0) {
     $dbBoxes[] = [
       'id' => $row['box_id'],
       'name' => $row['box_name'],
+      'vessel_code' => $row['vessel_code'] ?? '',
       'price' => (float) $row['box_price'],
       'image' => !empty($row['box_image']) ? base_url('/' . ltrim($row['box_image'], '/')) : '',
       'description' => $row['box_description'] ?? '',
-      'code' => 'B' . sprintf('%02d', $row['box_id'])
+      'code' => !empty($row['sku']) ? $row['sku'] : ('B' . sprintf('%02d', $row['box_id']))
     ];
   }
 }
@@ -2428,22 +2429,68 @@ function renderBoxCards(vessel) {
 
   grid.innerHTML = '';
 
-  const boxesToRender = (dbBoxesData && dbBoxesData.length > 0) ? dbBoxesData : [
-    { name: 'White Cubic Box', code: 'B01W', price: 6, image: 'img/box4.webp', description: 'White cubic keepsake box.' },
-    { name: 'Black Cubic Box', code: 'B01B', price: 6, image: 'img/box2.webp', description: 'Black cubic keepsake box.' }
-  ];
+  const currentVessel = (vessel || state.vessel || 'C').toUpperCase();
 
-  const wickText = vessel === 'E' ? 'Triple wick' : (vessel === 'D' ? 'Double wick' : 'Single wick');
+  // Filter boxes strictly matching selected vessel (C = 10 oz, D = 14 oz, E = 18 oz)
+  let filteredBoxes = [];
+  if (dbBoxesData && dbBoxesData.length > 0) {
+    filteredBoxes = dbBoxesData.filter(box => {
+      const vCode = (box.vessel_code || '').toUpperCase().trim();
+      if (vCode) {
+        return vCode === currentVessel;
+      }
+      const bName = (box.name || '').toLowerCase();
+      if (currentVessel === 'C' && bName.includes('10 oz')) return true;
+      if (currentVessel === 'D' && bName.includes('14 oz')) return true;
+      return false;
+    });
+  }
 
-  boxesToRender.forEach(box => {
+  // Handle Vessel E or vessels without keepsake boxes
+  if (!filteredBoxes || filteredBoxes.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1; padding: 28px 20px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 12px; text-align: center; margin: 10px 0;">
+        <div style="font-size: 28px; margin-bottom: 8px;">📦</div>
+        <h4 style="font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">No Keepsake Boxes Available for Vessel ${currentVessel}</h4>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 16px;">Packaging boxes for Vessel ${currentVessel} are not available at this time. You can proceed directly to review your order.</p>
+        <button type="button" class="btn-next" onclick="checkoutWithoutPackaging()" style="display:inline-block; padding:10px 22px; font-size:12px; border-radius:30px; cursor:pointer;">PROCEED WITHOUT PACKAGING &rarr;</button>
+      </div>
+    `;
+
+    // Clear any previously selected box from another vessel
+    if (state.box && state.box !== 'No Packaging') {
+      state.box = null;
+      state.boxCode = null;
+      state.boxPrice = 0;
+      setSpec('specBox', 'No Packaging');
+      recalcPrice();
+    }
+    return;
+  }
+
+  // Reset selected box if it was from a different vessel
+  if (state.box && state.box !== 'No Packaging') {
+    const isStillValid = filteredBoxes.some(b => b.name === state.box || b.code === state.boxCode);
+    if (!isStillValid) {
+      state.box = null;
+      state.boxCode = null;
+      state.boxPrice = 0;
+      setSpec('specBox', '—');
+      recalcPrice();
+    }
+  }
+
+  const wickText = currentVessel === 'E' ? 'Triple wick' : (currentVessel === 'D' ? 'Double wick' : 'Single wick');
+
+  filteredBoxes.forEach(box => {
     const card = document.createElement('div');
     card.className = 'box-card';
     card.dataset.box = box.name;
-    const defaultCode = (vessel === 'D' ? 'B02' : 'B01') + (box.name.toLowerCase().includes('black') ? 'B' : 'W');
+    const defaultCode = (currentVessel === 'D' ? 'B02' : 'B01') + (box.name.toLowerCase().includes('black') ? 'B' : 'W');
     card.dataset.boxCode = box.code || defaultCode;
-    card.dataset.price = box.price || 6;
+    card.dataset.price = box.price || (currentVessel === 'D' ? 7 : 6);
 
-    const fallbackImg = box.name.toLowerCase().includes('black') ? 'img/box2.webp' : (vessel === 'D' ? 'img/doublebox.webp' : 'img/box4.webp');
+    const fallbackImg = box.name.toLowerCase().includes('black') ? 'img/box2.webp' : (currentVessel === 'D' ? 'img/doublebox.webp' : 'img/box4.webp');
     const imgSrc = box.image || fallbackImg;
     const desc = box.description ? box.description : `${wickText} · ${box.name}`;
 
@@ -2464,9 +2511,9 @@ function renderBoxCards(vessel) {
   });
 
   // Highlight matching selected box if any
-  if (state.box) {
+  if (state.box && state.box !== 'No Packaging') {
     const allCards = Array.from(grid.querySelectorAll('.box-card'));
-    const matchingCard = allCards.find(c => c.dataset.box === state.box || c.dataset.boxCode === state.boxCode || c.dataset.box.toLowerCase().includes(state.box.toLowerCase()) || state.box.toLowerCase().includes(c.dataset.box.toLowerCase()));
+    const matchingCard = allCards.find(c => c.dataset.box === state.box || c.dataset.boxCode === state.boxCode);
     if (matchingCard) matchingCard.classList.add('selected');
   }
 }
