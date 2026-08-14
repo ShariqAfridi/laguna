@@ -107,17 +107,9 @@ class Order {
         $discount = 0;
         $promoCodeUpper = strtoupper(trim($promoCode));
         if (!empty($promoCodeUpper)) {
-            $promos = [
-                'WELCOME10' => ['type' => 'fixed', 'value' => 10.00],
-                'SAVE20'    => ['type' => 'percent', 'value' => 20],
-            ];
-            if (isset($promos[$promoCodeUpper])) {
-                $p = $promos[$promoCodeUpper];
-                if ($p['type'] === 'fixed') {
-                    $discount = min($p['value'], $subtotal);
-                } elseif ($p['type'] === 'percent') {
-                    $discount = round(($subtotal * $p['value']) / 100, 2);
-                }
+            $couponCheck = \App\Models\Coupon::validate($promoCodeUpper, $subtotal);
+            if ($couponCheck['valid']) {
+                $discount = floatval($couponCheck['discount']);
             }
         }
 

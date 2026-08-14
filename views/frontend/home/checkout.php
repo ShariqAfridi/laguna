@@ -811,6 +811,7 @@ textarea { resize: vertical; min-height: 80px; }
     <input type="hidden" name="place_order" value="1">
     <input type="hidden" name="cart_data" id="cartData" value="">
     <input type="hidden" name="payment_method" id="paymentMethodInput" value="stripe">
+    <input type="hidden" name="promo_code" id="promoCodeInput" value="">
 
     <!-- ── SECTION 1: CONTACT ── -->
     <div class="section-card">
@@ -1072,10 +1073,18 @@ textarea { resize: vertical; min-height: 80px; }
             </div>
 
             <!-- Coupon -->
-            <div class="coupon-row">
-                <input type="text" class="coupon-input" id="couponCode" placeholder="Promo / Coupon code">
+            <div class="coupon-row" id="couponInputGroup">
+                <input type="text" class="coupon-input" id="couponCode" placeholder="Promo / Coupon code" autocomplete="off">
                 <button type="button" class="coupon-btn" id="applyCouponBtn" onclick="applyCoupon()">Apply</button>
             </div>
+            <div id="couponAppliedBadge" style="display:none; margin: 14px 0; padding: 10px 14px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; font-size: 13px; color: #065f46; justify-content: space-between; align-items: center;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-tag" style="color:#059669;"></i>
+                    <span><strong id="appliedCouponCode"></strong> <span id="appliedCouponDesc" style="color:#047857; font-size:12px;"></span></span>
+                </div>
+                <button type="button" onclick="removeCoupon()" style="background:none; border:none; color:#dc2626; font-weight:600; cursor:pointer; font-size:12px; padding:2px 6px;">Remove</button>
+            </div>
+            <div id="couponFeedback" style="display:none; font-size:12px; margin-top:-6px; margin-bottom:12px; font-weight:500;"></div>
 
             <!-- Shipping Progress -->
             <div class="shipping-progress" id="shippingProgress" style="<?php echo ($totalItems === 0) ? 'display:none;' : ''; ?>">
@@ -1453,38 +1462,162 @@ textarea { resize: vertical; min-height: 80px; }
 
 
 
-    // ── Coupon ──
-    window.applyCoupon = function() {
-        const code = document.getElementById('couponCode').value.trim().toUpperCase();
+    // ── Coupon Logic ──
+    let appliedCouponCode = '';
+
+    window.applyCoupon = async function(manualCode = null) {
+        const input = document.getElementById('couponCode');
+        const code = (manualCode || (input ? input.value : '')).trim().toUpperCase();
         const btn = document.getElementById('applyCouponBtn');
-        if (!code) return;
+        const feedback = document.getElementById('couponFeedback');
+        const badge = document.getElementById('couponAppliedBadge');
+        const inputGroup = document.getElementById('couponInputGroup');
+        const promoInput = document.getElementById('promoCodeInput');
 
-        btn.textContent = '...';
-        btn.disabled = true;
-
-        // Demo: hardcoded promo for now
-        setTimeout(() => {
-            if (code === 'WELCOME10') {
-                discountAmount = 10;
-                document.getElementById('discountLine').style.display = 'flex';
-                document.getElementById('discountDisplay').textContent = '−$10.00';
-                updateTotals();
-                btn.textContent = '✓ Applied';
-                btn.style.background = 'var(--success)';
-                btn.style.color = 'white';
-            } else {
-                btn.textContent = 'Invalid';
-                btn.style.background = 'var(--error)';
-                btn.style.color = 'white';
-                setTimeout(() => {
-                    btn.textContent = 'Apply';
-                    btn.style.background = '';
-                    btn.style.color = '';
-                    btn.disabled = false;
-                }, 1500);
+        if (!code) {
+            if (feedback) {
+                feedback.style.display = 'block';
+                feedback.style.color = 'var(--error)';
+                feedback.textContent = 'Please enter a coupon code.';
             }
-        }, 600);
+            return;
+        }
+
+        if (btn) {
+            btn.textContent = 'Checking...';
+            btn.disabled = true;
+        }
+        if (feedback) feedback.style.display = 'none';
+
+        // Calculate current subtotal
+        let currentSubtotal = 0;
+        if (Array.isArray(cart)) {
+            cart.forEach(item => {
+                currentSubtotal += (parseFloat(item.price) || 0) * (parseInt(item.qty) || 1);
+            });
+        }
+        if (currentSubtotal <= 0) {
+            currentSubtotal = subtotal || 0;
+        }
+
+        try {
+            var baseApiUrl = (typeof window.basePath !== 'undefined') ? window.basePath : (window.location.pathname.startsWith('/laguna') ? '/laguna' : '');
+            const res = await fetch(baseApiUrl + '/api/validate-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    code: code,
+                    subtotal: currentSubtotal
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.valid) {
+                appliedCouponCode = data.code;
+                discountAmount = parseFloat(data.discount || 0);
+
+                if (promoInput) promoInput.value = appliedCouponCode;
+
+                const discountLine = document.getElementById('discountLine');
+                const discountDisplay = document.getElementById('discountDisplay');
+                if (discountLine) discountLine.style.display = 'flex';
+                if (discountDisplay) discountDisplay.textContent = '−$' + discountAmount.toFixed(2);
+                
+                if (badge) {
+                    badge.style.display = 'flex';
+                    const codeEl = document.getElementById('appliedCouponCode');
+                    const descEl = document.getElementById('appliedCouponDesc');
+                    if (codeEl) codeEl.textContent = data.code;
+                    if (descEl) descEl.textContent = `— ${data.type === 'percentage' ? data.value + '%' : '$' + data.value} Off`;
+                }
+                if (inputGroup) inputGroup.style.display = 'none';
+
+                updateTotals();
+
+                if (btn) {
+                    btn.textContent = '✓ Applied';
+                    btn.style.background = 'var(--success)';
+                    btn.style.color = 'white';
+                }
+            } else {
+                appliedCouponCode = '';
+                discountAmount = 0;
+                if (promoInput) promoInput.value = '';
+                const discountLine = document.getElementById('discountLine');
+                if (discountLine) discountLine.style.display = 'none';
+                updateTotals();
+
+                if (btn) {
+                    btn.textContent = 'Invalid';
+                    btn.style.background = 'var(--error)';
+                    btn.style.color = 'white';
+                }
+                if (feedback) {
+                    feedback.style.display = 'block';
+                    feedback.style.color = 'var(--error)';
+                    feedback.textContent = data.message || 'Invalid coupon code.';
+                }
+                setTimeout(() => {
+                    if (btn) {
+                        btn.textContent = 'Apply';
+                        btn.style.background = '';
+                        btn.style.color = '';
+                        btn.disabled = false;
+                    }
+                }, 2200);
+            }
+        } catch (e) {
+            console.error('Coupon validation error:', e);
+            if (btn) {
+                btn.textContent = 'Error';
+                btn.disabled = false;
+            }
+        }
     };
+
+    window.removeCoupon = function() {
+        appliedCouponCode = '';
+        discountAmount = 0;
+        const promoInput = document.getElementById('promoCodeInput');
+        if (promoInput) promoInput.value = '';
+
+        const badge = document.getElementById('couponAppliedBadge');
+        if (badge) badge.style.display = 'none';
+
+        const inputGroup = document.getElementById('couponInputGroup');
+        if (inputGroup) inputGroup.style.display = 'flex';
+
+        const input = document.getElementById('couponCode');
+        if (input) input.value = '';
+
+        const btn = document.getElementById('applyCouponBtn');
+        if (btn) {
+            btn.textContent = 'Apply';
+            btn.style.background = '';
+            btn.style.color = '';
+            btn.disabled = false;
+        }
+
+        const feedback = document.getElementById('couponFeedback');
+        if (feedback) feedback.style.display = 'none';
+
+        const discountLine = document.getElementById('discountLine');
+        if (discountLine) discountLine.style.display = 'none';
+        
+        updateTotals();
+    };
+
+    // Auto-apply promo from URL param if present (e.g. ?promo=WELCOME20 or ?coupon=WELCOME20)
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryPromo = urlParams.get('promo') || urlParams.get('coupon') || urlParams.get('code');
+    if (queryPromo) {
+        setTimeout(() => {
+            const input = document.getElementById('couponCode');
+            if (input) input.value = queryPromo.toUpperCase();
+            applyCoupon(queryPromo.toUpperCase());
+        }, 500);
+    }
 
     // ── Form Submission ──
     function setupFormSubmit() {

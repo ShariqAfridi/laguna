@@ -707,6 +707,14 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
                     </svg>
                     Orders
                 </a></li>
+                <!-- Coupons - discount voucher / tag icon -->
+                <li><a href="<?php echo $base; ?>/admin/coupons" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                        <line x1="7" y1="7" x2="7.01" y2="7"/>
+                    </svg>
+                    Coupons
+                </a></li>
                 <!-- Users - customer and admin management -->
                 <li><a href="<?php echo $base; ?>/admin/users" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
@@ -782,6 +790,7 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
                     if (path.includes('product')) return 'products';
                     if (path.includes('accessor')) return 'accessories';
                     if (path.includes('order')) return 'orders';
+                    if (path.includes('coupon')) return 'coupons';
                     if (path.includes('user')) return 'users';
                     if (path.includes('dashboard')) return 'dashboard';
                     return '';

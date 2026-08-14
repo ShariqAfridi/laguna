@@ -181,6 +181,11 @@ try {
         error_log("Failed to prepare payment statement: " . $conn->error);
     }
     
+    // Increment coupon usage count if applied
+    if (!empty($promo_code)) {
+        \App\Models\Coupon::incrementUsage($promo_code);
+    }
+    
     // Build items HTML for email
     $items_html = '';
     $items_text = '';

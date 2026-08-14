@@ -154,6 +154,11 @@ foreach ($cart as $item) {
 }
 $stmt_item->close();
 
+// Increment coupon usage count if applied
+if (!empty($promo_code)) {
+    \App\Models\Coupon::incrementUsage($promo_code);
+}
+
 // Clear session
 unset($_SESSION['cart']);
 

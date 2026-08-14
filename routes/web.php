@@ -60,5 +60,7 @@ return [
     '/logic/place_order.php' => 'Frontend\CheckoutController@placeOrder',
     '/api/search' => 'Frontend\SearchController@search',
     '/search' => 'Frontend\SearchController@search',
+    '/api/validate-coupon' => 'Frontend\CouponController@validate',
+    '/api/coupon/validate' => 'Frontend\CouponController@validate',
 ];
 ?>

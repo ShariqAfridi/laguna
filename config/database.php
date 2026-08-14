@@ -54,6 +54,26 @@ function get_db_connection()
                 @$conn->query("ALTER TABLE fragrances ADD COLUMN status TINYINT(1) DEFAULT 1");
                 @$conn->query("ALTER TABLE fragrances ADD COLUMN sort_order INT(11) DEFAULT 0");
             }
+
+            // 4. Ensure coupons table exists
+            @$conn->query("CREATE TABLE IF NOT EXISTS `coupons` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `code` varchar(50) NOT NULL,
+                `description` varchar(255) DEFAULT NULL,
+                `type` enum('percentage','fixed') NOT NULL DEFAULT 'percentage',
+                `value` decimal(10,2) NOT NULL DEFAULT '0.00',
+                `min_order_amount` decimal(10,2) DEFAULT '0.00',
+                `max_discount_amount` decimal(10,2) DEFAULT NULL,
+                `start_date` date DEFAULT NULL,
+                `end_date` date DEFAULT NULL,
+                `usage_limit` int(11) DEFAULT NULL,
+                `used_count` int(11) DEFAULT '0',
+                `status` tinyint(1) NOT NULL DEFAULT '1',
+                `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `idx_code` (`code`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         }
     }
     return $conn;
