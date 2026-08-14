@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -254,6 +254,8 @@
             <span>Handcrafted candles in the Spirit of Laguna Beach</span>
         </div>
     </footer>
+
+    <?php include __DIR__ . '/popup_modal.php'; ?>
 
 </body>
 </html>
