@@ -432,6 +432,23 @@ if (!isset($base)) {
             <div class="lvb-search-item-price">${product.price}</div>
             <div class="lvb-search-item-arrow">&rarr;</div>
           `;
+          card.addEventListener('click', function(e) {
+            closeSearch();
+            if (window.location.pathname.endsWith('/shop') && typeof openVariationModal === 'function' && typeof allVariationsData !== 'undefined' && allVariationsData) {
+              const targetProdId = parseInt(product.id);
+              const fragMatch = product.url.match(/fragrance=(\d+)/);
+              const targetFragId = fragMatch ? parseInt(fragMatch[1]) : 0;
+              for (let i = 0; i < allVariationsData.length; i++) {
+                const v = allVariationsData[i];
+                if (v.items && v.items.some(it => parseInt(it.product_id) === targetProdId)) {
+                  e.preventDefault();
+                  history.pushState({}, '', product.url);
+                  openVariationModal(v, targetFragId);
+                  return;
+                }
+              }
+            }
+          });
           resultsGrid.appendChild(card);
         });
 

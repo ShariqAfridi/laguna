@@ -1429,4 +1429,48 @@ function escapeHtml(str) {
         return m;
     });
 }
+
+// Auto-open product modal if target product_id is specified in URL
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetProdId = parseInt(urlParams.get('product_id') || urlParams.get('product') || '0');
+    const targetFragId = parseInt(urlParams.get('fragrance') || urlParams.get('fragrance_id') || '0');
+    const targetColorId = parseInt(urlParams.get('color') || '0');
+
+    if (targetProdId > 0) {
+        const allVariationsData = <?= json_encode(array_values($colorVariations ?? [])) ?>;
+        if (allVariationsData && allVariationsData.length > 0) {
+            let matchedVariation = null;
+            let matchedFragId = targetFragId;
+
+            for (let i = 0; i < allVariationsData.length; i++) {
+                const v = allVariationsData[i];
+                if (v.items && v.items.length > 0) {
+                    const itemMatch = v.items.find(it => parseInt(it.product_id) === targetProdId);
+                    if (itemMatch) {
+                        matchedVariation = v;
+                        if (!matchedFragId) {
+                            matchedFragId = parseInt(itemMatch.fragrance_id);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (!matchedVariation && targetColorId > 0) {
+                matchedVariation = allVariationsData.find(v => parseInt(v.color_id) === targetColorId);
+            }
+
+            if (!matchedVariation && allVariationsData.length > 0) {
+                matchedVariation = allVariationsData[0];
+            }
+
+            if (matchedVariation) {
+                setTimeout(function() {
+                    openVariationModal(matchedVariation, matchedFragId);
+                }, 150);
+            }
+        }
+    }
+});
 </script>

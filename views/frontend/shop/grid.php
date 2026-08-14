@@ -42,7 +42,7 @@ if (empty($validVessels)) {
 
 // Auto-detect vessel if product_id is provided without vessel
 if ($targetProductId > 0 && (empty($selectedVessel) || !in_array($selectedVessel, $validVessels))) {
-    $vCheck = $conn->query("SELECT size_id, wick_type FROM products WHERE product_id = " . $targetProductId);
+    $vCheck = $conn->query("SELECT size_id, wick_type, sku FROM products WHERE product_id = " . $targetProductId);
     if ($vCheck && $vRow = $vCheck->fetch_assoc()) {
         $p_sizes = json_decode($vRow['size_id'], true) ?: [];
         foreach ($categoriesMap as $sku => $cat) {
@@ -50,6 +50,25 @@ if ($targetProductId > 0 && (empty($selectedVessel) || !in_array($selectedVessel
                 $selectedVessel = $sku;
                 break;
             }
+        }
+        if (empty($selectedVessel) && !empty($vRow['sku'])) {
+            $firstChar = strtolower(substr(trim($vRow['sku']), 0, 1));
+            if (in_array($firstChar, $validVessels)) {
+                $selectedVessel = $firstChar;
+            }
+        }
+        if (empty($selectedVessel) && !empty($vRow['wick_type'])) {
+            $wt = strtolower($vRow['wick_type']);
+            if (strpos($wt, 'triple') !== false) {
+                $selectedVessel = 'e';
+            } elseif (strpos($wt, 'double') !== false) {
+                $selectedVessel = 'd';
+            } else {
+                $selectedVessel = 'c';
+            }
+        }
+        if (empty($selectedVessel)) {
+            $selectedVessel = 'c';
         }
     }
 }
@@ -1883,6 +1902,53 @@ function applyShopFilters() {
         countDisplay.innerText = `Showing ${visibleCount} ${visibleCount === 1 ? 'variation' : 'variations'}`;
     }
 }
+
+// Auto-open product modal if target product_id is specified in URL (e.g. from Search)
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetProdId = parseInt(urlParams.get('product_id') || urlParams.get('product') || '<?= (int)$targetProductId ?>');
+    const targetFragId = parseInt(urlParams.get('fragrance') || urlParams.get('fragrance_id') || '<?= (int)$selectedFragrance ?>');
+    const targetColorId = parseInt(urlParams.get('color') || '<?= (int)$selectedColor ?>');
+
+    if (targetProdId > 0) {
+        const allVariationsData = <?= json_encode(array_values($colorVariations ?? [])) ?>;
+        if (allVariationsData && allVariationsData.length > 0) {
+            let matchedVariation = null;
+            let matchedFragId = targetFragId;
+
+            // 1. Find variation containing target product_id
+            for (let i = 0; i < allVariationsData.length; i++) {
+                const v = allVariationsData[i];
+                if (v.items && v.items.length > 0) {
+                    const itemMatch = v.items.find(it => parseInt(it.product_id) === targetProdId);
+                    if (itemMatch) {
+                        matchedVariation = v;
+                        if (!matchedFragId) {
+                            matchedFragId = parseInt(itemMatch.fragrance_id);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // 2. Fallback by color_id
+            if (!matchedVariation && targetColorId > 0) {
+                matchedVariation = allVariationsData.find(v => parseInt(v.color_id) === targetColorId);
+            }
+
+            // 3. Fallback to first available variation
+            if (!matchedVariation && allVariationsData.length > 0) {
+                matchedVariation = allVariationsData[0];
+            }
+
+            if (matchedVariation) {
+                setTimeout(function() {
+                    openVariationModal(matchedVariation, matchedFragId);
+                }, 120);
+            }
+        }
+    }
+});
 </script>
 <?php endif; ?>
 
