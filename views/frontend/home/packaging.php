@@ -7,21 +7,21 @@
         <div class="lv-pack-grid">
             <div class="lv-pack-card">
                 <div class="lv-pack-img-placeholder">
-                    <img src="img/box-square.jpg" alt="Cubic Box Packaging" class="lv-pack-img">
+                    <img src="<?= function_exists('base_url') ? base_url('/public/uploads/boxes/box_black_cubic_showcase.webp') : 'public/uploads/boxes/box_black_cubic_showcase.webp' ?>" alt="Black Cubic Keepsake Box" class="lv-pack-img" onerror="this.src='<?= function_exists('base_url') ? base_url('/public/uploads/boxes/box_black_cubic_showcase.jpg') : 'public/uploads/boxes/box_black_cubic_showcase.jpg' ?>'">
                 </div>
                 <div class="lv-pack-content">
-                    <h4>Cubic Box</h4>
-                    <p>Square keepsake presentation box with a lift-off lid.</p>
+                    <h4>Black Cubic Box</h4>
+                    <p>Square keepsake presentation box with a lift-off lid in rich matte black.</p>
                 </div>
             </div>
 
             <div class="lv-pack-card">
                 <div class="lv-pack-img-placeholder">
-                    <img src="img/box-tubular.jpg" alt="Tubular Box Packaging" class="lv-pack-img">
+                    <img src="<?= function_exists('base_url') ? base_url('/public/uploads/boxes/box_white_cubic_showcase.webp') : 'public/uploads/boxes/box_white_cubic_showcase.webp' ?>" alt="White Cubic Keepsake Box" class="lv-pack-img" onerror="this.src='<?= function_exists('base_url') ? base_url('/public/uploads/boxes/box_white_cubic_showcase.jpg') : 'public/uploads/boxes/box_white_cubic_showcase.jpg' ?>'">
                 </div>
                 <div class="lv-pack-content">
-                    <h4>Tubular Box</h4>
-                    <p>Sculptural cylindrical keepsake box with a concealed lid.</p>
+                    <h4>White Cubic Box</h4>
+                    <p>Square keepsake presentation box with a lift-off lid in crisp satin white.</p>
                 </div>
             </div>
         </div>
@@ -91,6 +91,7 @@
     margin-top: 48px;
     justify-items: center;
     align-items: start;
+    gap: 30px;
 }
 
 /* Reduced width cards */
@@ -103,34 +104,41 @@
     text-align: left;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0, 75, 102, 0.06);
 }
 
 .lv-pack-section .lv-pack-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 16px 36px rgba(0, 75, 102, 0.12);
 }
 
 .lv-pack-section .lv-pack-img-placeholder {
     width: 100%;
-    aspect-ratio: 1.3 / 1;
+    aspect-ratio: 1.35 / 1;
     overflow: hidden;
-    background-color: #f5f5f5;
+    background-color: #e5cdb4;
 }
 
 .lv-pack-section .lv-pack-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
     display: block;
+    transition: transform 0.4s ease;
+}
+
+.lv-pack-section .lv-pack-card:hover .lv-pack-img {
+    transform: scale(1.03);
 }
 
 .lv-pack-section .lv-pack-content {
-    padding: 18px 22px 22px;
+    padding: 20px 24px 24px;
 }
 
 .lv-pack-section .lv-pack-content h4 {
     font-family: 'Cormorant Garamond', 'Times New Roman', serif;
-    font-weight: 400;
+    font-weight: 600;
     font-size: 1.5rem;
     color: #0f2a2f;
     margin-bottom: 8px;
@@ -152,22 +160,22 @@
     }
     
     .lv-pack-section .lv-pack-grid {
-        gap: 3px;
+        gap: 30px;
     }
     
     .lv-pack-section .lv-pack-card {
-        max-width: 360px;
+        max-width: 380px;
     }
 }
 
 /* Tablet */
 @media (max-width: 1024px) and (min-width: 769px) {
     .lv-pack-section {
-        padding: 70px 60px;
+        padding: 70px 40px;
     }
     
     .lv-pack-section .lv-pack-grid {
-        gap: 3px;
+        gap: 24px;
     }
     
     .lv-pack-section .lv-pack-card {
@@ -191,19 +199,19 @@
     
     .lv-pack-section .lv-pack-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 24px;
     }
     
     .lv-pack-section .lv-pack-card {
-        max-width: 340px;
+        max-width: 360px;
     }
     
     .lv-pack-section .lv-pack-img-placeholder {
-        aspect-ratio: 1.3 / 1;
+        aspect-ratio: 1.35 / 1;
     }
     
     .lv-pack-section .lv-pack-content {
-        padding: 14px 18px 16px;
+        padding: 16px 20px 18px;
     }
     
     .lv-pack-section .lv-pack-content h4 {
@@ -229,15 +237,15 @@
     }
     
     .lv-pack-section .lv-pack-card {
-        max-width: 300px;
+        max-width: 320px;
     }
     
     .lv-pack-section .lv-pack-img-placeholder {
-        aspect-ratio: 1.2 / 1;
+        aspect-ratio: 1.3 / 1;
     }
     
     .lv-pack-section .lv-pack-content {
-        padding: 12px 16px 14px;
+        padding: 14px 18px 16px;
     }
     
     .lv-pack-section .lv-pack-content h4 {
@@ -247,4 +255,4 @@
 </style>
 
 <!-- Add Google Fonts if not already included -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Cormorant+Garamond:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
