@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../../../db.php';
+$base = function_exists('base_url') ? base_url() : '';
 
 // Get vessel, filter parameters, and target product ID from URL
 $selectedVessel    = isset($_GET['vessel']) ? strtolower($_GET['vessel']) : '';
@@ -120,7 +121,7 @@ if (!$showVesselSelection) {
         }
 
         $boxes = [];
-        $box_result = $conn->query("SELECT box_id, sku, vessel_code, box_name, box_price FROM boxes WHERE status = 1 ORDER BY box_id");
+        $box_result = $conn->query("SELECT box_id, sku, vessel_code, box_name, box_price, box_image, box_description FROM boxes WHERE status = 1 ORDER BY box_id");
         if ($box_result) {
             while ($row = $box_result->fetch_assoc()) {
                 $boxes[$row['box_id']] = $row;
@@ -950,6 +951,63 @@ if (!empty($boxes)) {
     .tile-title { font-size: 13px; font-weight: 600; color: #0f172a; display: block; }
     .tile-sub   { font-size: 11px; color: #64748b; margin-top: 3px; font-weight: 500; display: block; }
 
+    /* Selected Keepsake Box Live Preview Card */
+    .selected-box-preview-card {
+        display: none;
+        align-items: center;
+        gap: 14px;
+        margin-top: 12px;
+        padding: 10px 14px;
+        background: #f8fafc;
+        border: 1.5px solid #004b66;
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgba(0, 75, 102, 0.08);
+        animation: fadeInBox 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fadeInBox {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .selected-box-preview-img {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        padding: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        flex-shrink: 0;
+    }
+    .selected-box-preview-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .selected-box-preview-badge {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #004b66;
+        background: #e0f2fe;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-bottom: 4px;
+    }
+    .selected-box-preview-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.25;
+        margin-bottom: 2px;
+    }
+    .selected-box-preview-sub {
+        font-size: 11.5px;
+        color: #64748b;
+        line-height: 1.3;
+    }
+
     .qty-total-block {
         display: flex;
         flex-direction: column;
@@ -1313,6 +1371,15 @@ if (!empty($boxes)) {
             <div>
                 <div class="section-label">Keepsake Box <span>Optional</span></div>
                 <div class="option-grid" id="boxOptions"></div>
+                <!-- Selected Keepsake Box Live Preview -->
+                <div id="selectedBoxPreview" class="selected-box-preview-card">
+                    <img id="selectedBoxPreviewImg" src="" alt="Selected Keepsake Box" class="selected-box-preview-img">
+                    <div class="selected-box-preview-info">
+                        <div class="selected-box-preview-badge">Selected Packaging</div>
+                        <div id="selectedBoxPreviewTitle" class="selected-box-preview-title"></div>
+                        <div id="selectedBoxPreviewSub" class="selected-box-preview-sub"></div>
+                    </div>
+                </div>
             </div>
             <hr class="modal-divider">
             <div class="qty-total-block">
@@ -1686,6 +1753,7 @@ function renderBoxOptions() {
         c.innerHTML = '<div style="grid-column: 1 / -1; padding: 12px 16px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; font-size: 13px; text-align: center; font-weight: 500;">No packaging box options available for Vessel ' + escapeHtml(vesselCode) + '</div>';
         selectedBoxId = null;
         boxPrice = 0;
+        updateBoxPreview();
         updateDisplay();
         return;
     }
@@ -1699,6 +1767,45 @@ function renderBoxOptions() {
         tile.onclick = (function(bid, price) { return function() { selectBox(tile, bid, price); }; })(parseInt(bid), price);
         c.appendChild(tile);
     });
+    updateBoxPreview();
+}
+
+function getBoxImageUrl(box) {
+    if (!box || !box.box_image) return '';
+    let img = box.box_image.trim();
+    if (img.startsWith('http://') || img.startsWith('https://')) return img;
+    let clean = img.replace(/^\/+/, '');
+    if (clean.startsWith('public/')) {
+        return '<?= base_url('/') ?>' + clean;
+    }
+    return '<?= base_url('/public/uploads/boxes/') ?>' + clean.replace(/^uploads\/boxes\//, '');
+}
+
+function updateBoxPreview() {
+    const previewEl = document.getElementById('selectedBoxPreview');
+    const imgEl = document.getElementById('selectedBoxPreviewImg');
+    const titleEl = document.getElementById('selectedBoxPreviewTitle');
+    const subEl = document.getElementById('selectedBoxPreviewSub');
+    
+    if (!previewEl) return;
+    
+    if (selectedBoxId && boxesData && boxesData[selectedBoxId]) {
+        const box = boxesData[selectedBoxId];
+        const imgUrl = getBoxImageUrl(box);
+        if (imgEl) {
+            imgEl.src = imgUrl;
+            imgEl.style.display = imgUrl ? 'block' : 'none';
+        }
+        if (titleEl) titleEl.innerText = box.box_name || 'Keepsake Box';
+        if (subEl) {
+            let p = parseFloat(box.box_price || 6);
+            let desc = box.box_description ? box.box_description : 'Luxury custom keepsake box';
+            subEl.innerText = `${desc} · +$${p.toFixed(2)}`;
+        }
+        previewEl.style.display = 'flex';
+    } else {
+        previewEl.style.display = 'none';
+    }
 }
 
 function selectBox(el, boxId, price) {
@@ -1713,6 +1820,7 @@ function selectBox(el, boxId, price) {
         selectedBoxId = boxId; 
         boxPrice = price;
     }
+    updateBoxPreview();
     updateDisplay();
     if (currentProduct) {
         document.getElementById('modalSKU').innerText = getFullProductSKU(selectedBoxId);
