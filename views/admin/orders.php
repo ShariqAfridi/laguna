@@ -52,13 +52,83 @@ $orderItems = [];
 foreach ($orders as $o) {
     $oid  = (int)$o['id'];
     $iRes = mysqli_query($conn,
-        "SELECT oi.product_name, oi.scent, oi.quantity, oi.price, oi.subtotal,
-                p.image, p.color_id, p.size_id, p.fragrance_id
+        "SELECT oi.product_name, oi.scent, oi.quantity, oi.price, oi.subtotal, oi.product_id,
+                p.image, p.color_id, p.size_id, p.fragrance_id, p.fragrance_images,
+                acc.image AS accessory_image
          FROM order_items oi
          LEFT JOIN products p ON oi.product_id = p.product_id
+         LEFT JOIN accessory acc ON oi.product_id = acc.accessory_id
          WHERE oi.order_id = $oid");
     $orderItems[$oid] = [];
     if ($iRes) while ($row = mysqli_fetch_assoc($iRes)) $orderItems[$oid][] = $row;
+}
+
+function getAdminOrderItemImgUrl($item, $conn) {
+    $rawImg = '';
+
+    // 1. Check if specific fragrance image exists in fragrance_images JSON
+    if (!empty($item['fragrance_images']) && !empty($item['scent'])) {
+        $fMap = json_decode($item['fragrance_images'], true);
+        if (is_array($fMap) && !empty($fMap)) {
+            $scentEsc = mysqli_real_escape_string($conn, trim($item['scent']));
+            $fq = mysqli_query($conn, "SELECT fragrance_id FROM fragrances WHERE fragrance_name = '$scentEsc' LIMIT 1");
+            if ($fq && $fr = mysqli_fetch_assoc($fq)) {
+                $fid = (string)$fr['fragrance_id'];
+                if (!empty($fMap[$fid])) {
+                    $rawImg = $fMap[$fid];
+                }
+            }
+        }
+    }
+
+    // 2. Main product image
+    if (empty($rawImg) && !empty($item['image'])) {
+        $rawImg = $item['image'];
+    }
+
+    // 3. Accessory image
+    if (empty($rawImg) && !empty($item['accessory_image'])) {
+        $rawImg = $item['accessory_image'];
+    }
+
+    // 4. Fallback search by product name
+    if (empty($rawImg) && !empty($item['product_name']) && $conn) {
+        $pNameClean = trim(explode('+', $item['product_name'])[0]);
+        $pNameClean = trim(explode('—', $pNameClean)[0]);
+        $pNameEsc = mysqli_real_escape_string($conn, $pNameClean);
+        if (!empty($pNameEsc)) {
+            $pq = mysqli_query($conn, "SELECT image, fragrance_images FROM products WHERE product_name LIKE '%$pNameEsc%' LIMIT 1");
+            if ($pq && $pr = mysqli_fetch_assoc($pq)) {
+                if (!empty($pr['fragrance_images']) && !empty($item['scent'])) {
+                    $fMap = json_decode($pr['fragrance_images'], true);
+                    if (is_array($fMap)) {
+                        $scentEsc = mysqli_real_escape_string($conn, trim($item['scent']));
+                        $fq = mysqli_query($conn, "SELECT fragrance_id FROM fragrances WHERE fragrance_name = '$scentEsc' LIMIT 1");
+                        if ($fq && $fr = mysqli_fetch_assoc($fq)) {
+                            $fid = (string)$fr['fragrance_id'];
+                            if (!empty($fMap[$fid])) {
+                                $rawImg = $fMap[$fid];
+                            }
+                        }
+                    }
+                }
+                if (empty($rawImg)) {
+                    $rawImg = $pr['image'] ?? '';
+                }
+            }
+        }
+    }
+
+    if (empty($rawImg)) {
+        return '';
+    }
+
+    if (strpos($rawImg, 'http://') === 0 || strpos($rawImg, 'https://') === 0) {
+        return $rawImg;
+    }
+
+    $clean = ltrim(preg_replace('#^/?(public/)?#i', '', $rawImg), '/');
+    return function_exists('base_url') ? base_url('/public/' . $clean) : ('/public/' . $clean);
 }
 
 // ─── Status counts ────────────────────────────────────────────────────────────
@@ -249,8 +319,9 @@ function statusBadgeClass($sk) {
         .product-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.07); background:#fff; }
 
         .product-img {
-            width:76px; height:76px; object-fit:cover; border-radius:10px;
-            flex-shrink:0; border:1px solid #eee; background:#f0f0f0;
+            width:76px; height:76px; object-fit:contain; border-radius:10px;
+            flex-shrink:0; border:1px solid #e2e8f0; background:#ffffff; padding:2px;
+            box-shadow:0 2px 6px rgba(0,0,0,0.04);
         }
         .product-img-placeholder {
             width:76px; height:76px; border-radius:10px; flex-shrink:0;
@@ -549,10 +620,11 @@ function statusBadgeClass($sk) {
             </span>
             <div class="product-list">
             <?php if (!empty($items)): foreach ($items as $item): ?>
+                <?php $itemImgUrl = getAdminOrderItemImgUrl($item, $conn); ?>
                 <div class="product-card">
-                    <?php if (!empty($item['image'])): ?>
+                    <?php if (!empty($itemImgUrl)): ?>
                         <img class="product-img"
-                             src="../img/<?= htmlspecialchars($item['image']) ?>"
+                             src="<?= htmlspecialchars($itemImgUrl) ?>"
                              alt="<?= htmlspecialchars($item['product_name']) ?>"
                              onerror="this.outerHTML='<div class=\'product-img-placeholder\'><i class=\'fas fa-image\'></i></div>'">
                     <?php else: ?>

@@ -629,10 +629,14 @@ function renderOrderDetailsModal(o) {
             const price = parseFloat(it.price || 0);
             const scent = it.scent || '';
             const border = (idx < o.items.length - 1) ? 'border-bottom:1px solid #F4F8FA;' : '';
+            const imgHtml = it.image_url 
+                ? `<img src="${it.image_url}" style="width:48px; height:48px; object-fit:contain; border-radius:8px; border:1px solid #E5E7EB; background:#fff; padding:2px; flex-shrink:0;" alt="${pName}" onerror="this.outerHTML='<div style=\\'width:48px; height:48px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:1.1rem; flex-shrink:0;\\'><i class=\\'fas fa-image\\'></i></div>'">` 
+                : `<div style="width:48px; height:48px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:1.1rem; flex-shrink:0;"><i class="fas fa-image"></i></div>`;
 
             html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; ${border}">
-                    <div>
+                <div style="display:flex; align-items:center; gap:12px; padding:10px 0; ${border}">
+                    ${imgHtml}
+                    <div style="flex:1; min-width:0;">
                         <div style="font-size:13px; font-weight:600; color:#1E2F3A;">${pName}</div>
                         <div style="font-size:11px; color:#6D8491;">
                             Qty: ${qty} ${scent ? ' · Scent: ' + scent : ''}

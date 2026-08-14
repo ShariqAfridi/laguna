@@ -146,12 +146,59 @@ class Order {
         $orders = [];
         if ($res && $res->num_rows > 0) {
             while ($row = $res->fetch_assoc()) {
-                // Attach order items if order_items table exists or parse items JSON/metadata
                 $orderId = intval($row['id']);
-                $itemsRes = $conn->query("SELECT * FROM order_items WHERE order_id = {$orderId}");
+                $itemsRes = $conn->query("
+                    SELECT oi.*, p.image, p.fragrance_images, acc.image AS accessory_image
+                    FROM order_items oi
+                    LEFT JOIN products p ON oi.product_id = p.product_id
+                    LEFT JOIN accessory acc ON oi.product_id = acc.accessory_id
+                    WHERE oi.order_id = {$orderId}
+                ");
                 $items = [];
                 if ($itemsRes && $itemsRes->num_rows > 0) {
                     while ($item = $itemsRes->fetch_assoc()) {
+                        $rawImg = '';
+                        if (!empty($item['fragrance_images']) && !empty($item['scent'])) {
+                            $fMap = json_decode($item['fragrance_images'], true);
+                            if (is_array($fMap) && !empty($fMap)) {
+                                $scentEsc = $conn->real_escape_string(trim($item['scent']));
+                                $fq = $conn->query("SELECT fragrance_id FROM fragrances WHERE fragrance_name = '$scentEsc' LIMIT 1");
+                                if ($fq && $fr = $fq->fetch_assoc()) {
+                                    $fid = (string)$fr['fragrance_id'];
+                                    if (!empty($fMap[$fid])) {
+                                        $rawImg = $fMap[$fid];
+                                    }
+                                }
+                            }
+                        }
+                        if (empty($rawImg) && !empty($item['image'])) {
+                            $rawImg = $item['image'];
+                        }
+                        if (empty($rawImg) && !empty($item['accessory_image'])) {
+                            $rawImg = $item['accessory_image'];
+                        }
+                        if (empty($rawImg) && !empty($item['product_name'])) {
+                            $pNameClean = trim(explode('+', $item['product_name'])[0]);
+                            $pNameClean = trim(explode('—', $pNameClean)[0]);
+                            $pNameEsc = $conn->real_escape_string($pNameClean);
+                            if (!empty($pNameEsc)) {
+                                $pq = $conn->query("SELECT image FROM products WHERE product_name LIKE '%$pNameEsc%' LIMIT 1");
+                                if ($pq && $pr = $pq->fetch_assoc()) {
+                                    $rawImg = $pr['image'] ?? '';
+                                }
+                            }
+                        }
+
+                        $imgUrl = '';
+                        if (!empty($rawImg)) {
+                            if (strpos($rawImg, 'http://') === 0 || strpos($rawImg, 'https://') === 0) {
+                                $imgUrl = $rawImg;
+                            } else {
+                                $clean = ltrim(preg_replace('#^/?(public/)?#i', '', $rawImg), '/');
+                                $imgUrl = function_exists('base_url') ? base_url('/public/' . $clean) : ('/public/' . $clean);
+                            }
+                        }
+                        $item['image_url'] = $imgUrl;
                         $items[] = $item;
                     }
                 }
