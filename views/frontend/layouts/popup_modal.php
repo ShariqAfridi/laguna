@@ -20,7 +20,7 @@ if (!isset($base)) {
         </button>
         <div class="lvb-popup-image-container">
             <img src="<?php echo $base; ?>/img/popup-grand-opening.jpg" 
-                 alt="Laguna Vibe Grand Opening - 20% Off Your First Order - Code: WELCOME20" 
+                 alt="Laguna Vibe Grand Opening - 20% Off Your First Order - Code: LAGUNA20" 
                  class="lvb-popup-main-img" 
                  loading="eager" 
                  draggable="false" />
