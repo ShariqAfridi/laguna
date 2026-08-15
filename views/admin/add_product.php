@@ -1064,7 +1064,7 @@ function onFragranceSelectionChange() {
                 } else if (cleanImg.includes('uploads/')) {
                     previewSrc = '<?php echo base_url('/public/'); ?>' + cleanImg.replace(/^\/+/, '');
                 } else {
-                    previewSrc = '<?php echo base_url('/'); ?>' + cleanImg.replace(/^\/+/, '');
+                    previewSrc = '<?php echo rtrim(base_url(), '/') . '/'; ?>' + cleanImg.replace(/^\/+/, '');
                 }
             } else if (defaultImg && defaultImg.trim() !== '') {
                 let cleanImg = defaultImg.trim();
@@ -1073,7 +1073,7 @@ function onFragranceSelectionChange() {
                 } else if (cleanImg.includes('uploads/')) {
                     previewSrc = '<?php echo base_url('/public/'); ?>' + cleanImg.replace(/^\/+/, '');
                 } else {
-                    previewSrc = '<?php echo base_url('/'); ?>' + cleanImg.replace(/^\/+/, '');
+                    previewSrc = '<?php echo rtrim(base_url(), '/') . '/'; ?>' + cleanImg.replace(/^\/+/, '');
                 }
             }
 

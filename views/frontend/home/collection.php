@@ -1341,9 +1341,9 @@ function getBoxImageUrl(box) {
     if (img.startsWith('http://') || img.startsWith('https://')) return img;
     let clean = img.replace(/^\/+/, '');
     if (clean.startsWith('public/')) {
-        return '<?= base_url('/') ?>' + clean;
+        return '<?= rtrim(base_url(), '/') . '/' ?>' + clean;
     }
-    return '<?= base_url('/public/uploads/boxes/') ?>' + clean.replace(/^uploads\/boxes\//, '');
+    return '<?= rtrim(base_url(), '/') . '/public/uploads/boxes/' ?>' + clean.replace(/^uploads\/boxes\//, '');
 }
 
 function updateBoxPreview() {
