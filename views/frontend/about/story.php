@@ -1,3 +1,8 @@
+<?php
+if (!isset($base)) {
+    $base = function_exists('base_url') ? rtrim(base_url(), '/') : '';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -127,7 +132,7 @@
 
     <section class="vibe-about-section">
         <div class="vibe-image-container">
-            <img src="<?php echo $base; ?>/img/about.webp" alt="Laguna Vibe Founders" class="vibe-featured-img">
+            <img src="<?php echo $base; ?>/img/about.webp?v=<?php echo file_exists(dirname(__DIR__, 3) . '/public/assets/img/about.webp') ? filemtime(dirname(__DIR__, 3) . '/public/assets/img/about.webp') : '1'; ?>" alt="Laguna Vibe Founders" class="vibe-featured-img">
         </div>
 
         <div class="vibe-text-content">
@@ -156,13 +161,6 @@
                 </p>
             </div>
 
-<?php
-if (!isset($base)) {
-    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-    if (substr($scriptDir, -6) === '/logic') { $scriptDir = substr($scriptDir, 0, -6); }
-    $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
-}
-?>
             <a href="<?php echo $base; ?>/builder" class="vibe-cta-link">Begin Your Candle &rarr;</a>
         </div>
     </section>
