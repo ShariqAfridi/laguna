@@ -30,7 +30,6 @@ return [
         '/admin/coupons/edit'       => 'Admin\CouponController@edit',
         '/admin/coupons/delete'     => 'Admin\CouponController@delete',
         '/admin/coupons/toggle'     => 'Admin\CouponController@toggle',
-        '/admin/sizes'              => 'Admin\SizesController@index',
         '/admin/logout'             => 'Admin\AdminLoginController@logout',
     ],
     'redirects' => [
@@ -46,7 +45,7 @@ return [
         '/fragrance'       => '/admin/fragrance',
         '/boxes'           => '/admin/boxes',
         '/colors'          => '/admin/colors',
-        '/sizes'           => '/admin/sizes',
+        '/sizes'           => '/admin/categories',
         '/add_accessory'   => '/admin/add_accessory',
         '/edit_accessory'  => '/admin/edit_accessory',
         '/list_accessory'  => '/admin/list_accessory',

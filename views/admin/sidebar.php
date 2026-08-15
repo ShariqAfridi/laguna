@@ -719,16 +719,6 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
                     </svg>
                     Colors
                 </a></li>
-                <!-- Sizes - ruler / dimensions distinct -->
-                <li><a href="<?php echo $base; ?>/admin/sizes" class="nav-link">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-                        <path d="M21.3 8.7l-6-6a1 1 0 0 0-1.4 0l-11.2 11.2a1 1 0 0 0 0 1.4l6 6a1 1 0 0 0 1.4 0l11.2-11.2a1 1 0 0 0 0-1.4z"/>
-                        <line x1="7.5" y1="10.5" x2="8.9" y2="9.1"/>
-                        <line x1="10.5" y1="13.5" x2="11.9" y2="12.1"/>
-                        <line x1="13.5" y1="16.5" x2="14.9" y2="15.1"/>
-                    </svg>
-                    Sizes
-                </a></li>
                 <!-- Box - gift/package distinct -->
                 <li><a href="<?php echo $base; ?>/admin/boxes" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
