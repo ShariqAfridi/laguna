@@ -3,7 +3,7 @@
     <div class="panel-title">
         <div>
             <h2>Dashboard Overview</h2>
-            <p>Welcome to your personal Laguna Vibe Atelier account.</p>
+            <p>Welcome to your personal Laguna Vibe account.</p>
         </div>
     </div>
 

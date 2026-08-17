@@ -209,7 +209,7 @@ $basePath = (isset($base)) ? $base : (function_exists('base_url') ? base_url() :
                 <i class="fas fa-universal-access" style="color:#E9C46A;"></i> ADA Accessibility Statement
             </h2>
             <div style="font-size:13.5px; line-height:1.7; color:#334155;">
-                <p style="margin-bottom:12px;"><strong>Laguna Vibe Atelier</strong> is committed to ensuring digital accessibility for all users, including individuals with disabilities. We continually improve our user experience and apply relevant accessibility standards compliant with <strong>WCAG 2.1 Level AA</strong> and the <strong>Americans with Disabilities Act (ADA)</strong>.</p>
+                <p style="margin-bottom:12px;"><strong>Laguna Vibe</strong> is committed to ensuring digital accessibility for all users, including individuals with disabilities. We continually improve our user experience and apply relevant accessibility standards compliant with <strong>WCAG 2.1 Level AA</strong> and the <strong>Americans with Disabilities Act (ADA)</strong>.</p>
                 
                 <h4 style="color:#0F4C5C; margin:16px 0 6px; font-size:15px;">Measures to Support Accessibility</h4>
                 <ul style="padding-left:20px; margin-bottom:12px;">

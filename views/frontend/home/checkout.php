@@ -1754,7 +1754,7 @@ textarea { resize: vertical; min-height: 80px; }
         </div>
 
         <div class="processing-brand-badge">
-            <i class="fa-solid fa-shield-halved"></i> 256-Bit SSL Encrypted &bull; Laguna Vibe Atelier
+            <i class="fa-solid fa-shield-halved"></i> 256-Bit SSL Encrypted &bull; Laguna Vibe
         </div>
     </div>
 </div>

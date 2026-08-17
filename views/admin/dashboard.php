@@ -80,7 +80,7 @@ if ($result && mysqli_num_rows($result) > 0) {
     <!-- Executive Header -->
     <div class="admin-header">
         <div>
-            <h1 class="admin-title">Laguna Vibe Atelier Dashboard</h1>
+            <h1 class="admin-title">Laguna Vibe Dashboard</h1>
             <p class="admin-subtitle">Real-time candle sales, fragrance popularity, vessel inventory & business performance overview.</p>
         </div>
         <div style="display:flex; gap:10px;">

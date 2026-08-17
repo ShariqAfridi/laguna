@@ -153,7 +153,7 @@
             <div style="font-size:38px; margin-bottom:12px;">🛍️</div>
             <h4 style="font-family:'Cinzel', serif; margin-bottom:6px; font-size:18px; color:#1E2F3A;">No Order History Found</h4>
             <p style="font-size:13px; color:#6D8491; margin-bottom:20px; max-width:400px; margin-left:auto; margin-right:auto;">
-                You haven't placed any orders with Laguna Vibe Atelier yet. Any orders placed online will appear here with live tracking.
+                You haven't placed any orders with Laguna Vibe yet. Any orders placed online will appear here with live tracking.
             </p>
             <a href="<?php echo $base; ?>/shop" class="btn-lvb" style="padding:10px 24px; font-size:11px; border-radius:8px;">Explore Our Collections &rarr;</a>
         </div>
