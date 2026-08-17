@@ -61,6 +61,7 @@ class FedExService
                 'Content-Type: application/x-www-form-urlencoded'
             ],
             CURLOPT_TIMEOUT        => 10,
+            CURLOPT_ENCODING       => '',
             CURLOPT_SSL_VERIFYPEER => false,
         ]);
 
@@ -245,6 +246,7 @@ class FedExService
                 'X-locale: en_US'
             ],
             CURLOPT_TIMEOUT        => 12,
+            CURLOPT_ENCODING       => '',
             CURLOPT_SSL_VERIFYPEER => false,
         ]);
 
