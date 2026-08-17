@@ -189,13 +189,10 @@ $basePath = (isset($base)) ? $base : (function_exists('base_url') ? base_url() :
         </div>
 
         <!-- Footer -->
-        <div class="ada-panel-footer">
-            <button type="button" class="ada-reset-btn" id="adaResetBtn">
-                <i class="fas fa-undo" aria-hidden="true"></i> Reset Settings
+        <div class="ada-panel-footer" style="justify-content:center;">
+            <button type="button" class="ada-reset-btn" id="adaResetBtn" style="width:100%; justify-content:center; padding:12px 18px;">
+                <i class="fas fa-undo" aria-hidden="true"></i> Reset All Settings
             </button>
-            <a href="javascript:void(0)" class="ada-statement-link" id="adaStatementBtn">
-                Accessibility Statement
-            </a>
         </div>
     </aside>
 
@@ -285,6 +282,9 @@ $basePath = (isset($base)) ? $base : (function_exists('base_url') ? base_url() :
         panel.setAttribute('aria-hidden', 'true');
         if (triggerBtn) triggerBtn.setAttribute('aria-expanded', 'false');
     }
+
+    window.openAdaPanel = openAdaPanel;
+    window.closeAdaPanel = closeAdaPanel;
 
     if (triggerBtn) triggerBtn.addEventListener('click', openAdaPanel);
     if (closeBtn) closeBtn.addEventListener('click', closeAdaPanel);

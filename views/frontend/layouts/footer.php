@@ -250,7 +250,7 @@ if (!isset($base)) {
             <span class="lvb-divider">|</span>
             <a href="<?php echo $base; ?>/returns" class="lvb-policy-link">Return Policy</a>
             <span class="lvb-divider">|</span>
-            <a href="javascript:void(0)" onclick="if(document.getElementById('adaStatementModal')) document.getElementById('adaStatementModal').style.display='flex'" class="lvb-policy-link" style="font-weight:600;"><i class="fas fa-universal-access" style="color:#0F4C5C; margin-right:4px;"></i> Accessibility (ADA)</a>
+            <a href="javascript:void(0)" onclick="if(typeof window.openAdaPanel==='function'){window.openAdaPanel();}else if(document.getElementById('adaTriggerBtn')){document.getElementById('adaTriggerBtn').click();}" class="lvb-policy-link" style="font-weight:600;"><i class="fas fa-universal-access" style="color:#0F4C5C; margin-right:4px;"></i> Accessibility (ADA)</a>
         </div>
 
         <span>Handcrafted candles in the Spirit of Laguna Beach</span>
