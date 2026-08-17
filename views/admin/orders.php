@@ -15,7 +15,7 @@ $searchTerm   = isset($_GET['search']) ? trim($_GET['search']) : '';
 $sql = "SELECT o.id, o.order_number, o.total, o.status, o.created_at,
                o.email, o.name as full_name, o.address, o.city,
                o.state, o.zip, o.phone, o.notes, o.promo_code,
-               o.subtotal, o.shipping, o.shipping_method, o.discount, o.payment_method,
+               o.subtotal, o.shipping, o.shipping_method, o.delivery_estimate, o.discount, o.payment_method,
                COUNT(oi.id) as item_count
         FROM orders o
         LEFT JOIN order_items oi ON o.id = oi.order_id
@@ -437,7 +437,14 @@ function statusBadgeClass($sk) {
                         <br><small style="color:#888;"><i class="fas fa-phone"></i> <?= htmlspecialchars($order['phone']) ?></small>
                     <?php endif; ?>
                 </td>
-                <td class="total-cell">$ <?= number_format($order['total'], 2) ?></td>
+                <td class="total-cell">
+                    $ <?= number_format($order['total'], 2) ?>
+                    <?php if (!empty($order['shipping_method'])): ?>
+                        <br><span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:.68rem; font-weight:600; padding:2px 7px; border-radius:10px; display:inline-flex; align-items:center; gap:4px; margin-top:4px;">
+                            <i class="fas fa-truck" style="font-size:10px;"></i> <?= htmlspecialchars($order['shipping_method']) ?>
+                        </span>
+                    <?php endif; ?>
+                </td>
                 <td class="date-cell">
                     <i class="far fa-calendar-alt" style="color:#aaa;margin-right:5px;"></i>
                     <?= date('d M Y', strtotime($order['created_at'])) ?>
@@ -585,6 +592,16 @@ function statusBadgeClass($sk) {
                     <label>Payment</label>
                     <span><?= htmlspecialchars(ucfirst(str_replace('_',' ',$order['payment_method'] ?: '—'))) ?></span>
                 </div>
+                <div class="cs-item">
+                    <label>Shipping Method</label>
+                    <span style="color:#0284c7; font-weight:700;"><i class="fas fa-truck"></i> <?= htmlspecialchars($order['shipping_method'] ?: 'FedEx Home Delivery®') ?></span>
+                </div>
+                <?php if (!empty($order['delivery_estimate'])): ?>
+                <div class="cs-item">
+                    <label>Est. Delivery</label>
+                    <span><?= htmlspecialchars($order['delivery_estimate']) ?></span>
+                </div>
+                <?php endif; ?>
                 <div class="cs-item" style="grid-column:1/-1;">
                     <label>Delivery Address</label>
                     <span><?= htmlspecialchars($fullAddr ?: '—') ?></span>

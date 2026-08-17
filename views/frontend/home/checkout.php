@@ -1417,6 +1417,7 @@ textarea { resize: vertical; min-height: 80px; }
         <input type="hidden" name="delivery_type" id="deliveryTypeInput" value="<?php echo htmlspecialchars($selectedRateCode); ?>">
         <input type="hidden" name="shipping_method" id="shippingMethodInput" value="<?php echo htmlspecialchars($selectedRateName); ?>">
         <input type="hidden" name="shipping_amount" id="shippingAmountInput" value="<?php echo number_format($shipping, 2, '.', ''); ?>">
+        <input type="hidden" name="delivery_estimate" id="deliveryEstimateInput" value="<?php echo htmlspecialchars($selectedRateDesc); ?>">
 
         <div id="fedexRatesContainer">
             <?php foreach ($initialRates as $idx => $r): ?>
@@ -1775,12 +1776,18 @@ textarea { resize: vertical; min-height: 80px; }
                     <span class="detail-value" id="succPayment">Credit Card (Stripe)</span>
                 </div>
                 <div class="detail-row">
+                    <span class="detail-label">Shipping method</span>
+                    <span class="detail-value" id="succShippingMethod">
+                        <i class="fa-solid fa-truck-fast" style="color:#0F4C5C; margin-right:4px;"></i> FedEx Home Delivery®
+                    </span>
+                </div>
+                <div class="detail-row">
                     <span class="detail-label">Shipping to</span>
                     <span class="detail-value" id="succAddress" style="text-align: right; max-width: 60%; word-break: break-word;"></span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Estimated delivery</span>
-                    <span class="detail-value" id="succDelivery">3–5 business days ✨</span>
+                    <span class="detail-value highlight" id="succDelivery" style="color:#0F4C5C; font-weight:700;">3–5 business days</span>
                 </div>
                 
                 <!-- Show ordered items -->
@@ -2026,6 +2033,9 @@ textarea { resize: vertical; min-height: 80px; }
 
         const delTypeInput = document.getElementById('deliveryTypeInput');
         if (delTypeInput) delTypeInput.value = currentShippingCode;
+
+        const delEstInput = document.getElementById('deliveryEstimateInput');
+        if (delEstInput) delEstInput.value = currentDeliveryDays;
 
         // Update DOM
         const countLabel = document.getElementById('itemCountLabel');
@@ -2740,13 +2750,24 @@ textarea { resize: vertical; min-height: 80px; }
         const paymentEl = document.getElementById('succPayment');
         if (paymentEl) paymentEl.textContent = order.payment_display || 'Credit Card (Stripe)';
 
+        // Shipping Method Display
+        const shippingMethodEl = document.getElementById('succShippingMethod');
+        if (shippingMethodEl) {
+            const shipMethod = order.shipping_method || 'FedEx Home Delivery®';
+            const shipCost = parseFloat(order.shipping || 0);
+            shippingMethodEl.innerHTML = `<i class="fa-solid fa-truck-fast" style="color:#0F4C5C; margin-right:4px;"></i> <strong>${esc(shipMethod)}</strong> (${shipCost > 0 ? '$' + shipCost.toFixed(2) : '<span style="color:#16a34a; font-weight:700;">FREE</span>'})`;
+        }
+
         // Address Display
         const addressEl = document.getElementById('succAddress');
         if (addressEl) addressEl.textContent = order.full_address || order.address || 'Standard Delivery Address';
 
         // Delivery Estimate
         const deliveryEl = document.getElementById('succDelivery');
-        if (deliveryEl) deliveryEl.textContent = order.delivery_est || '3–5 business days ✨';
+        if (deliveryEl) {
+            const rawEst = order.delivery_est || order.delivery_estimate || '3–5 business days';
+            deliveryEl.innerHTML = `<strong>${esc(rawEst)}</strong>`;
+        }
 
         // Email Sent confirmation
         const emailEl = document.getElementById('succEmail');

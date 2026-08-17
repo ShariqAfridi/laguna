@@ -106,9 +106,10 @@ if (empty($full_name) || empty($address) || empty($city) || empty($state) || emp
 }
 
 // ====================== CALCULATE TOTALS ======================
-$delivery_type    = trim($_POST['delivery_type'] ?? 'standard');
-$shipping_method  = trim($_POST['shipping_method'] ?? '');
+$delivery_type      = trim($_POST['delivery_type'] ?? 'standard');
+$shipping_method    = trim($_POST['shipping_method'] ?? '');
 $shipping_amount_in = isset($_POST['shipping_amount']) && is_numeric($_POST['shipping_amount']) ? (float)$_POST['shipping_amount'] : null;
+$delivery_estimate  = trim($_POST['delivery_estimate'] ?? '');
 
 if (empty($shipping_method)) {
     if (strtolower($delivery_type) === 'express' || strpos(strtolower($delivery_type), '2day') !== false) {
@@ -117,6 +118,20 @@ if (empty($shipping_method)) {
         $shipping_method = 'FedEx Priority Overnight®';
     } else {
         $shipping_method = 'FedEx Home Delivery®';
+    }
+}
+
+if (empty($delivery_estimate)) {
+    if (stripos($shipping_method, 'Overnight') !== false || stripos($delivery_type, 'overnight') !== false) {
+        $delivery_estimate = 'Next business day by 10:30 AM 🚚';
+    } elseif (stripos($shipping_method, '2Day AM') !== false) {
+        $delivery_estimate = '2 business days by 10:30 AM 🚚';
+    } elseif (stripos($shipping_method, '2Day') !== false || stripos($delivery_type, '2day') !== false) {
+        $delivery_estimate = '2 business days by 4:30 PM 🚚';
+    } elseif (stripos($shipping_method, 'Express Saver') !== false) {
+        $delivery_estimate = '3 business days by 4:30 PM 🚚';
+    } else {
+        $delivery_estimate = '3–5 business days · Reliable Ground Delivery 🚚';
     }
 }
 
@@ -153,14 +168,14 @@ $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
 $stmt = $conn->prepare("
     INSERT INTO orders
         (user_id, order_number, name, email, phone, address, city, state, zip, country,
-         notes, promo_code, subtotal, shipping, shipping_method, discount, total,
+         notes, promo_code, subtotal, shipping, shipping_method, delivery_estimate, discount, total,
          payment_method, stripe_payment_intent_id, status, created_at)
     VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
 ");
 
 $stmt->bind_param(
-    "isssssssssssddsddsss",
+    "isssssssssssddssddsss",
     $user_id,
     $order_number,
     $full_name,
@@ -176,6 +191,7 @@ $stmt->bind_param(
     $subtotal,
     $shipping,
     $shipping_method,
+    $delivery_estimate,
     $discount,
     $total,
     $payment_method,
@@ -596,17 +612,19 @@ if ($is_ajax) {
         'zip'             => $zip,
         'country'         => $country,
         'full_address'    => $address_full . (!empty($city) ? ', ' . $city : '') . (!empty($state) ? ', ' . $state : '') . (!empty($zip) ? ' ' . $zip : '') . (!empty($country) ? ', ' . $country : ''),
-        'subtotal'        => $subtotal,
-        'shipping'        => $shipping,
-        'shipping_method' => $shipping_method,
-        'discount'        => $discount,
-        'tax'             => $tax,
-        'total'           => $total,
-        'payment_method'  => $payment_method,
-        'payment_display' => $payment_label,
-        'delivery_est'    => '3–5 business days ✨',
-        'created_at'      => $order_date,
-        'items'           => $items_summary
+        'subtotal'          => $subtotal,
+        'shipping'          => $shipping,
+        'shipping_method'   => $shipping_method,
+        'shipping_display'  => $shipping_method . ($shipping > 0 ? ' ($' . number_format($shipping, 2) . ')' : ' (FREE)'),
+        'delivery_est'      => $delivery_estimate,
+        'delivery_estimate' => $delivery_estimate,
+        'discount'          => $discount,
+        'tax'               => $tax,
+        'total'             => $total,
+        'payment_method'    => $payment_method,
+        'payment_display'   => $payment_label,
+        'created_at'        => $order_date,
+        'items'             => $items_summary
     ]);
     exit;
 }

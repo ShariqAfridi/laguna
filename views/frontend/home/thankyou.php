@@ -379,7 +379,7 @@ $customer_email = $order['email'] ?? 'your email';
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Estimated delivery</span>
-                        <span class="detail-value">3–5 business days ✨</span>
+                        <span class="detail-value"><?php echo htmlspecialchars(!empty($order['delivery_estimate']) ? $order['delivery_estimate'] : '3–5 business days ✨'); ?></span>
                     </div>
                     
                     <!-- Show ordered items if available -->

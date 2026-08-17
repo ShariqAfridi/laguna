@@ -44,6 +44,7 @@
                 'subtotal' => (float)($o['subtotal'] ?? $o['total']),
                 'shipping' => (float)($o['shipping'] ?? 0),
                 'shipping_method' => $o['shipping_method'] ?? 'FedEx Home Delivery®',
+                'delivery_estimate' => $o['delivery_estimate'] ?? '3–5 business days',
                 'discount' => (float)($o['discount'] ?? 0),
                 'tax' => (float)($o['tax'] ?? 0),
                 'promo_code' => $o['promo_code'] ?? '',
@@ -121,6 +122,11 @@
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; border-top:1px solid #F4F8FA; padding-top:14px;">
                 <div style="font-size:13px; color:#475569;">
                     Placed on <strong><?php echo date('M d, Y', strtotime($o['created_at'])); ?></strong> &bull; Total: <strong style="color:#1E2F3A; font-size:15px;">$<?php echo number_format($o['total'], 2); ?></strong>
+                    <?php if (!empty($o['shipping_method'])): ?>
+                        <span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; margin-left:6px;">
+                            <i class="fas fa-truck"></i> <?php echo htmlspecialchars($o['shipping_method']); ?>
+                        </span>
+                    <?php endif; ?>
                     <?php if (!empty($o['promo_code'])): ?>
                         <span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; margin-left:6px;">
                             Promo: <?php echo htmlspecialchars($o['promo_code']); ?>

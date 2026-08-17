@@ -84,6 +84,10 @@ function get_db_connection()
             if ($res_o_tn && $res_o_tn->num_rows === 0) {
                 @$conn->query("ALTER TABLE orders ADD COLUMN tracking_number VARCHAR(100) DEFAULT NULL AFTER shipping_method");
             }
+            $res_o_de = $conn->query("SHOW COLUMNS FROM orders LIKE 'delivery_estimate'");
+            if ($res_o_de && $res_o_de->num_rows === 0) {
+                @$conn->query("ALTER TABLE orders ADD COLUMN delivery_estimate VARCHAR(100) DEFAULT NULL AFTER tracking_number");
+            }
         }
     }
     return $conn;
