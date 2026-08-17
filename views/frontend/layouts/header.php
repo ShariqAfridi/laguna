@@ -32,6 +32,7 @@ if (!isset($base)) {
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="<?php echo $base; ?>/public/assets/css/ada-compliance.css">
 
   <style>
     * {

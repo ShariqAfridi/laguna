@@ -1,0 +1,527 @@
+/* ==========================================================================
+   ADA & WCAG 2.1 LEVEL AA ACCESSIBILITY STYLESHEET
+   Laguna Vibe Atelier — Digital Accessibility Suite
+   ========================================================================== */
+
+/* ── 1. Skip to Content Link ── */
+.ada-skip-link {
+    position: fixed;
+    top: -100px;
+    left: 20px;
+    background: #0F4C5C;
+    color: #FFFFFF !important;
+    padding: 12px 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 9999999;
+    transition: top 0.2s ease-in-out;
+    outline: 3px solid #E9C46A;
+}
+.ada-skip-link:focus {
+    top: 0;
+}
+
+/* ── 2. Universal Focus Visible Outline (WCAG 2.4.7) ── */
+body.ada-keyboard-nav *:focus-visible,
+body.ada-focus-visible *:focus-visible {
+    outline: 3px solid #E9C46A !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 5px rgba(15, 76, 92, 0.5) !important;
+}
+
+/* ── 3. High Contrast Dark Mode ── */
+body.ada-high-contrast {
+    background: #000000 !important;
+    color: #FFFFFF !important;
+}
+body.ada-high-contrast * {
+    background-color: transparent !important;
+    color: #FFFFFF !important;
+    border-color: #E9C46A !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+}
+body.ada-high-contrast a,
+body.ada-high-contrast button {
+    color: #FFDF00 !important;
+    text-decoration: underline !important;
+}
+body.ada-high-contrast input,
+body.ada-high-contrast select,
+body.ada-high-contrast textarea {
+    background: #111111 !important;
+    color: #FFFFFF !important;
+    border: 2px solid #E9C46A !important;
+}
+body.ada-high-contrast #adaTriggerBtn,
+body.ada-high-contrast .ada-panel,
+body.ada-high-contrast .ada-panel * {
+    background-color: initial !important;
+}
+
+/* ── 4. Invert Colors Mode ── */
+html.ada-invert {
+    filter: invert(100%) hue-rotate(180deg) !important;
+}
+html.ada-invert img,
+html.ada-invert video,
+html.ada-invert iframe,
+html.ada-invert .ada-panel,
+html.ada-invert #adaTriggerBtn {
+    filter: invert(100%) hue-rotate(180deg) !important;
+}
+
+/* ── 5. Monochrome / Grayscale Mode ── */
+html.ada-monochrome {
+    filter: grayscale(100%) !important;
+}
+
+/* ── 6. Low / High Saturation ── */
+html.ada-low-saturation {
+    filter: saturate(50%) !important;
+}
+html.ada-high-saturation {
+    filter: saturate(180%) !important;
+}
+
+/* ── 7. Light High-Contrast Background ── */
+body.ada-light-contrast {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+}
+body.ada-light-contrast * {
+    color: #000000 !important;
+    border-color: #000000 !important;
+}
+body.ada-light-contrast a {
+    color: #0F4C5C !important;
+    font-weight: 700 !important;
+    text-decoration: underline !important;
+}
+
+/* ── 8. Dyslexia-Friendly Font ── */
+@font-face {
+    font-family: 'AccessibleDyslexic';
+    src: local('Comic Sans MS'), local('Verdana'), local('Arial');
+    font-weight: normal;
+}
+body.ada-dyslexic-font,
+body.ada-dyslexic-font * {
+    font-family: 'Comic Sans MS', 'Verdana', 'Trebuchet MS', sans-serif !important;
+    letter-spacing: 0.08em !important;
+    word-spacing: 0.16em !important;
+}
+
+/* ── 9. Text Sizing Modifiers ── */
+body.ada-font-110 { font-size: 110% !important; }
+body.ada-font-110 * { font-size: 105% !important; }
+body.ada-font-120 { font-size: 120% !important; }
+body.ada-font-120 * { font-size: 110% !important; }
+body.ada-font-130 { font-size: 130% !important; }
+body.ada-font-130 * { font-size: 115% !important; }
+body.ada-font-140 { font-size: 140% !important; }
+body.ada-font-140 * { font-size: 120% !important; }
+body.ada-font-150 { font-size: 150% !important; }
+body.ada-font-150 * { font-size: 125% !important; }
+
+/* ── 10. Line Height & Letter Spacing ── */
+body.ada-line-height,
+body.ada-line-height * {
+    line-height: 2 !important;
+}
+body.ada-letter-spacing,
+body.ada-letter-spacing * {
+    letter-spacing: 0.12em !important;
+}
+
+/* ── 11. Text Alignment ── */
+body.ada-align-left, body.ada-align-left * { text-align: left !important; }
+body.ada-align-center, body.ada-align-center * { text-align: center !important; }
+body.ada-align-right, body.ada-align-right * { text-align: right !important; }
+body.ada-align-justify, body.ada-align-justify * { text-align: justify !important; }
+
+/* ── 12. Highlight Links (WCAG 1.4.1) ── */
+body.ada-highlight-links a {
+    text-decoration: underline !important;
+    text-decoration-thickness: 2.5px !important;
+    text-decoration-color: #E9C46A !important;
+    background-color: rgba(233, 196, 106, 0.25) !important;
+    color: #0F4C5C !important;
+    font-weight: 700 !important;
+    padding: 1px 3px !important;
+    border-radius: 3px !important;
+}
+
+/* ── 13. Highlight Headings ── */
+body.ada-highlight-headings h1,
+body.ada-highlight-headings h2,
+body.ada-highlight-headings h3,
+body.ada-highlight-headings h4,
+body.ada-highlight-headings h5,
+body.ada-highlight-headings h6 {
+    outline: 2.5px solid #0F4C5C !important;
+    background-color: rgba(15, 76, 92, 0.08) !important;
+    padding: 4px 8px !important;
+    border-radius: 6px !important;
+}
+
+/* ── 14. Stop Animations / Reduced Motion (WCAG 2.2.2 & 2.3.1) ── */
+body.ada-stop-animations *,
+body.ada-stop-animations *::before,
+body.ada-stop-animations *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+}
+body.ada-stop-animations marquee,
+body.ada-stop-animations .marquee,
+body.ada-stop-animations .marquee-track {
+    animation: none !important;
+    transform: none !important;
+}
+
+/* ── 15. Hide Images for Text-Only Focus ── */
+body.ada-hide-images img,
+body.ada-hide-images svg:not(.ada-icon svg),
+body.ada-hide-images video,
+body.ada-hide-images [style*="background-image"]:not(.ada-panel *) {
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* ── 16. Big Cursor (High-Visibility) ── */
+body.ada-cursor-big-dark,
+body.ada-cursor-big-dark * {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath fill='%23000000' stroke='%23ffffff' stroke-width='1.5' d='M5.5 3.21V20.8l4.6-4.6h6.4l-11-13z'/%3E%3C/svg%3E"), auto !important;
+}
+body.ada-cursor-big-light,
+body.ada-cursor-big-light * {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='%23000000' stroke-width='1.5' d='M5.5 3.21V20.8l4.6-4.6h6.4l-11-13z'/%3E%3C/svg%3E"), auto !important;
+}
+
+/* ── 17. Reading Guide (Ruler) ── */
+#adaReadingGuide {
+    display: none;
+    position: fixed;
+    left: 0;
+    width: 100vw;
+    height: 12px;
+    background: rgba(233, 196, 106, 0.45);
+    border-top: 2px solid #E9C46A;
+    border-bottom: 2px solid #E9C46A;
+    pointer-events: none;
+    z-index: 999999;
+    box-shadow: 0 0 15px rgba(233, 196, 106, 0.5);
+}
+
+/* ── 18. Reading Mask (Focus Area) ── */
+#adaReadingMaskTop,
+#adaReadingMaskBottom {
+    display: none;
+    position: fixed;
+    left: 0;
+    width: 100vw;
+    background: rgba(0, 0, 0, 0.65);
+    pointer-events: none;
+    z-index: 999998;
+    backdrop-filter: blur(1px);
+}
+#adaReadingMaskTop { top: 0; }
+#adaReadingMaskBottom { bottom: 0; }
+
+/* ── 19. Floating Accessibility Trigger Button ── */
+#adaTriggerBtn {
+    position: fixed;
+    bottom: 28px;
+    left: 28px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0F4C5C 0%, #153E4D 100%);
+    color: #FFFFFF;
+    border: 2px solid #E9C46A;
+    box-shadow: 0 8px 25px rgba(15, 76, 92, 0.35), 0 0 0 4px rgba(233, 196, 106, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 999990;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    outline: none;
+}
+#adaTriggerBtn:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 12px 30px rgba(15, 76, 92, 0.45), 0 0 0 6px rgba(233, 196, 106, 0.4);
+    background: linear-gradient(135deg, #135A6D 0%, #0F4C5C 100%);
+}
+#adaTriggerBtn:focus-visible {
+    outline: 3px solid #E9C46A !important;
+    outline-offset: 4px !important;
+}
+#adaTriggerBtn .ada-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #E9C46A;
+    color: #0F4C5C;
+    font-size: 9.5px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* ── 20. ADA Accessibility Panel / Drawer ── */
+#adaModalOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 76, 92, 0.5);
+    backdrop-filter: blur(6px);
+    z-index: 999995;
+    animation: adaFadeIn 0.25s ease;
+}
+#adaModalOverlay.active {
+    display: block;
+}
+
+#adaPanel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 440px;
+    max-width: 94vw;
+    height: 100vh;
+    background: #FFFFFF;
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.25);
+    z-index: 999996;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: 'Inter', sans-serif;
+    color: #1E2D38;
+}
+#adaPanel.active {
+    transform: translateX(0);
+}
+
+@keyframes adaFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Panel Header */
+.ada-panel-header {
+    background: linear-gradient(135deg, #0F4C5C 0%, #1A3A45 100%);
+    color: #FFFFFF;
+    padding: 22px 24px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #E9C46A;
+}
+.ada-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.ada-panel-title h3 {
+    margin: 0;
+    font-family: 'Cinzel', serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 1px;
+}
+.ada-panel-title span {
+    font-size: 11px;
+    color: #E9C46A;
+    font-weight: 600;
+    display: block;
+}
+.ada-close-btn {
+    background: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+.ada-close-btn:hover {
+    background: #E9C46A;
+    color: #0F4C5C;
+    transform: rotate(90deg);
+}
+
+/* Panel Body */
+.ada-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Section Header */
+.ada-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0F4C5C;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.ada-section-title i {
+    color: #E9C46A;
+    font-size: 14px;
+}
+
+/* Profiles Grid */
+.ada-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+.ada-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+/* Feature Button Cards */
+.ada-btn-card {
+    background: #F8FAFC;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    color: #334155;
+}
+.ada-btn-card:hover {
+    border-color: #0F4C5C;
+    background: #F0FDF4;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(15, 76, 92, 0.08);
+}
+.ada-btn-card.active {
+    background: #0F4C5C;
+    color: #FFFFFF;
+    border-color: #0F4C5C;
+    box-shadow: 0 4px 14px rgba(15, 76, 92, 0.25);
+}
+.ada-btn-card.active .ada-card-icon {
+    color: #E9C46A;
+}
+.ada-btn-card.active .ada-card-title {
+    color: #FFFFFF;
+}
+.ada-card-icon {
+    font-size: 20px;
+    color: #0F4C5C;
+    transition: color 0.2s;
+}
+.ada-card-title {
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: #1E293B;
+}
+
+/* Font Resizer Strip */
+.ada-counter-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F8FAFC;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 8px 14px;
+}
+.ada-counter-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1.5px solid #CBD5E1;
+    background: #FFFFFF;
+    color: #0F4C5C;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.ada-counter-btn:hover {
+    background: #0F4C5C;
+    color: #FFFFFF;
+    border-color: #0F4C5C;
+}
+.ada-counter-val {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0F4C5C;
+}
+
+/* Panel Footer */
+.ada-panel-footer {
+    padding: 16px 22px;
+    background: #F8FAFC;
+    border-top: 1px solid #E2E8F0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.ada-reset-btn {
+    background: #FFFFFF;
+    color: #DC2626;
+    border: 1.5px solid #FECACA;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+.ada-reset-btn:hover {
+    background: #DC2626;
+    color: #FFFFFF;
+    border-color: #DC2626;
+}
+.ada-statement-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0F4C5C;
+    text-decoration: underline;
+    cursor: pointer;
+}

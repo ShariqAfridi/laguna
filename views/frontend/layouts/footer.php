@@ -204,7 +204,7 @@
                 padding: 35px 16px 25px 16px;
             }
         }
-    </style>
+    <link rel="stylesheet" href="<?php echo $base; ?>/public/assets/css/ada-compliance.css">
 </head>
 <body style="margin:0;">
 
@@ -249,6 +249,8 @@
                 <a href="<?php echo $base; ?>/terms" class="lvb-policy-link">Terms of Service</a>
                 <span class="lvb-divider">|</span>
                 <a href="<?php echo $base; ?>/returns" class="lvb-policy-link">Return Policy</a>
+                <span class="lvb-divider">|</span>
+                <a href="javascript:void(0)" onclick="if(document.getElementById('adaStatementModal')) document.getElementById('adaStatementModal').style.display='flex'" class="lvb-policy-link" style="font-weight:600;"><i class="fas fa-universal-access" style="color:#0F4C5C; margin-right:4px;"></i> Accessibility (ADA)</a>
             </div>
 
             <span>Handcrafted candles in the Spirit of Laguna Beach</span>
@@ -256,6 +258,7 @@
     </footer>
 
     <?php include __DIR__ . '/popup_modal.php'; ?>
+    <?php include __DIR__ . '/ada_widget.php'; ?>
 
 </body>
 </html>

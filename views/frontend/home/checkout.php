@@ -55,6 +55,7 @@ $countries = [
     'NO'=>'Norway','DK'=>'Denmark','CH'=>'Switzerland','NZ'=>'New Zealand'
 ];
 ?>
+<link rel="stylesheet" href="<?php echo $base; ?>/public/assets/css/ada-compliance.css">
 <style>
 :root {
     --ink: #1a1a1a;
@@ -2865,3 +2866,4 @@ textarea { resize: vertical; min-height: 80px; }
     });
 })();
 </script>
+<?php include __DIR__ . '/../layouts/ada_widget.php'; ?>
