@@ -2,6 +2,9 @@
 // views/frontend/layouts/ada_widget.php — ADA & WCAG 2.1 AA Compliance Suite
 $basePath = (isset($base)) ? $base : (function_exists('base_url') ? base_url() : '');
 ?>
+<!-- FontAwesome for ADA suite icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 <!-- ═══════════════ ADA ACCESSIBILITY SUITE ═══════════════ -->
 <div id="adaAccessibilityWrapper" role="region" aria-label="Accessibility Tools">
 
@@ -17,9 +20,12 @@ $basePath = (isset($base)) ? $base : (function_exists('base_url') ? base_url() :
     <div id="adaReadingMaskTop" aria-hidden="true"></div>
     <div id="adaReadingMaskBottom" aria-hidden="true"></div>
 
-    <!-- 4. Floating Trigger Button -->
+    <!-- 4. Floating Trigger Button (Left Center) -->
     <button type="button" id="adaTriggerBtn" aria-label="Open Accessibility Menu (Alt+A)" aria-haspopup="dialog" aria-expanded="false" title="Accessibility Tools (Alt+A)">
-        <i class="fas fa-universal-access" aria-hidden="true"></i>
+        <svg class="ada-btn-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="12" cy="4" r="2.3" fill="#E9C46A"/>
+            <path d="M12 7.8C8 7.8 4.8 9.1 4.8 9.1L5.5 11C5.5 11 7.8 9.9 10.2 9.7V14L7.8 19.8H10L11.4 16.2H12.6L14 19.8H16.2L13.8 14V9.7C16.2 9.9 18.5 11 18.5 11L19.2 9.1C19.2 9.1 16 7.8 12 7.8Z" fill="#FFFFFF"/>
+        </svg>
         <span class="ada-badge">ADA</span>
     </button>
 
