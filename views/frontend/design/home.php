@@ -1611,7 +1611,7 @@ const colorData = [
   },
   { 
     name: 'Mocha Frost', 
-    code: '09', 
+    code: '07', 
     type: 'FROST', 
     vessels: ['C'],
     images: {
@@ -1620,7 +1620,7 @@ const colorData = [
   },
   { 
     name: 'Blue Frost', 
-    code: '12', 
+    code: '08', 
     type: 'FROST', 
     vessels: ['C'],
     images: {
@@ -1629,7 +1629,7 @@ const colorData = [
   },
   { 
     name: 'Blush Pink', 
-    code: '01', 
+    code: '12', 
     type: 'MATTE', 
     vessels: ['C','D'],
     images: {
@@ -1639,7 +1639,7 @@ const colorData = [
   },
   { 
     name: 'Charcoal Grey Matte', 
-    code: '08', 
+    code: '13', 
     type: 'MATTE', 
     vessels: ['C','D'],
     images: {
@@ -2527,8 +2527,8 @@ function renderFragranceCards() {
 
   grid.innerHTML = '';
   const fragsToRender = (dbFragrancesData && dbFragrancesData.length > 0) ? dbFragrancesData : [
-    { name: 'Amber Musk', code: '12', image: 'img/02 AMBER MUSK FRAGRANT.webp', description: 'A rich and comforting blend of warm amber and sensual musk.' },
-    { name: 'Champagne Luxe', code: '13', image: 'img/05 CHAMPAGNE LUXE FRAGRANT.webp', description: 'A sparkling, sophisticated fragrance with bright citrus.' },
+    { name: 'Amber Musk', code: '02', image: 'img/02 AMBER MUSK FRAGRANT.webp', description: 'A rich and comforting blend of warm amber and sensual musk.' },
+    { name: 'Champagne Luxe', code: '05', image: 'img/05 CHAMPAGNE LUXE FRAGRANT.webp', description: 'A sparkling, sophisticated fragrance with bright citrus.' },
     { name: 'Citrus Agave Zest', code: '06', image: 'img/06 CITRUS AGAVE ZEST FRAGRANT.webp', description: 'Zesty citrus and sweet agave nectar.' },
     { name: 'Evening Tide', code: '08', image: 'img/08 EVENING TIDE FRAGRANT.webp', description: 'Cool coastal evening breeze.' },
     { name: 'Fragrance Free', code: '01', image: 'img/01 FRAGRABCE FREE.webp', description: 'Pure unscented candle.' },

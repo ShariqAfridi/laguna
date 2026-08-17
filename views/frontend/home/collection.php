@@ -68,6 +68,7 @@ if ($cRes && $cRes->num_rows > 0) {
 $fragrances = [];
 $fragrance_details = [];
 $fragrance_descriptions = [];
+$fragrance_skus = [];
 $fRes = $conn->query("SELECT * FROM fragrances WHERE status = 1 ORDER BY sort_order ASC, fragrance_name ASC");
 if ($fRes && $fRes->num_rows > 0) {
     while ($r = $fRes->fetch_assoc()) {
@@ -75,6 +76,7 @@ if ($fRes && $fRes->num_rows > 0) {
         $fragrances[$fid] = $r['fragrance_name'];
         $fragrance_details[$fid] = $r['fragrance_image'] ?? '';
         $fragrance_descriptions[$fid] = $r['fragrance_description'] ?? '';
+        $fragrance_skus[$fid] = $r['sku'] ?? '';
     }
 }
 
@@ -134,6 +136,14 @@ foreach ($products as $p) {
     $vesselCode = 'C';
     if (!empty($p['sku']) && in_array(strtoupper($p['sku'][0]), ['C', 'D', 'E'])) {
         $vesselCode = strtoupper($p['sku'][0]);
+    } elseif (!empty($p['size_id'])) {
+        $sId = is_array($p['size_id']) ? (int)$p['size_id'][0] : (int)$p['size_id'];
+        foreach ($categoriesMap as $csku => $cat) {
+            if ((int)$cat['id'] === $sId) {
+                $vesselCode = strtoupper($csku);
+                break;
+            }
+        }
     }
 
     $varKey = $vesselCode . '_' . $primaryColorId;
@@ -184,7 +194,9 @@ foreach ($products as $p) {
             }
         }
 
-        $item['sku'] = $vesselCode . sprintf('%02d', $primaryColorId) . sprintf('%02d', $fid);
+        $colorSku = !empty($colors[$primaryColorId]['sku']) ? $colors[$primaryColorId]['sku'] : sprintf('%02d', $primaryColorId);
+        $fragSku = !empty($fragrance_skus[$fid]) ? $fragrance_skus[$fid] : sprintf('%02d', $fid);
+        $item['sku'] = $vesselCode . $colorSku . $fragSku;
         $colorVariations[$varKey]['items'][] = $item;
     }
 }

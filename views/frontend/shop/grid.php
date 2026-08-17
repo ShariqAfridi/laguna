@@ -95,18 +95,20 @@ if (!$showVesselSelection) {
 
     if ($result) {
         // Get lookup data
-        $frag_result = $conn->query("SELECT fragrance_id, fragrance_name, fragrance_image, fragrance_description FROM fragrances");
+        $frag_result = $conn->query("SELECT fragrance_id, fragrance_name, fragrance_image, fragrance_description, sku FROM fragrances");
         $fragrance_details = [];
         $fragrance_descriptions = [];
+        $fragrance_skus = [];
         if ($frag_result) {
             while ($row = $frag_result->fetch_assoc()) {
                 $fragrances[$row['fragrance_id']] = $row['fragrance_name'];
                 $fragrance_details[$row['fragrance_id']] = $row['fragrance_image'] ?? '';
                 $fragrance_descriptions[$row['fragrance_id']] = $row['fragrance_description'] ?? '';
+                $fragrance_skus[$row['fragrance_id']] = $row['sku'] ?? '';
             }
         }
 
-        $color_result = $conn->query("SELECT color_id, color_name, color_hex, double_wick_image FROM colors");
+        $color_result = $conn->query("SELECT color_id, color_name, color_hex, double_wick_image, sku FROM colors");
         if ($color_result) {
             while ($row = $color_result->fetch_assoc()) {
                 $colors[$row['color_id']] = $row;
@@ -1251,8 +1253,8 @@ if (!empty($boxes)) {
 
             // Dynamic variation SKU: Vessel SKU + Color SKU + Fragrance SKU
             $vessel_letter = strtoupper($selectedVessel);
-            $color_num = sprintf('%02d', $primaryColorId);
-            $frag_num = sprintf('%02d', $fid);
+            $color_num = !empty($colors[$primaryColorId]['sku']) ? $colors[$primaryColorId]['sku'] : sprintf('%02d', $primaryColorId);
+            $frag_num = !empty($fragrance_skus[$fid]) ? $fragrance_skus[$fid] : sprintf('%02d', $fid);
             $item['sku'] = $vessel_letter . $color_num . $frag_num;
 
             $colorVariations[$primaryColorId]['items'][] = $item;
