@@ -1126,11 +1126,14 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 .thankyou-card {
-    max-width: 820px;
+    max-width: 520px;
     width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
     background: #ffffff;
-    border-radius: 24px;
-    box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.06);
+    border-radius: 18px;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     animation: lvbCardPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     margin: auto;
@@ -1138,92 +1141,96 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 .thankyou-card .card-header {
-    background: #0F4C5C;
-    padding: 2.2rem 2.5rem 1.8rem;
+    background: linear-gradient(135deg, #004B66 0%, #0F4C5C 100%);
+    padding: 1.2rem 1.5rem 1rem;
     text-align: center;
     color: white;
     position: relative;
+    flex-shrink: 0;
 }
 
 .thankyou-card .modal-close-btn {
     position: absolute;
-    top: 16px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.15);
+    top: 12px;
+    right: 14px;
+    background: rgba(255, 255, 255, 0.18);
     border: none;
     color: #ffffff;
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: 18px;
     cursor: pointer;
     transition: all 0.2s ease;
     line-height: 1;
 }
 
 .thankyou-card .modal-close-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.06);
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.08);
 }
 
 .thankyou-card .card-header i.header-icon {
-    font-size: 3.2rem;
+    font-size: 2.2rem;
     color: #e9c46a;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.35rem;
     display: inline-block;
 }
 
 .thankyou-card .card-header h1 {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 2.3rem;
-    font-weight: 600;
-    margin: 0 0 0.5rem;
-    letter-spacing: 0.5px;
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    letter-spacing: 0.4px;
     color: #ffffff;
 }
 
 .thankyou-card .order-badge {
     display: inline-block;
-    background: rgba(255, 255, 255, 0.16);
-    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: #ffffff;
-    padding: 0.38rem 1.3rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    letter-spacing: 1.5px;
+    padding: 0.25rem 0.9rem;
+    border-radius: 16px;
+    font-size: 0.76rem;
+    letter-spacing: 1px;
     font-weight: 700;
 }
 
 .thankyou-card .card-body {
-    padding: 2.2rem 3rem 2rem;
+    padding: 1.2rem 1.4rem 1.1rem;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .thankyou-card .thankyou-message {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .thankyou-card .thankyou-message p:first-child {
-    font-size: 1.15rem;
+    font-size: 0.95rem;
     color: #1E2F3A;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.2rem;
+    font-weight: 700;
 }
 
 .thankyou-card .thankyou-message p:last-child {
-    font-size: 0.92rem;
-    color: #6D8491;
+    font-size: 0.82rem;
+    color: #64748b;
     margin: 0;
-    line-height: 1.55;
+    line-height: 1.45;
 }
 
 .thankyou-card .order-details {
     background: #f8fafc;
-    border-radius: 18px;
-    padding: 1.4rem 1.8rem;
-    margin-bottom: 1.3rem;
+    border-radius: 14px;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 0.8rem;
     border: 1px solid #e2e8f0;
 }
 
@@ -1231,9 +1238,9 @@ textarea { resize: vertical; min-height: 80px; }
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: 0.75rem 0;
+    padding: 0.45rem 0;
     border-bottom: 1px solid #edf2f7;
-    font-size: 0.92rem;
+    font-size: 0.84rem;
 }
 
 .thankyou-card .detail-row:last-of-type {
@@ -1243,17 +1250,19 @@ textarea { resize: vertical; min-height: 80px; }
 .thankyou-card .detail-label {
     color: #64748b;
     font-weight: 500;
+    font-size: 0.82rem;
 }
 
 .thankyou-card .detail-value {
     color: #1e293b;
     font-weight: 600;
+    font-size: 0.84rem;
 }
 
 .thankyou-card .detail-value.highlight {
-    color: #d97706;
-    font-size: 1.25rem;
-    font-weight: 700;
+    color: #0F4C5C;
+    font-size: 1.05rem;
+    font-weight: 800;
 }
 
 .thankyou-card .items-preview summary {
@@ -1268,47 +1277,47 @@ textarea { resize: vertical; min-height: 80px; }
 .thankyou-card .btn-modal-primary {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 0.85rem 1.8rem;
-    border-radius: 40px;
+    gap: 6px;
+    padding: 0.65rem 1.4rem;
+    border-radius: 30px;
     font-weight: 600;
     text-decoration: none;
-    font-size: 0.9rem;
-    background: #1f5446;
+    font-size: 0.84rem;
+    background: #0F4C5C;
     color: white;
     border: none;
     transition: 0.2s;
 }
 
 .thankyou-card .btn-modal-primary:hover {
-    background: #154237;
+    background: #0a3a46;
     transform: translateY(-1px);
 }
 
 .thankyou-card .btn-modal-outline {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 0.85rem 1.8rem;
-    border-radius: 40px;
+    gap: 6px;
+    padding: 0.65rem 1.4rem;
+    border-radius: 30px;
     font-weight: 600;
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 0.84rem;
     background: white;
-    border: 1px solid #cbdcd0;
-    color: #2d5a47;
+    border: 1px solid #cbd5e1;
+    color: #0F4C5C;
     transition: 0.2s;
 }
 
 .thankyou-card .btn-modal-outline:hover {
-    background: #f5f1ea;
+    background: #f8fafc;
     transform: translateY(-1px);
 }
 
 @media(max-width: 768px) {
-    .thankyou-card .card-body { padding: 1.5rem 1.4rem 1.6rem; }
-    .thankyou-card .card-header { padding: 1.8rem 1.4rem 1.4rem; }
-    .thankyou-card .card-header h1 { font-size: 1.85rem; }
+    .thankyou-card .card-body { padding: 1.1rem 1rem; }
+    .thankyou-card .card-header { padding: 1rem 1rem 0.85rem; }
+    .thankyou-card .card-header h1 { font-size: 1.3rem; }
 }
 </style>
 
@@ -1811,17 +1820,17 @@ textarea { resize: vertical; min-height: 80px; }
                 </details>
             </div>
 
-            <div class="pci-notice" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:0.8rem; padding:0.7rem 1rem; display:flex; align-items:center; gap:0.7rem; margin:1rem 0; font-size:0.78rem; color:#166534; line-height: 1.4;">
-                <i class="fa-solid fa-shield-check" style="font-size:1.2rem; color:#16a34a; flex-shrink: 0;"></i>
-                <span><strong>Bank of America Secure Transaction</strong> — Processed via Bank of America Merchant Services Gateway. Card details are fully encrypted and zero card data is retained on our servers.</span>
+            <div class="pci-notice" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:0.5rem 0.8rem; display:flex; align-items:center; gap:0.6rem; margin:0.7rem 0; font-size:0.74rem; color:#166534; line-height: 1.35;">
+                <i class="fa-solid fa-shield-check" style="font-size:1.1rem; color:#16a34a; flex-shrink: 0;"></i>
+                <span><strong>Bank of America Secure</strong> — Processed via Bank of America Merchant Services. Card details are fully encrypted.</span>
             </div>
 
-            <div class="email-sent" style="background:#ecf6ef; border-radius:1rem; padding:0.75rem 1rem; display:flex; align-items:center; gap:0.7rem; margin:1rem 0; font-size:0.8rem; color:#2b5e3b; line-height: 1.4;">
-                <i class="fa-regular fa-envelope-open" style="font-size:1.2rem; flex-shrink: 0;"></i>
-                <span><strong>Instant confirmation</strong> — We've emailed your order details & receipt.<br><small style="color: #4b7a5a;">(Customer & admin copies sent to <span id="succEmail"></span>)</small></span>
+            <div class="email-sent" style="background:#ecf6ef; border-radius:10px; padding:0.55rem 0.8rem; display:flex; align-items:center; gap:0.6rem; margin:0.7rem 0; font-size:0.75rem; color:#2b5e3b; line-height: 1.35;">
+                <i class="fa-regular fa-envelope-open" style="font-size:1.1rem; flex-shrink: 0;"></i>
+                <span><strong>Instant confirmation</strong> — Order receipt sent to <span id="succEmail" style="font-weight:600;"></span></span>
             </div>
 
-            <div class="action-buttons" style="display:flex; flex-wrap:wrap; gap:0.8rem; justify-content:center; margin:1.5rem 0 1rem;">
+            <div class="action-buttons" style="display:flex; flex-wrap:wrap; gap:0.6rem; justify-content:center; margin:1rem 0 0.6rem;">
                 <a href="<?php echo $base; ?>/shop" class="btn-modal-primary">
                     <i class="fa-solid fa-shop"></i> Continue shopping
                 </a>
@@ -1830,9 +1839,8 @@ textarea { resize: vertical; min-height: 80px; }
                 </a>
             </div>
 
-            <div class="support-links" style="text-align:center; font-size:0.72rem; color:#6f7e72; border-top:1px solid #ede3d6; padding-top:1.2rem; margin-top:0.5rem; line-height: 1.5;">
-                Need help? Email <a href="mailto:support@lagunavibe.com" style="color:#3a6b58; text-decoration:none; font-weight:500;">support@lagunavibe.com</a> or call +1 (888) 420-1965<br>
-                <span style="font-size: 0.7rem;">A portion of every order supports sustainable artisans. © Laguna Vibe <?php echo date('Y'); ?> | ethical fragrance</span>
+            <div class="support-links" style="text-align:center; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0; padding-top:0.8rem; margin-top:0.4rem; line-height: 1.4;">
+                Need help? Email <a href="mailto:support@lagunavibe.com" style="color:#0F4C5C; text-decoration:none; font-weight:600;">support@lagunavibe.com</a> or call +1 (888) 420-1965
             </div>
         </div>
     </div>
