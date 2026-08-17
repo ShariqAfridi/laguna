@@ -62,5 +62,7 @@ return [
     '/search' => 'Frontend\SearchController@search',
     '/api/validate-coupon' => 'Frontend\CouponController@validate',
     '/api/coupon/validate' => 'Frontend\CouponController@validate',
+    '/api/shipping/rates' => 'Frontend\ShippingController@calculateRates',
+    '/api/fedex/rates' => 'Frontend\ShippingController@calculateRates',
 ];
 ?>

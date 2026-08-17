@@ -106,8 +106,21 @@ if (empty($full_name) || empty($address) || empty($city) || empty($state) || emp
 }
 
 // ====================== CALCULATE TOTALS ======================
-$delivery_type = trim($_POST['delivery_type'] ?? 'standard');
-$calc = \App\Models\Order::calculateTotals($cart, $promo_code, $delivery_type);
+$delivery_type    = trim($_POST['delivery_type'] ?? 'standard');
+$shipping_method  = trim($_POST['shipping_method'] ?? '');
+$shipping_amount_in = isset($_POST['shipping_amount']) && is_numeric($_POST['shipping_amount']) ? (float)$_POST['shipping_amount'] : null;
+
+if (empty($shipping_method)) {
+    if (strtolower($delivery_type) === 'express' || strpos(strtolower($delivery_type), '2day') !== false) {
+        $shipping_method = 'FedEx 2Day®';
+    } elseif (strpos(strtolower($delivery_type), 'overnight') !== false) {
+        $shipping_method = 'FedEx Priority Overnight®';
+    } else {
+        $shipping_method = 'FedEx Home Delivery®';
+    }
+}
+
+$calc = \App\Models\Order::calculateTotals($cart, $promo_code, $delivery_type, $shipping_amount_in);
 $subtotal = $calc['subtotal'];
 $shipping = $calc['shipping'];
 $tax      = $calc['tax'];
@@ -140,14 +153,14 @@ $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
 $stmt = $conn->prepare("
     INSERT INTO orders
         (user_id, order_number, name, email, phone, address, city, state, zip, country,
-         notes, promo_code, subtotal, shipping, discount, total,
+         notes, promo_code, subtotal, shipping, shipping_method, discount, total,
          payment_method, stripe_payment_intent_id, status, created_at)
     VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
 ");
 
 $stmt->bind_param(
-    "isssssssssssddddsss",
+    "isssssssssssddsddsss",
     $user_id,
     $order_number,
     $full_name,
@@ -162,6 +175,7 @@ $stmt->bind_param(
     $promo_code,
     $subtotal,
     $shipping,
+    $shipping_method,
     $discount,
     $total,
     $payment_method,
@@ -584,6 +598,7 @@ if ($is_ajax) {
         'full_address'    => $address_full . (!empty($city) ? ', ' . $city : '') . (!empty($state) ? ', ' . $state : '') . (!empty($zip) ? ' ' . $zip : '') . (!empty($country) ? ', ' . $country : ''),
         'subtotal'        => $subtotal,
         'shipping'        => $shipping,
+        'shipping_method' => $shipping_method,
         'discount'        => $discount,
         'tax'             => $tax,
         'total'           => $total,

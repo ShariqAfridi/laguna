@@ -366,6 +366,14 @@ $customer_email = $order['email'] ?? 'your email';
                         <span class="detail-value"><?php echo htmlspecialchars($payment_display); ?></span>
                     </div>
                     <div class="detail-row">
+                        <span class="detail-label">Shipping method</span>
+                        <span class="detail-value">
+                            <i class="fa-solid fa-truck-fast" style="color:#0F4C5C; margin-right:4px;"></i>
+                            <?php echo htmlspecialchars($order['shipping_method'] ?? 'FedEx Home Delivery®'); ?>
+                            (<?php echo ((float)($order['shipping'] ?? 0) > 0) ? '$' . number_format((float)$order['shipping'], 2) : '<span style="color:#16a34a; font-weight:700;">FREE</span>'; ?>)
+                        </span>
+                    </div>
+                    <div class="detail-row">
                         <span class="detail-label">Shipping to</span>
                         <span class="detail-value"><?php echo htmlspecialchars($full_address); ?></span>
                     </div>

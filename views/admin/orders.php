@@ -15,7 +15,7 @@ $searchTerm   = isset($_GET['search']) ? trim($_GET['search']) : '';
 $sql = "SELECT o.id, o.order_number, o.total, o.status, o.created_at,
                o.email, o.name as full_name, o.address, o.city,
                o.state, o.zip, o.phone, o.notes, o.promo_code,
-               o.subtotal, o.shipping, o.discount, o.payment_method,
+               o.subtotal, o.shipping, o.shipping_method, o.discount, o.payment_method,
                COUNT(oi.id) as item_count
         FROM orders o
         LEFT JOIN order_items oi ON o.id = oi.order_id
@@ -598,7 +598,7 @@ function statusBadgeClass($sk) {
                     <span>$ <?= number_format($order['subtotal'] ?? 0, 2) ?></span>
                 </div>
                 <div class="ts-item">
-                    <label>Shipping</label>
+                    <label>Shipping (<?= htmlspecialchars($order['shipping_method'] ?? 'Standard') ?>)</label>
                     <span>$ <?= number_format($order['shipping'] ?? 0, 2) ?></span>
                 </div>
                 <div class="ts-item">

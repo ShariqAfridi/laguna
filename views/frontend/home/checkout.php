@@ -20,7 +20,18 @@ foreach ($cart as $item) {
     $totalItems += $item['qty'];
     $subtotal += $item['price'] * $item['qty'];
 }
-$shipping = ($subtotal >= 75) ? 0 : 12.00;
+
+// Initial FedEx Rate Calculation
+$initialRecipient = [
+    'zip'     => '92651',
+    'state'   => 'CA',
+    'country' => 'US',
+];
+$fedexRatesResult = \App\Services\FedExService::getRates($initialRecipient, $cart, $subtotal);
+$initialRates = $fedexRatesResult['rates'] ?? [];
+$selectedRateCode = !empty($initialRates) ? $initialRates[0]['code'] : 'FEDEX_GROUND';
+$selectedRateName = !empty($initialRates) ? $initialRates[0]['name'] : 'FedEx Home Delivery®';
+$shipping = !empty($initialRates) ? (float)$initialRates[0]['rate'] : (($subtotal >= 75) ? 0.00 : 12.00);
 $tax = round($subtotal * 0.08, 2); // 8% tax
 $total = $subtotal + $shipping + $tax;
 
@@ -220,7 +231,78 @@ select {
 
 textarea { resize: vertical; min-height: 80px; }
 
-/* ─── DELIVERY OPTIONS ─── */
+/* ─── DELIVERY OPTIONS & FEDEX BADGES ─── */
+.fedex-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    margin-left: 8px;
+    vertical-align: middle;
+    letter-spacing: -0.5px;
+}
+.fed-purple { color: #4D148C; font-weight: 800; font-family: 'DM Sans', sans-serif; }
+.fed-orange { color: #FF6600; font-weight: 800; font-family: 'DM Sans', sans-serif; }
+
+.fedex-logo-icon {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: -0.6px;
+    line-height: 1;
+    padding: 6px 9px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    flex-shrink: 0;
+}
+
+.free-tag {
+    display: inline-block;
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    vertical-align: middle;
+}
+
+.shipping-rates-loading {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #f0fdf4;
+    border: 1px dashed #86efac;
+    border-radius: var(--radius-sm);
+    color: #166534;
+    font-size: 12.5px;
+    margin-bottom: 12px;
+}
+.shipping-rates-loading.active {
+    display: flex;
+}
+.shipping-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #86efac;
+    border-top-color: #166534;
+    border-radius: 50%;
+    animation: spin-shipping 0.7s linear infinite;
+}
+@keyframes spin-shipping {
+    to { transform: rotate(360deg); }
+}
+
 .delivery-option {
     display: flex;
     align-items: center;
@@ -265,10 +347,10 @@ textarea { resize: vertical; min-height: 80px; }
     display: block;
 }
 
-.delivery-info { flex: 1; }
-.delivery-name { font-weight: 600; font-size: 14px; color: var(--ink); }
+.delivery-info { flex: 1; min-width: 0; }
+.delivery-name { font-weight: 600; font-size: 14px; color: var(--ink); display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 .delivery-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.delivery-price { font-weight: 600; color: var(--accent); font-size: 14px; }
+.delivery-price { font-weight: 600; color: var(--accent); font-size: 14px; text-align: right; flex-shrink: 0; }
 
 /* ─── BILLING CHECKBOX ─── */
 .checkbox-field {
@@ -1096,31 +1178,44 @@ textarea { resize: vertical; min-height: 80px; }
         </div>
     </div>
 
-    <!-- ── SECTION 3: DELIVERY ── -->
+    <!-- ── SECTION 3: DELIVERY (FEDEX LIVE RATES) ── -->
     <div class="section-card">
         <h2 class="section-title">
             <span class="step-num">3</span> Delivery Options
+            <span class="fedex-badge"><span class="fed-purple">Fed</span><span class="fed-orange">Ex</span> Live Rates</span>
         </h2>
 
-        <label class="delivery-option selected" id="shippingStandard">
-            <input type="radio" name="delivery_type" value="standard" checked>
-            <div class="delivery-radio"></div>
-            <div class="delivery-info">
-                <div class="delivery-name">Standard Shipping</div>
-                <div class="delivery-desc">5–8 business days · Tracked</div>
-            </div>
-            <div class="delivery-price" id="standardShippingPrice"><?php echo ($subtotal >= 75) ? '<span style="color:#059669; font-weight:700;">FREE</span>' : '$12.00'; ?></div>
-        </label>
+        <div class="shipping-rates-loading" id="fedexRatesLoading">
+            <div class="shipping-spinner"></div>
+            <span id="fedexRatesLoadingText">Calculating live FedEx rates for your location...</span>
+        </div>
 
-        <label class="delivery-option" id="shippingExpress">
-            <input type="radio" name="delivery_type" value="express">
-            <div class="delivery-radio"></div>
-            <div class="delivery-info">
-                <div class="delivery-name">Express Shipping</div>
-                <div class="delivery-desc">2–3 business days · Priority</div>
-            </div>
-            <div class="delivery-price">$18.00</div>
-        </label>
+        <input type="hidden" name="delivery_type" id="deliveryTypeInput" value="<?php echo htmlspecialchars($selectedRateCode); ?>">
+        <input type="hidden" name="shipping_method" id="shippingMethodInput" value="<?php echo htmlspecialchars($selectedRateName); ?>">
+        <input type="hidden" name="shipping_amount" id="shippingAmountInput" value="<?php echo number_format($shipping, 2, '.', ''); ?>">
+
+        <div id="fedexRatesContainer">
+            <?php foreach ($initialRates as $idx => $r): ?>
+            <?php $isSelected = ($idx === 0); ?>
+            <label class="delivery-option <?php echo $isSelected ? 'selected' : ''; ?>" data-code="<?php echo htmlspecialchars($r['code']); ?>" data-name="<?php echo htmlspecialchars($r['name']); ?>" data-rate="<?php echo (float)$r['rate']; ?>" data-delivery="<?php echo htmlspecialchars($r['delivery_days'] ?? $r['description']); ?>">
+                <input type="radio" name="delivery_type_radio" value="<?php echo htmlspecialchars($r['code']); ?>" <?php echo $isSelected ? 'checked' : ''; ?>>
+                <div class="delivery-radio"></div>
+                <div class="fedex-logo-icon">
+                    <span class="fed-purple">Fed</span><span class="fed-orange">Ex</span>
+                </div>
+                <div class="delivery-info">
+                    <div class="delivery-name">
+                        <?php echo htmlspecialchars($r['name']); ?>
+                        <?php if (!empty($r['is_free'])): ?>
+                            <span class="free-tag">Free Shipping</span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="delivery-desc"><?php echo htmlspecialchars($r['description']); ?></div>
+                </div>
+                <div class="delivery-price"><?php echo $r['formatted_rate']; ?></div>
+            </label>
+            <?php endforeach; ?>
+        </div>
     </div>
 
     <!-- ── SECTION 4: BILLING ── -->
@@ -1470,21 +1565,24 @@ textarea { resize: vertical; min-height: 80px; }
     let cart = [];
     let discountAmount = 0;
     let currentPayment = 'stripe';
-    let expressShipping = false;
+    let currentShippingRate = <?php echo (float)$shipping; ?>;
+    let currentShippingName = <?php echo json_encode($selectedRateName); ?>;
+    let currentShippingCode = <?php echo json_encode($selectedRateCode); ?>;
+    let currentDeliveryDays = '3–5 business days';
+    let rateFetchTimeout = null;
 
     const STRIPE_KEY = "pk_live_51TPX6YJnMt0K4iLyZzGxBoQv7xqg3I1I8VLSUC8MqqWgKaiCI3WLRjUPSy1O3QSe4jv0rgaGgCBmwOAYHRPxZS7800qAb6ZiTK";
     let stripe = null;
     try { stripe = Stripe(STRIPE_KEY); } catch(e) { console.error('Stripe init failed:', e); }
 
     // ── Init ──
- function init() {
-    loadCart();
-    setupDeliveryOptions();
-    setupBillingToggle();
-    setupFormSubmit();
-    // setupCardFormatting(); // REMOVE THIS
-    // setupPaymentMethodSync(); // REMOVE THIS
-}
+    function init() {
+        loadCart();
+        setupDeliveryOptions();
+        setupAddressRateListeners();
+        setupBillingToggle();
+        setupFormSubmit();
+    }
 
     // ── Cart Load ──
     function loadCart() {
@@ -1590,6 +1688,7 @@ textarea { resize: vertical; min-height: 80px; }
         broadcastCartChange();
         syncServer(cart);
         renderCart();
+        fetchFedExRates();
     };
 
     // ── Qty Change (global so onclick works) ──
@@ -1617,6 +1716,7 @@ textarea { resize: vertical; min-height: 80px; }
         const price = parseFloat(item.dataset.price) || 0;
         item.querySelector('.item-price').textContent = '$' + (price * qty).toFixed(2);
         updateTotals();
+        fetchFedExRates();
     };
 
     // ── Totals ──
@@ -1650,22 +1750,23 @@ textarea { resize: vertical; min-height: 80px; }
             if (discountLine) discountLine.style.display = 'none';
         }
 
-        const baseShipping = (count === 0) ? 0 : (expressShipping ? 18.00 : (subtotal >= 75 ? 0 : 12.00));
-        const tax = (count === 0) ? 0 : subtotal * 0.08;
-        const total = (count === 0) ? 0 : Math.max(0, subtotal + baseShipping + tax - discountAmount);
+        const effectiveShipping = (count === 0) ? 0 : currentShippingRate;
+        const tax = (count === 0) ? 0 : (subtotal * 0.08);
+        const total = (count === 0) ? 0 : Math.max(0, subtotal + effectiveShipping + tax - discountAmount);
+
+        // Update Hidden Inputs
+        const shipAmtInput = document.getElementById('shippingAmountInput');
+        if (shipAmtInput) shipAmtInput.value = effectiveShipping.toFixed(2);
+
+        const shipMethodInput = document.getElementById('shippingMethodInput');
+        if (shipMethodInput) shipMethodInput.value = currentShippingName;
+
+        const delTypeInput = document.getElementById('deliveryTypeInput');
+        if (delTypeInput) delTypeInput.value = currentShippingCode;
 
         // Update DOM
         const countLabel = document.getElementById('itemCountLabel');
         if (countLabel) countLabel.textContent = `(${count} ${count === 1 ? 'item' : 'items'})`;
-
-        const stdPriceEl = document.getElementById('standardShippingPrice');
-        if (stdPriceEl) {
-            if (subtotal >= 75) {
-                stdPriceEl.innerHTML = '<span style="color:#059669; font-weight:700;">FREE</span>';
-            } else {
-                stdPriceEl.textContent = '$12.00';
-            }
-        }
 
         const subtotalEl = document.getElementById('subtotalDisplay');
         if (subtotalEl) subtotalEl.textContent = '$' + subtotal.toFixed(2);
@@ -1678,11 +1779,11 @@ textarea { resize: vertical; min-height: 80px; }
             if (count === 0) {
                 shippingEl.textContent = '$0.00';
                 shippingEl.classList.remove('free');
-            } else if (baseShipping === 0) {
+            } else if (effectiveShipping === 0) {
                 shippingEl.textContent = 'FREE';
                 shippingEl.classList.add('free');
             } else {
-                shippingEl.textContent = '$' + baseShipping.toFixed(2);
+                shippingEl.textContent = '$' + effectiveShipping.toFixed(2);
                 shippingEl.classList.remove('free');
             }
         }
@@ -1696,10 +1797,13 @@ textarea { resize: vertical; min-height: 80px; }
         const ctaBtn = document.getElementById('ctaButton');
         if (ctaBtn) ctaBtn.disabled = (count === 0);
 
-        // Shipping progress
+        const deliveryEl = document.getElementById('deliveryRange');
+        if (deliveryEl) deliveryEl.textContent = currentDeliveryDays || '3–5 business days';
+
+        // Free Shipping Progress
         const progress = document.getElementById('shippingProgress');
         if (progress) {
-            if (count === 0 || expressShipping) {
+            if (count === 0) {
                 progress.style.display = 'none';
             } else {
                 progress.style.display = 'block';
@@ -1712,7 +1816,7 @@ textarea { resize: vertical; min-height: 80px; }
                         fillEl.style.backgroundColor = '#059669';
                     }
                     if (progText) {
-                        progText.innerHTML = '<strong>🎉 Congratulations! You\'ve unlocked FREE Shipping!</strong>';
+                        progText.innerHTML = '<strong>🎉 Congratulations! You\'ve unlocked FREE Ground Shipping!</strong>';
                     }
                 } else {
                     const pct = Math.min(100, (subtotal / 75) * 100);
@@ -1722,7 +1826,7 @@ textarea { resize: vertical; min-height: 80px; }
                     }
                     if (progText) {
                         const remaining = (75 - subtotal).toFixed(2);
-                        progText.innerHTML = 'Spend <strong>$' + remaining + '</strong> more to unlock <strong>FREE Shipping</strong>!';
+                        progText.innerHTML = 'Spend <strong>$' + remaining + '</strong> more to unlock <strong>FREE Ground Shipping</strong>!';
                     }
                 }
             }
@@ -1733,23 +1837,140 @@ textarea { resize: vertical; min-height: 80px; }
         if (cartInput) cartInput.value = JSON.stringify(cart || []);
     }
 
-    // ── Delivery Options ──
+    // ── Delivery Options Click Setup ──
     function setupDeliveryOptions() {
-        document.querySelectorAll('.delivery-option').forEach(opt => {
+        const container = document.getElementById('fedexRatesContainer');
+        if (!container) return;
+
+        container.querySelectorAll('.delivery-option').forEach(opt => {
             opt.addEventListener('click', function() {
-                document.querySelectorAll('.delivery-option').forEach(o => o.classList.remove('selected'));
+                container.querySelectorAll('.delivery-option').forEach(o => o.classList.remove('selected'));
                 this.classList.add('selected');
-                this.querySelector('input[type="radio"]').checked = true;
-                expressShipping = (this.querySelector('input').value === 'express');
-                
-                const deliveryEl = document.getElementById('deliveryRange');
-                if (expressShipping) {
-                    deliveryEl.textContent = '2–3 business days';
-                } else {
-                    deliveryEl.textContent = '5–8 business days';
-                }
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
+
+                currentShippingRate = parseFloat(this.dataset.rate) || 0;
+                currentShippingName = this.dataset.name || 'FedEx Home Delivery®';
+                currentShippingCode = this.dataset.code || 'FEDEX_GROUND';
+                currentDeliveryDays = this.dataset.delivery || '3–5 business days';
+
                 updateTotals();
             });
+        });
+    }
+
+    // ── Fetch Live FedEx Rates from API ──
+    window.fetchFedExRates = async function() {
+        const zipEl     = document.getElementById('zip');
+        const stateEl   = document.getElementById('state');
+        const cityEl    = document.getElementById('city');
+        const countryEl = document.getElementById('country');
+        const addrEl    = document.getElementById('address');
+        const loadingEl = document.getElementById('fedexRatesLoading');
+        const container = document.getElementById('fedexRatesContainer');
+
+        if (!container) return;
+
+        const zip = zipEl ? zipEl.value.trim() : '';
+        const state = stateEl ? stateEl.value.trim() : '';
+        const city = cityEl ? cityEl.value.trim() : '';
+        const country = countryEl ? countryEl.value.trim() : 'US';
+        const address = addrEl ? addrEl.value.trim() : '';
+
+        // Calculate current subtotal
+        let subtotal = 0;
+        if (cart && cart.length > 0) {
+            cart.forEach(i => subtotal += (parseFloat(i.price) || 0) * (parseInt(i.qty) || 1));
+        }
+
+        if (loadingEl) {
+            const loadingText = document.getElementById('fedexRatesLoadingText');
+            if (loadingText) {
+                loadingText.textContent = zip ? `Calculating live FedEx rates for ${zip}...` : 'Calculating live FedEx rates...';
+            }
+            loadingEl.classList.add('active');
+        }
+
+        var baseApiUrl = (typeof window.basePath !== 'undefined') ? window.basePath : (window.location.pathname.startsWith('/laguna') ? '/laguna' : '<?php echo $base; ?>');
+
+        try {
+            const res = await fetch(baseApiUrl + '/api/shipping/rates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    zip: zip,
+                    state: state,
+                    city: city,
+                    country: country,
+                    address: address,
+                    subtotal: subtotal,
+                    cart_data: cart
+                })
+            });
+
+            const data = await res.json();
+            if (data.success && Array.isArray(data.rates) && data.rates.length > 0) {
+                let html = '';
+                let matchedIndex = 0;
+
+                data.rates.forEach((r, idx) => {
+                    if (r.code === currentShippingCode) {
+                        matchedIndex = idx;
+                    }
+                });
+
+                data.rates.forEach((r, idx) => {
+                    const isSelected = (idx === matchedIndex);
+                    const isFreeTag = r.is_free ? '<span class="free-tag">Free Shipping</span>' : '';
+                    html += `
+                    <label class="delivery-option ${isSelected ? 'selected' : ''}" data-code="${esc(r.code)}" data-name="${esc(r.name)}" data-rate="${parseFloat(r.rate)||0}" data-delivery="${esc(r.delivery_days || r.description)}">
+                        <input type="radio" name="delivery_type_radio" value="${esc(r.code)}" ${isSelected ? 'checked' : ''}>
+                        <div class="delivery-radio"></div>
+                        <div class="fedex-logo-icon">
+                            <span class="fed-purple">Fed</span><span class="fed-orange">Ex</span>
+                        </div>
+                        <div class="delivery-info">
+                            <div class="delivery-name">
+                                ${esc(r.name)} ${isFreeTag}
+                            </div>
+                            <div class="delivery-desc">${esc(r.description)}</div>
+                        </div>
+                        <div class="delivery-price">${r.formatted_rate}</div>
+                    </label>`;
+                });
+
+                container.innerHTML = html;
+                setupDeliveryOptions();
+
+                // Update current selected rate
+                const activeRate = data.rates[matchedIndex];
+                currentShippingRate = parseFloat(activeRate.rate) || 0;
+                currentShippingName = activeRate.name;
+                currentShippingCode = activeRate.code;
+                currentDeliveryDays = activeRate.delivery_days || activeRate.description;
+                updateTotals();
+            }
+        } catch(e) {
+            console.warn('FedEx Rate Quote fetch failed:', e);
+        } finally {
+            if (loadingEl) loadingEl.classList.remove('active');
+        }
+    };
+
+    // ── Debounced Listeners for Address Inputs ──
+    function setupAddressRateListeners() {
+        const triggers = ['zip', 'state', 'city', 'country'];
+        triggers.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const evt = (el.tagName === 'SELECT') ? 'change' : 'input';
+                el.addEventListener(evt, function() {
+                    clearTimeout(rateFetchTimeout);
+                    rateFetchTimeout = setTimeout(() => {
+                        fetchFedExRates();
+                    }, 450);
+                });
+            }
         });
     }
 

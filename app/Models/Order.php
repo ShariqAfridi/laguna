@@ -89,13 +89,15 @@ class Order {
         return false;
     }
 
-    public static function calculateTotals(array $cart, string $promoCode = '', string $deliveryType = 'standard'): array {
+    public static function calculateTotals(array $cart, string $promoCode = '', string $deliveryType = 'standard', ?float $customShipping = null): array {
         $subtotal = 0;
         foreach ($cart as $item) {
             $subtotal += floatval($item['price'] ?? 0) * intval($item['qty'] ?? 1);
         }
 
-        if (strtolower($deliveryType) === 'express') {
+        if ($customShipping !== null && $customShipping >= 0) {
+            $shipping = floatval($customShipping);
+        } elseif (strtolower($deliveryType) === 'express' || strpos(strtolower($deliveryType), '2day') !== false || strpos(strtolower($deliveryType), 'overnight') !== false) {
             $shipping = 18.00;
         } else {
             $shipping = ($subtotal >= 75) ? 0.00 : 12.00;

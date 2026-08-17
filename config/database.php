@@ -74,6 +74,16 @@ function get_db_connection()
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `idx_code` (`code`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            // 5. Ensure orders table shipping_method and tracking_number columns
+            $res_o_sm = $conn->query("SHOW COLUMNS FROM orders LIKE 'shipping_method'");
+            if ($res_o_sm && $res_o_sm->num_rows === 0) {
+                @$conn->query("ALTER TABLE orders ADD COLUMN shipping_method VARCHAR(100) DEFAULT NULL AFTER shipping");
+            }
+            $res_o_tn = $conn->query("SHOW COLUMNS FROM orders LIKE 'tracking_number'");
+            if ($res_o_tn && $res_o_tn->num_rows === 0) {
+                @$conn->query("ALTER TABLE orders ADD COLUMN tracking_number VARCHAR(100) DEFAULT NULL AFTER shipping_method");
+            }
         }
     }
     return $conn;

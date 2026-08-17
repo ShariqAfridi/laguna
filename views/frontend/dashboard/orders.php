@@ -43,6 +43,7 @@
                 'total' => (float)$o['total'],
                 'subtotal' => (float)($o['subtotal'] ?? $o['total']),
                 'shipping' => (float)($o['shipping'] ?? 0),
+                'shipping_method' => $o['shipping_method'] ?? 'FedEx Home Delivery®',
                 'discount' => (float)($o['discount'] ?? 0),
                 'tax' => (float)($o['tax'] ?? 0),
                 'promo_code' => $o['promo_code'] ?? '',
