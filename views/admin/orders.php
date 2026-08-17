@@ -53,8 +53,8 @@ foreach ($orders as $o) {
     $oid  = (int)$o['id'];
     $iRes = mysqli_query($conn,
         "SELECT oi.product_name, oi.scent, oi.quantity, oi.price, oi.subtotal, oi.product_id,
-                p.image, p.color_id, p.size_id, p.fragrance_id, p.fragrance_images,
-                acc.image AS accessory_image
+                p.sku, p.image, p.color_id, p.size_id, p.fragrance_id, p.fragrance_images,
+                acc.sku AS accessory_sku, acc.image AS accessory_image
          FROM order_items oi
          LEFT JOIN products p ON oi.product_id = p.product_id
          LEFT JOIN accessory acc ON oi.product_id = acc.accessory_id
@@ -656,9 +656,32 @@ function statusBadgeClass($sk) {
                     <div class="product-info">
                         <h4><?= htmlspecialchars($item['product_name']) ?></h4>
 
-                        <div class="product-meta">
+                        <?php
+                        $itemSku = trim($item['sku'] ?? $item['accessory_sku'] ?? '');
+                        if (empty($itemSku) && !empty($item['product_name']) && $conn) {
+                            $pNameClean = trim(explode('+', $item['product_name'])[0]);
+                            $pNameClean = trim(explode('—', $pNameClean)[0]);
+                            $pNameEsc = mysqli_real_escape_string($conn, $pNameClean);
+                            if (!empty($pNameEsc)) {
+                                $sq = mysqli_query($conn, "SELECT sku FROM products WHERE product_name LIKE '%$pNameEsc%' AND sku IS NOT NULL AND sku != '' LIMIT 1");
+                                if ($sq && $sr = mysqli_fetch_assoc($sq)) {
+                                    $itemSku = $sr['sku'];
+                                }
+                            }
+                        }
+                        ?>
+
+                        <div class="product-meta" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:4px 0 6px;">
+                            <?php if (!empty($itemSku)): ?>
+                                <span class="meta-tag" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#0f172a; font-weight:700; font-family:monospace; font-size:11.5px; padding:2px 8px; border-radius:6px;">
+                                    <i class="fas fa-barcode" style="color:#475569; margin-right:3px;"></i>SKU: <?= htmlspecialchars($itemSku) ?>
+                                </span>
+                            <?php endif; ?>
+
                             <?php if (!empty($item['scent'])): ?>
-                                <span class="meta-tag" style="background:#f0fdf4; border-color:#86efac; color:#15803d; font-weight:700;"><i class="fas fa-wind" style="color:#16a34a;"></i> Scent: <?= htmlspecialchars($item['scent']) ?></span>
+                                <span class="meta-tag" style="background:#f0fdf4; border:1px solid #86efac; color:#15803d; font-weight:700; font-size:11.5px; padding:2px 8px; border-radius:6px;">
+                                    <i class="fas fa-wind" style="color:#16a34a; margin-right:3px;"></i>Scent: <?= htmlspecialchars($item['scent']) ?>
+                                </span>
                             <?php endif; ?>
                         </div>
 
