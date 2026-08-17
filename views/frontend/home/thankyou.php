@@ -71,11 +71,14 @@ if (!empty($order['country'])) $full_address .= ', ' . $order['country'];
 if (empty($full_address)) $full_address = 'Saved address at checkout';
 
 // Format payment method for display
-$payment_display = 'Credit Card / PayPal';
+$payment_display = 'Bank of America® (Credit / Debit Card)';
 if (!empty($order['payment_method'])) {
     switch ($order['payment_method']) {
+        case 'bank_of_america':
+            $payment_display = 'Bank of America® (Card / Merchant Gateway)';
+            break;
         case 'stripe':
-            $payment_display = 'Credit Card (Stripe)';
+            $payment_display = 'Bank of America® (Credit / Debit Card)';
             break;
         case 'cod':
             $payment_display = 'Cash on Delivery';
@@ -84,7 +87,7 @@ if (!empty($order['payment_method'])) {
             $payment_display = 'PayPal';
             break;
         default:
-            $payment_display = ucfirst($order['payment_method']);
+            $payment_display = 'Bank of America® (' . ucfirst($order['payment_method']) . ')';
     }
 }
 
@@ -406,7 +409,7 @@ $customer_email = $order['email'] ?? 'your email';
 
                 <div class="pci-notice" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:0.8rem; padding:0.7rem 1rem; display:flex; align-items:center; gap:0.7rem; margin:1rem 0; font-size:0.78rem; color:#166534;">
                     <i class="fa-solid fa-shield-check" style="font-size:1.2rem; color:#16a34a;"></i>
-                    <span><strong>PCI-DSS Compliant Transaction</strong> — Processed via Stripe Level 1 PCI Gateway. Card details are fully encrypted and zero card data is retained on our servers.</span>
+                    <span><strong>Bank of America Secure Transaction</strong> — Processed via Bank of America Merchant Services Gateway. Card details are fully encrypted and zero card data is retained on our servers.</span>
                 </div>
 
                 <div class="email-sent">

@@ -88,6 +88,10 @@ function get_db_connection()
             if ($res_o_de && $res_o_de->num_rows === 0) {
                 @$conn->query("ALTER TABLE orders ADD COLUMN delivery_estimate VARCHAR(100) DEFAULT NULL AFTER tracking_number");
             }
+            $res_o_boa = $conn->query("SHOW COLUMNS FROM orders LIKE 'boa_transaction_id'");
+            if ($res_o_boa && $res_o_boa->num_rows === 0) {
+                @$conn->query("ALTER TABLE orders ADD COLUMN boa_transaction_id VARCHAR(100) DEFAULT NULL AFTER stripe_payment_intent_id");
+            }
         }
     }
     return $conn;

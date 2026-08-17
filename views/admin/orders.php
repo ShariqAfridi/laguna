@@ -15,7 +15,7 @@ $searchTerm   = isset($_GET['search']) ? trim($_GET['search']) : '';
 $sql = "SELECT o.id, o.order_number, o.total, o.status, o.created_at,
                o.email, o.name as full_name, o.address, o.city,
                o.state, o.zip, o.phone, o.notes, o.promo_code,
-               o.subtotal, o.shipping, o.shipping_method, o.delivery_estimate, o.discount, o.payment_method,
+               o.subtotal, o.shipping, o.shipping_method, o.delivery_estimate, o.discount, o.payment_method, o.boa_transaction_id,
                COUNT(oi.id) as item_count
         FROM orders o
         LEFT JOIN order_items oi ON o.id = oi.order_id
@@ -589,8 +589,13 @@ function statusBadgeClass($sk) {
                     <span><?= htmlspecialchars($order['phone'] ?: '—') ?></span>
                 </div>
                 <div class="cs-item">
-                    <label>Payment</label>
-                    <span><?= htmlspecialchars(ucfirst(str_replace('_',' ',$order['payment_method'] ?: '—'))) ?></span>
+                    <label>Payment Method</label>
+                    <span style="color:#012169; font-weight:700;">
+                        <i class="fas fa-university"></i> <?= ($order['payment_method'] === 'bank_of_america' || empty($order['payment_method']) || $order['payment_method'] === 'stripe') ? 'Bank of America®' : htmlspecialchars(ucfirst(str_replace('_',' ',$order['payment_method']))) ?>
+                        <?php if (!empty($order['boa_transaction_id'])): ?>
+                            <br><small style="font-size:10.5px; color:#64748b; font-weight:normal;">Ref: <?= htmlspecialchars($order['boa_transaction_id']) ?></small>
+                        <?php endif; ?>
+                    </span>
                 </div>
                 <div class="cs-item">
                     <label>Shipping Method</label>

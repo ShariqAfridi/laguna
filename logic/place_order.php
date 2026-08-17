@@ -145,17 +145,45 @@ $total    = $calc['total'];
 // ====================== GENERATE ORDER NUMBER ======================
 $order_number = 'LVB-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
 
-// Status & Mock Payment Handling
-$is_mock_stripe = isset($_POST['is_mock_payment']) && $_POST['is_mock_payment'] === '1';
+// ====================== PAYMENT PROCESSING (BANK OF AMERICA GATEWAY) ======================
+$boa_transaction_id = null;
 $stripe_payment_intent_id = null;
 
-if ($payment_method === 'stripe') {
-    if ($is_mock_stripe || env('STRIPE_MOCK_MODE', true)) {
-        $status = 'processing'; // Mark as paid/processing in test mode
-        $stripe_payment_intent_id = 'pi_mock_' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 16));
-    } else {
-        $status = 'pending_payment';
+if ($payment_method === 'bank_of_america' || $payment_method === 'stripe' || $payment_method === 'card') {
+    $payment_method = 'bank_of_america';
+    $card_number = trim($_POST['card_number'] ?? '');
+    $card_expiry = trim($_POST['card_expiry'] ?? '');
+    $card_cvc    = trim($_POST['card_cvc'] ?? '');
+    $card_name   = trim($_POST['card_name'] ?? $full_name);
+
+    $expParts  = explode('/', str_replace(' ', '', $card_expiry));
+    $exp_month = $expParts[0] ?? '';
+    $exp_year  = $expParts[1] ?? '';
+
+    $boaResult = \App\Services\BankOfAmericaService::processPayment([
+        'number'    => $card_number,
+        'exp_month' => $exp_month,
+        'exp_year'  => $exp_year,
+        'cvc'       => $card_cvc,
+        'name'      => $card_name
+    ], [
+        'first_name' => $first_name,
+        'last_name'  => $last_name,
+        'address'    => $billing_address,
+        'city'       => $billing_city,
+        'state'      => $billing_state,
+        'zip'        => $billing_zip,
+        'country'    => $billing_country,
+        'email'      => $email,
+        'phone'      => $phone
+    ], $total, $order_number);
+
+    if (!$boaResult['success']) {
+        return_order_error($boaResult['error'] ?? 'Card payment declined by Bank of America Gateway. Please verify your card details.', $is_ajax);
     }
+
+    $boa_transaction_id = $boaResult['transaction_id'] ?? ('BOA_' . strtoupper(substr(md5(uniqid('', true)), 0, 14)));
+    $status = 'processing';
 } elseif ($payment_method === 'paypal') {
     $status = 'pending_payment';
 } else {
@@ -169,13 +197,13 @@ $stmt = $conn->prepare("
     INSERT INTO orders
         (user_id, order_number, name, email, phone, address, city, state, zip, country,
          notes, promo_code, subtotal, shipping, shipping_method, delivery_estimate, discount, total,
-         payment_method, stripe_payment_intent_id, status, created_at)
+         payment_method, stripe_payment_intent_id, boa_transaction_id, status, created_at)
     VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
 ");
 
 $stmt->bind_param(
-    "isssssssssssddssddsss",
+    "isssssssssssddssddssss",
     $user_id,
     $order_number,
     $full_name,
@@ -196,11 +224,12 @@ $stmt->bind_param(
     $total,
     $payment_method,
     $stripe_payment_intent_id,
+    $boa_transaction_id,
     $status
 );
 
 if (!$stmt->execute()) {
-    die("Failed to save order: " . $conn->error);
+    return_order_error("Failed to save order: " . $conn->error, $is_ajax);
 }
 $order_id = $stmt->insert_id;
 $stmt->close();
@@ -211,42 +240,48 @@ $stmt_item = $conn->prepare("
     VALUES (?, ?, ?, ?, ?, ?, ?)
 ");
 
-$items_html = '';
-$items_text = '';
+$items_text = "";
+$items_html = "";
+$items_summary = [];
 
-foreach ($cart as $item) {
-    $product_id   = intval($item['product_id'] ?? $item['id'] ?? 0);
-    $product_name = $item['name'] ?? 'Product';
-    $scent        = $item['scent'] ?? $item['fragrance_name'] ?? $item['size_name'] ?? 'Standard';
-    $price        = floatval($item['price'] ?? 0);
-    $qty          = intval($item['qty'] ?? 1);
+foreach ($cart as $cItem) {
+    $p_id         = intval($cItem['product_id'] ?? $cItem['id'] ?? 0);
+    $product_name = $cItem['name'] ?? 'Handcrafted Candle';
+    $scent        = $cItem['scent'] ?? 'Standard';
+    $qty          = intval($cItem['quantity'] ?? $cItem['qty'] ?? 1);
+    $price        = floatval($cItem['price'] ?? 0);
     $item_total   = $price * $qty;
 
-    $stmt_item->bind_param("iissidd",
-        $order_id, $product_id, $product_name, $scent, $qty, $price, $item_total
-    );
+    $stmt_item->bind_param("iissidd", $order_id, $p_id, $product_name, $scent, $qty, $price, $item_total);
     $stmt_item->execute();
 
-    // Decrement stock quantity
-    if ($product_id > 0) {
-        $decStmt = $conn->prepare("UPDATE products SET qty = GREATEST(0, qty - ?) WHERE product_id = ?");
-        if ($decStmt) {
-            $decStmt->bind_param("ii", $qty, $product_id);
-            $decStmt->execute();
-            $decStmt->close();
+    if ($p_id > 0) {
+        $stUp = $conn->prepare("UPDATE products SET qty = GREATEST(0, qty - ?) WHERE product_id = ?");
+        if ($stUp) {
+            $stUp->bind_param("ii", $qty, $p_id);
+            $stUp->execute();
+            $stUp->close();
         }
     }
 
+    $items_summary[] = [
+        'product_name' => $product_name,
+        'scent'        => $scent,
+        'quantity'     => $qty,
+        'price'        => $price,
+        'subtotal'     => $item_total,
+        'image'        => $cItem['image'] ?? ''
+    ];
+
     $items_html .= "
         <tr>
-            <td style='padding:10px 12px;border-bottom:1px solid #eee;'>
-                <strong>" . htmlspecialchars($product_name) . "</strong>
-                <br><span style='color:#6b7280;font-size:12px;'>Variant: " . htmlspecialchars($scent) . "</span>
-            </td>
-            <td style='padding:10px 12px;border-bottom:1px solid #eee;text-align:center;'>" . $qty . "</td>
-            <td style='padding:10px 12px;border-bottom:1px solid #eee;text-align:right;'>$" . number_format($price, 2) . "</td>
-            <td style='padding:10px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:600;'>$" . number_format($item_total, 2) . "</td>
-        </tr>";
+            <td style='padding:8px 12px;border-bottom:1px solid #eee;'>" . htmlspecialchars($product_name) . "</td>
+            <td style='padding:8px 12px;border-bottom:1px solid #eee;'>" . htmlspecialchars($scent) . "</td>
+            <td style='padding:8px 12px;border-bottom:1px solid #eee;text-align:center;'>" . $qty . "</td>
+            <td style='padding:8px 12px;border-bottom:1px solid #eee;text-align:right;'>$" . number_format($item_total, 2) . "</td>
+        </tr>
+    ";
+
     $items_text .= "• " . $product_name . " (" . $scent . ") × " . $qty . " = $" . number_format($item_total, 2) . "\n";
 }
 $stmt_item->close();
@@ -259,16 +294,14 @@ if (!empty($promo_code)) {
 // Clear session
 unset($_SESSION['cart']);
 
-// ====================== EMAIL HELPER ======================
-// Handled by app/Helpers/mail_helper.php via send_mail() or sendMail()
-
 // ====================== BUILD SHARED SNIPPETS ======================
 $order_date     = date('F j, Y \a\t g:i a');
 $payment_label  = match ($payment_method) {
-    'stripe' => 'Credit / Debit Card (Stripe)',
-    'paypal' => 'PayPal',
-    'cod'    => 'Cash on Delivery',
-    default  => ucfirst($payment_method),
+    'bank_of_america' => 'Bank of America® (Credit / Debit Card)',
+    'stripe'          => 'Bank of America® (Credit / Debit Card)',
+    'paypal'          => 'PayPal',
+    'cod'             => 'Cash on Delivery',
+    default           => 'Bank of America® (' . ucfirst($payment_method) . ')',
 };
 
 $discount_row_html = $discount > 0

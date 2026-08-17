@@ -56,7 +56,7 @@
                 'state' => $o['state'] ?? '',
                 'zip' => $o['zip'] ?? '',
                 'country' => $o['country'] ?? '',
-                'payment_method' => $o['payment_method'] ?? 'Credit Card (Stripe)',
+                'payment_method' => (!empty($o['payment_method']) && $o['payment_method'] !== 'stripe') ? ucfirst($o['payment_method']) : 'Bank of America®',
                 'notes' => $o['notes'] ?? '',
                 'items' => $items
             ];
