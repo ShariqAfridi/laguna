@@ -18,14 +18,41 @@ class FedExService
             : 'https://apis-sandbox.fedex.com';
     }
 
+    public static function getApiKey(): string
+    {
+        $env = strtolower(env('FEDEX_ENVIRONMENT', 'sandbox'));
+        if ($env === 'production' || $env === 'live') {
+            return env('FEDEX_PROD_API_KEY', env('FEDEX_API_KEY', 'l738a0ede026e54ea4b96ebb7320b84465'));
+        }
+        return env('FEDEX_SANDBOX_API_KEY', env('FEDEX_API_KEY', 'l79e2ef3a2972b43289406d0d5bf4af4a0'));
+    }
+
+    public static function getSecretKey(): string
+    {
+        $env = strtolower(env('FEDEX_ENVIRONMENT', 'sandbox'));
+        if ($env === 'production' || $env === 'live') {
+            return env('FEDEX_PROD_SECRET_KEY', env('FEDEX_SECRET_KEY', '45bc08d845cc47d5b95eae31ab242a7b'));
+        }
+        return env('FEDEX_SANDBOX_SECRET_KEY', env('FEDEX_SECRET_KEY', '8cabfe575e6e4faaaf0cb354a429b607'));
+    }
+
+    public static function getAccountNumber(): string
+    {
+        $env = strtolower(env('FEDEX_ENVIRONMENT', 'sandbox'));
+        if ($env === 'production' || $env === 'live') {
+            return env('FEDEX_PROD_ACCOUNT_NUMBER', env('FEDEX_ACCOUNT_NUMBER', '213498874'));
+        }
+        return env('FEDEX_SANDBOX_ACCOUNT_NUMBER', env('FEDEX_ACCOUNT_NUMBER', '740561073'));
+    }
+
     /**
      * Check if FedEx credentials are fully configured
      */
     public static function isConfigured(): bool
     {
-        $apiKey = env('FEDEX_API_KEY', '');
-        $secret = env('FEDEX_SECRET_KEY', '');
-        $account = env('FEDEX_ACCOUNT_NUMBER', '');
+        $apiKey = self::getApiKey();
+        $secret = self::getSecretKey();
+        $account = self::getAccountNumber();
         return !empty($apiKey) && !empty($secret) && !empty($account);
     }
 
@@ -38,8 +65,8 @@ class FedExService
             return self::$tokenCache;
         }
 
-        $apiKey = env('FEDEX_API_KEY', '');
-        $secretKey = env('FEDEX_SECRET_KEY', '');
+        $apiKey = self::getApiKey();
+        $secretKey = self::getSecretKey();
 
         if (empty($apiKey) || empty($secretKey)) {
             return null;
@@ -183,7 +210,7 @@ class FedExService
             return null;
         }
 
-        $account = env('FEDEX_ACCOUNT_NUMBER', '');
+        $account = self::getAccountNumber();
         $shipperStreet  = env('FEDEX_SHIPPER_STREET', '123 Ocean Ave');
         $shipperCity    = env('FEDEX_SHIPPER_CITY', 'Laguna Beach');
         $shipperState   = env('FEDEX_SHIPPER_STATE', 'CA');
