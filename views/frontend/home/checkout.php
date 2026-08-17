@@ -874,6 +874,230 @@ textarea { resize: vertical; min-height: 80px; }
     .breadcrumb { font-size: 11px; gap: 6px; }
     .order-summary { padding: 20px 16px; }
 }
+/* ─── LUXURY ORDER PROCESSING OVERLAY (THEME-MATCHED LOADER) ─── */
+.order-processing-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999999;
+    background: rgba(15, 76, 92, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    animation: lvbModalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.processing-card {
+    max-width: 440px;
+    width: 100%;
+    background: #ffffff;
+    border-radius: 26px;
+    padding: 2.8rem 2.4rem 2.2rem;
+    text-align: center;
+    box-shadow: 0 30px 80px -10px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+    animation: lvbCardPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    position: relative;
+    overflow: hidden;
+}
+
+.processing-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #0f4c5c 0%, #1f5446 35%, #e9c46a 70%, #0f4c5c 100%);
+    background-size: 200% 100%;
+    animation: gradientShimmer 2s linear infinite;
+}
+
+@keyframes gradientShimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+.processing-flame-container {
+    position: relative;
+    width: 86px;
+    height: 86px;
+    margin: 0 auto 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pulse-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(233, 196, 106, 0.6);
+    animation: pulseRing 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.pulse-ring-1 {
+    width: 70px;
+    height: 70px;
+    animation-delay: 0s;
+}
+
+.pulse-ring-2 {
+    width: 86px;
+    height: 86px;
+    animation-delay: 0.6s;
+    border-color: rgba(15, 76, 92, 0.35);
+}
+
+@keyframes pulseRing {
+    0% { transform: scale(0.65); opacity: 0.9; }
+    80% { transform: scale(1.35); opacity: 0; }
+    100% { transform: scale(1.4); opacity: 0; }
+}
+
+.candle-flame-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0f4c5c 0%, #175e70 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #e9c46a;
+    font-size: 26px;
+    box-shadow: 0 10px 25px rgba(15, 76, 92, 0.35), 0 0 20px rgba(233, 196, 106, 0.4);
+    position: relative;
+    z-index: 2;
+    animation: flameFloat 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes flameFloat {
+    0% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 4px #f59e0b); }
+    100% { transform: translateY(-4px) scale(1.05); filter: drop-shadow(0 0 12px #e9c46a); }
+}
+
+.processing-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #0F4C5C;
+    margin: 0 0 0.4rem;
+    letter-spacing: 0.3px;
+}
+
+.processing-subtext {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+    min-height: 22px;
+}
+
+.processing-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #edf2f7;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 1.6rem;
+    position: relative;
+}
+
+.processing-progress-fill {
+    height: 100%;
+    width: 35%;
+    background: linear-gradient(90deg, #0F4C5C, #1f5446, #e9c46a);
+    border-radius: 20px;
+    transition: width 0.4s ease;
+    animation: progressGlow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes progressGlow {
+    from { opacity: 0.85; }
+    to { opacity: 1; }
+}
+
+.processing-steps-list {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.1rem 1.3rem;
+    margin-bottom: 1.4rem;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.processing-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.84rem;
+    color: #94a3b8;
+    transition: all 0.3s ease;
+}
+
+.processing-step.active {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.processing-step .step-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    background: #e2e8f0;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.processing-step.active .step-icon {
+    background: #0F4C5C;
+    color: #ffffff;
+}
+
+.processing-step.active.done .step-icon {
+    background: #059669;
+    color: #ffffff;
+}
+
+.processing-brand-badge {
+    font-size: 0.76rem;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    letter-spacing: 0.4px;
+}
+
+.processing-brand-badge i {
+    color: #059669;
+    font-size: 13px;
+}
+
+/* ── Luxury CTA Button Processing Animation ── */
+.cta-btn.is-processing {
+    background: linear-gradient(135deg, #0F4C5C 0%, #155566 50%, #0F4C5C 100%) !important;
+    background-size: 200% 200% !important;
+    animation: btnGradientSweep 1.8s ease infinite !important;
+    box-shadow: 0 4px 20px rgba(15, 76, 92, 0.4) !important;
+    cursor: wait !important;
+    opacity: 1 !important;
+    color: #ffffff !important;
+}
+
+@keyframes btnGradientSweep {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 /* ── Order Confirmation Popup Modal (Clean Normal Popup) ── */
 .order-success-overlay {
     position: fixed;
@@ -1482,6 +1706,45 @@ textarea { resize: vertical; min-height: 80px; }
         </div><!-- /.summary-card -->
     </div><!-- /.right-col -->
 </div><!-- /.page-wrapper -->
+
+<!-- ═══════════════ LUXURY ORDER PROCESSING LOADER MODAL ═══════════════ -->
+<div id="orderProcessingModal" class="order-processing-overlay" style="display: none;">
+    <div class="processing-card">
+        <div class="processing-flame-container">
+            <div class="pulse-ring pulse-ring-1"></div>
+            <div class="pulse-ring pulse-ring-2"></div>
+            <div class="candle-flame-icon">
+                <i class="fa-solid fa-fire-flame-curved"></i>
+            </div>
+        </div>
+
+        <h2 class="processing-title">Confirming Your Order</h2>
+        <p class="processing-subtext" id="processingStatusText">Crafting your handcrafted candle order...</p>
+
+        <div class="processing-progress-bar">
+            <div class="processing-progress-fill" id="processingProgressFill"></div>
+        </div>
+
+        <div class="processing-steps-list">
+            <div class="processing-step active done" id="pstep1">
+                <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                <span>Order items & fragrance selection verified</span>
+            </div>
+            <div class="processing-step active" id="pstep2">
+                <div class="step-icon" id="pstep2Icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                <span id="pstep2Text">Processing secure encrypted payment...</span>
+            </div>
+            <div class="processing-step" id="pstep3">
+                <div class="step-icon" id="pstep3Icon"><i class="fa-solid fa-truck-fast"></i></div>
+                <span id="pstep3Text">Registering FedEx live shipment</span>
+            </div>
+        </div>
+
+        <div class="processing-brand-badge">
+            <i class="fa-solid fa-shield-halved"></i> 256-Bit SSL Encrypted &bull; Laguna Vibe Atelier
+        </div>
+    </div>
+</div>
 
 <!-- ═══════════════ ORDER CONFIRMATION POPUP MODAL ═══════════════ -->
 <div id="orderSuccessModal" class="order-success-overlay" style="display: none;">
@@ -2255,6 +2518,67 @@ textarea { resize: vertical; min-height: 80px; }
         }
     }
 
+    // ── Luxury Processing Loader Helpers ──
+    let processingInterval = null;
+
+    function showOrderProcessingLoader() {
+        const modal = document.getElementById('orderProcessingModal');
+        if (!modal) return;
+
+        const btn = document.getElementById('ctaButton');
+        if (btn) {
+            btn.classList.add('is-processing');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-fire-flame-curved fa-spin" style="margin-right:6px; color:#e9c46a;"></i> Confirming Order...';
+        }
+
+        modal.style.display = 'flex';
+
+        const fill = document.getElementById('processingProgressFill');
+        const statusText = document.getElementById('processingStatusText');
+        const pstep2 = document.getElementById('pstep2');
+        const pstep2Icon = document.getElementById('pstep2Icon');
+        const pstep3 = document.getElementById('pstep3');
+        const pstep3Icon = document.getElementById('pstep3Icon');
+
+        if (fill) fill.style.width = '30%';
+        if (statusText) statusText.textContent = 'Verifying handcrafted candle reservation...';
+
+        let stage = 1;
+        clearInterval(processingInterval);
+        processingInterval = setInterval(() => {
+            stage++;
+            if (stage === 2) {
+                if (fill) fill.style.width = '65%';
+                if (statusText) statusText.textContent = 'Authorizing secure encrypted payment...';
+                if (pstep2Icon) pstep2Icon.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            } else if (stage === 3) {
+                if (fill) fill.style.width = '88%';
+                if (statusText) statusText.textContent = 'Registering FedEx live shipment details...';
+                if (pstep2) pstep2.classList.add('done');
+                if (pstep2Icon) pstep2Icon.innerHTML = '<i class="fa-solid fa-check"></i>';
+                if (pstep3) pstep3.classList.add('active');
+                if (pstep3Icon) pstep3Icon.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            }
+        }, 900);
+    }
+
+    function hideOrderProcessingLoader() {
+        clearInterval(processingInterval);
+        const fill = document.getElementById('processingProgressFill');
+        if (fill) fill.style.width = '100%';
+
+        const pstep3 = document.getElementById('pstep3');
+        const pstep3Icon = document.getElementById('pstep3Icon');
+        if (pstep3) pstep3.classList.add('active', 'done');
+        if (pstep3Icon) pstep3Icon.innerHTML = '<i class="fa-solid fa-check"></i>';
+
+        setTimeout(() => {
+            const modal = document.getElementById('orderProcessingModal');
+            if (modal) modal.style.display = 'none';
+        }, 350);
+    }
+
     async function handleStripePayment(btn, form) {
         const cardNum = document.getElementById('cardNumber');
         const cardExp = document.getElementById('cardExpiry');
@@ -2313,22 +2637,13 @@ textarea { resize: vertical; min-height: 80px; }
             return;
         }
 
-        const original = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner spinner"></i> Processing Payment...';
-
-        // Simulate seamless payment verification and submit order asynchronously
-        setTimeout(() => {
-            btn.innerHTML = '<i class="fas fa-check"></i> Payment Approved! Placing Order...';
-            btn.style.background = 'var(--success)';
-            submitOrderAsync(btn, form);
-        }, 800);
+        showOrderProcessingLoader();
+        await submitOrderAsync(btn, form);
     }
 
     // ── Async Order Submission ──
     async function submitOrderAsync(btn, form) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner spinner"></i> Confirming Order...';
+        showOrderProcessingLoader();
 
         const formData = new FormData(form);
         formData.set('is_ajax', '1');
@@ -2378,21 +2693,32 @@ textarea { resize: vertical; min-height: 80px; }
                 cart = [];
                 renderCart();
 
-                // 2. Display order confirmation modal popup
-                displayOrderSuccessModal(data);
+                // 2. Hide processing loader & Display order confirmation modal popup
+                hideOrderProcessingLoader();
+                setTimeout(() => {
+                    displayOrderSuccessModal(data);
+                }, 400);
 
                 // 3. Update CTA button
-                btn.innerHTML = '<i class="fas fa-check"></i> Order Confirmed!';
-                btn.style.background = 'var(--success)';
-                btn.disabled = true;
+                if (btn) {
+                    btn.classList.remove('is-processing');
+                    btn.innerHTML = '<i class="fas fa-check"></i> Order Confirmed!';
+                    btn.style.background = '#0F4C5C';
+                    btn.disabled = true;
+                }
             } else {
+                hideOrderProcessingLoader();
                 alert((data && data.error) ? data.error : 'Failed to place order. Please check your details and try again.');
-                btn.disabled = false;
-                btn.innerHTML = 'Place Secure Order';
-                btn.style.background = '';
+                if (btn) {
+                    btn.classList.remove('is-processing');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-lock"></i> Place Secure Order · ' + (document.getElementById('grandTotalDisplay')?.textContent || '');
+                    btn.style.background = '';
+                }
             }
         } catch (err) {
             console.error('Order submission error:', err);
+            hideOrderProcessingLoader();
             form.submit(); // fallback
         }
     }
