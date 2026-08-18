@@ -343,7 +343,8 @@ try {
 
     // Send emails
     sendMail($email, "Order Confirmed #{$order_number} — Laguna Vibe", $customer_email_html);
-    sendMail('admin@lagunavibe.com', "New Paid Order #{$order_number} — Laguna Vibe", $customer_email_html);
+    $adminEmail = env('ADMIN_EMAIL', 'admin@lagunavibe.com');
+    sendMail($adminEmail, "New Paid Order #{$order_number} — Laguna Vibe", $customer_email_html);
     
     // Clear cart from session
     unset($_SESSION['cart']);

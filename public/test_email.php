@@ -37,11 +37,12 @@ if ($isPost) {
     $result = $success ? 'success' : 'error';
 }
 
-$currentHost = env('MAIL_HOST', 'smtp.office365.com');
-$currentPort = env('MAIL_PORT', '587');
+$currentHost = env('MAIL_HOST', 'mail.lagunavibe.com');
+$pop3Host    = env('POP3_HOST', 'mail.lagunavibe.com');
+$currentPort = env('MAIL_PORT', '465');
 $currentUser = env('MAIL_USERNAME', 'noreply@lagunavibe.com');
-$currentPass = env('MAIL_PASSWORD', '');
-$currentEnc  = env('MAIL_ENCRYPTION', 'tls');
+$currentPass = env('MAIL_PASSWORD', '=xQHc%KEN3!@ol96');
+$currentEnc  = env('MAIL_ENCRYPTION', 'ssl');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -54,8 +55,8 @@ $currentEnc  = env('MAIL_ENCRYPTION', 'tls');
         h1 { color: #38bdf8; font-size: 24px; margin-top: 0; }
         label { display: block; font-size: 13px; font-weight: 600; color: #94a3b8; margin: 14px 0 6px; }
         input, select { width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid #334155; color: #ffffff; padding: 10px 14px; border-radius: 8px; font-size: 14px; }
-        .btn { background: #0284c7; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 20px; width: 100%; font-size: 15px; }
-        .btn:hover { background: #0369a1; }
+        .btn { background: #0f4c5c; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 20px; width: 100%; font-size: 15px; transition: background 0.2s; }
+        .btn:hover { background: #0c3d4a; }
         .alert { padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
         .alert-success { background: #064e3b; border: 1px solid #059669; color: #a7f3d0; }
         .alert-error { background: #7f1d1d; border: 1px solid #dc2626; color: #fecaca; }
@@ -63,14 +64,21 @@ $currentEnc  = env('MAIL_ENCRYPTION', 'tls');
         .quick-fill { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
         .quick-btn { background: #334155; color: #e2e8f0; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
         .quick-btn:hover { background: #475569; }
+        .host-info { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #94a3b8; margin-bottom: 18px; }
+        .host-info strong { color: #38bdf8; }
     </style>
 </head>
 <body>
 <div class="card">
     <h1>📧 Laguna Vibe SMTP Tester & Diagnostic</h1>
     <p style="color: #94a3b8; font-size: 14px; line-height: 1.5;">
-        Use this tool to test email sending and verify your SMTP credentials with full real-time debug logs.
+        Use this tool to test email sending when an order is completed and verify your SMTP credentials with real-time debug logs.
     </p>
+
+    <div class="host-info">
+        <div><strong>POP3 Host:</strong> <?= htmlspecialchars($pop3Host) ?> (Port 995 SSL / 110)</div>
+        <div style="margin-top: 4px;"><strong>SMTP Host:</strong> <?= htmlspecialchars($currentHost) ?> (Port 465 SSL / 587 TLS)</div>
+    </div>
 
     <?php if ($result === 'success'): ?>
         <div class="alert alert-success">
@@ -84,9 +92,11 @@ $currentEnc  = env('MAIL_ENCRYPTION', 'tls');
 
     <div class="quick-fill">
         <span style="font-size: 12px; color: #94a3b8; line-height: 28px;">Presets:</span>
+        <button type="button" class="quick-btn" onclick="fillLagunaSSL()">Laguna Vibe (SSL 465)</button>
+        <button type="button" class="quick-btn" onclick="fillLagunaTLS()">Laguna Vibe (TLS 587)</button>
         <button type="button" class="quick-btn" onclick="fillO365()">Office 365</button>
         <button type="button" class="quick-btn" onclick="fillGmail()">Gmail SMTP</button>
-        <button type="button" class="quick-btn" onclick="fillBrevo()">Brevo (Free Relay)</button>
+        <button type="button" class="quick-btn" onclick="fillBrevo()">Brevo Relay</button>
     </div>
 
     <form method="POST">
@@ -112,8 +122,8 @@ $currentEnc  = env('MAIL_ENCRYPTION', 'tls');
             <div>
                 <label>Encryption:</label>
                 <select name="enc" id="fEnc">
-                    <option value="tls" <?= $currentEnc === 'tls' ? 'selected' : '' ?>>TLS (STARTTLS - Port 587)</option>
                     <option value="ssl" <?= $currentEnc === 'ssl' ? 'selected' : '' ?>>SSL (Port 465)</option>
+                    <option value="tls" <?= $currentEnc === 'tls' ? 'selected' : '' ?>>TLS (STARTTLS - Port 587)</option>
                     <option value="none" <?= $currentEnc === 'none' ? 'selected' : '' ?>>None (Port 25)</option>
                 </select>
             </div>
@@ -132,6 +142,20 @@ $currentEnc  = env('MAIL_ENCRYPTION', 'tls');
 </div>
 
 <script>
+function fillLagunaSSL() {
+    document.getElementById('fHost').value = 'mail.lagunavibe.com';
+    document.getElementById('fPort').value = '465';
+    document.getElementById('fEnc').value = 'ssl';
+    document.getElementById('fUser').value = 'noreply@lagunavibe.com';
+    document.getElementById('fPass').value = '=xQHc%KEN3!@ol96';
+}
+function fillLagunaTLS() {
+    document.getElementById('fHost').value = 'mail.lagunavibe.com';
+    document.getElementById('fPort').value = '587';
+    document.getElementById('fEnc').value = 'tls';
+    document.getElementById('fUser').value = 'noreply@lagunavibe.com';
+    document.getElementById('fPass').value = '=xQHc%KEN3!@ol96';
+}
 function fillO365() {
     document.getElementById('fHost').value = 'smtp.office365.com';
     document.getElementById('fPort').value = '587';

@@ -608,7 +608,8 @@ $admin_email_html = "
 // ====================== SEND EMAILS ======================
 try {
     sendMail($email, "Order Confirmed #{$order_number} — Laguna Vibe", $customer_email_html);
-    sendMail('admin@lagunavibe.com', "New Order #{$order_number} — Laguna Vibe", $admin_email_html);
+    $adminEmail = env('ADMIN_EMAIL', 'admin@lagunavibe.com');
+    sendMail($adminEmail, "New Order #{$order_number} — Laguna Vibe", $admin_email_html);
 } catch (\Throwable $mailErr) {
     error_log("Order confirmation email failed: " . $mailErr->getMessage());
 }
