@@ -35,14 +35,23 @@ if (!function_exists('env')) {
 
 if (!function_exists('base_url')) {
     function base_url($path = '') {
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $isLiveDomain = (!empty($host) && stripos($host, 'localhost') === false && $host !== '127.0.0.1');
+
         $envAppUrl = env('APP_URL', null);
-        if (!empty($envAppUrl)) {
+        // If on a live domain, do not allow an accidental 'localhost' APP_URL to break assets
+        if (!empty($envAppUrl) && (!$isLiveDomain || stripos($envAppUrl, 'localhost') === false)) {
             $trimmed = rtrim($envAppUrl, '/');
             return ($path === '' || $path === '/') ? $trimmed : ($trimmed . '/' . ltrim($path, '/'));
         }
 
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
-        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+            || (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
+            || $isLiveDomain;
+
+        $protocol = $isHttps ? 'https://' : 'http://';
+        $host = !empty($host) ? $host : 'lagunavibe.com';
         $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
         $scriptDir = preg_replace('#/logic$#', '', $scriptDir);
         $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;

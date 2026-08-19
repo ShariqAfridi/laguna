@@ -1,14 +1,44 @@
-RewriteEngine On
+<IfModule mod_rewrite.c>
+    RewriteEngine On
 
-# Transparently route legacy img/, assets/, and videos/ requests to public/
-RewriteRule ^img/(.*)$ public/assets/img/$1 [L,NC]
-RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]
-RewriteRule ^videos/(.*)$ public/videos/$1 [L,NC]
+    # ==============================================================================
+    # 1. Enforce HTTPS (Redirect all HTTP requests to HTTPS on live server)
+    # ==============================================================================
+    RewriteCond %{HTTPS} off [OR]
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteCond %{HTTP_HOST} !=localhost
+    RewriteCond %{HTTP_HOST} !=127.0.0.1
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^ - [L]
+    # ==============================================================================
+    # 2. Block access to Git, dotfiles, .env, and sensitive files
+    # ==============================================================================
+    RewriteRule "(^|/)\.(?!well-known)" - [F,L]
 
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
+    <FilesMatch "\.(env|sql|log|md|sh|bak|config|json|lock|yml|yaml|dist)$">
+        <IfModule mod_authz_core.c>
+            Require all denied
+        </IfModule>
+        <IfModule !mod_authz_core.c>
+            Order allow,deny
+            Deny from all
+        </IfModule>
+    </FilesMatch>
 
-RewriteRule ^ index.php [QSA,L]
+    # ==============================================================================
+    # 3. Transparently route legacy img/, assets/, and videos/ requests to public/
+    # ==============================================================================
+    RewriteRule ^img/(.*)$ public/assets/img/$1 [L,NC]
+    RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]
+    RewriteRule ^videos/(.*)$ public/videos/$1 [L,NC]
+
+    # Serve existing files and directories directly
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Front Controller Routing
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>

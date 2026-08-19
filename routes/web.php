@@ -7,6 +7,7 @@ return [
     '/contact' => 'Frontend\ContactController@index',
     '/journal' => 'Frontend\JournalController@index',
     '/shop' => 'Frontend\ShopController@index',
+    '/cart' => 'Frontend\ShopController@index',
     '/accessories' => 'Frontend\AccessoriesController@index',
     '/builder' => 'Frontend\DesignController@index',
     '/customizer' => 'Frontend\DesignController@index',
