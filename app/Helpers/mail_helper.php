@@ -29,8 +29,38 @@ if (!function_exists('send_mail')) {
         $username   = env('MAIL_USERNAME', 'noreply@lagunavibe.com');
         $password   = env('MAIL_PASSWORD', '=xQHc%KEN3!@ol96');
         $encryption = env('MAIL_ENCRYPTION', 'ssl');
-        $fromEmail  = env('MAIL_FROM_ADDRESS', 'noreply@lagunavibe.com');
+        $fromEmail  = env('MAIL_FROM_ADDRESS', 'orders@lagunavibe.com');
         $fromName   = env('MAIL_FROM_NAME', 'Laguna Vibe');
+
+        // Resend API Handler (Fastest REST API delivery)
+        if (str_starts_with($password, 're_') || str_contains($host, 'resend')) {
+            $senderEmail = (str_contains($fromEmail, 'resend.dev')) ? $fromEmail : 'onboarding@resend.dev';
+            $payload = [
+                'from'     => "{$fromName} <{$senderEmail}>",
+                'to'       => [$to],
+                'subject'  => $subject,
+                'html'     => $htmlBody,
+                'reply_to' => 'orders@lagunavibe.com'
+            ];
+
+            $ch = curl_init('https://api.resend.com/emails');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $password,
+                'Content-Type: application/json'
+            ]);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            $debugLog[] = "Resend API HTTP {$httpCode}: {$response}";
+            if ($httpCode >= 200 && $httpCode < 300) {
+                return true;
+            }
+        }
 
         $mail = new PHPMailer(true);
 
