@@ -73,7 +73,11 @@ if (!function_exists('send_mail')) {
                 $debugLog[] = trim($str);
             };
 
-            $mail->setFrom($fromEmail, $fromName);
+            // SetFrom uses username for SMTP authentication, with brand name and Reply-To header
+            $mail->setFrom($username, $fromName);
+            if (!empty($fromEmail) && $fromEmail !== $username) {
+                $mail->addReplyTo($fromEmail, $fromName);
+            }
             $mail->addAddress($to);
             $mail->isHTML(true);
             $mail->Subject = $subject;
