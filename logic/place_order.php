@@ -251,6 +251,20 @@ foreach ($cart as $cItem) {
     $qty          = intval($cItem['quantity'] ?? $cItem['qty'] ?? 1);
     $price        = floatval($cItem['price'] ?? 0);
     $item_total   = $price * $qty;
+    $sku          = $cItem['sku'] ?? '';
+
+    if (empty($sku) && $p_id > 0 && $conn) {
+        $stSku = $conn->prepare("SELECT sku FROM products WHERE product_id = ?");
+        if ($stSku) {
+            $stSku->bind_param("i", $p_id);
+            $stSku->execute();
+            $skuRes = $stSku->get_result()->fetch_assoc();
+            if (!empty($skuRes['sku'])) {
+                $sku = $skuRes['sku'];
+            }
+            $stSku->close();
+        }
+    }
 
     $stmt_item->bind_param("iissidd", $order_id, $p_id, $product_name, $scent, $qty, $price, $item_total);
     $stmt_item->execute();
@@ -266,6 +280,7 @@ foreach ($cart as $cItem) {
 
     $items_summary[] = [
         'product_name' => $product_name,
+        'sku'          => $sku,
         'scent'        => $scent,
         'quantity'     => $qty,
         'price'        => $price,
@@ -273,16 +288,18 @@ foreach ($cart as $cItem) {
         'image'        => $cItem['image'] ?? ''
     ];
 
+    $sku_html = !empty($sku) ? "<br><span style='font-size:11px;font-family:monospace;color:#526d7a;background:#f0f6f8;border:1px solid #dce8ec;padding:1px 5px;border-radius:4px;'>SKU: " . htmlspecialchars($sku) . "</span>" : "";
+
     $items_html .= "
         <tr>
-            <td style='padding:8px 12px;border-bottom:1px solid #eee;'>" . htmlspecialchars($product_name) . "</td>
+            <td style='padding:8px 12px;border-bottom:1px solid #eee;'>" . htmlspecialchars($product_name) . $sku_html . "</td>
             <td style='padding:8px 12px;border-bottom:1px solid #eee;'>" . htmlspecialchars($scent) . "</td>
             <td style='padding:8px 12px;border-bottom:1px solid #eee;text-align:center;'>" . $qty . "</td>
             <td style='padding:8px 12px;border-bottom:1px solid #eee;text-align:right;'>$" . number_format($item_total, 2) . "</td>
         </tr>
     ";
 
-    $items_text .= "• " . $product_name . " (" . $scent . ") × " . $qty . " = $" . number_format($item_total, 2) . "\n";
+    $items_text .= "• " . $product_name . (!empty($sku) ? " [SKU: $sku]" : "") . " (" . $scent . ") × " . $qty . " = $" . number_format($item_total, 2) . "\n";
 }
 $stmt_item->close();
 
@@ -618,20 +635,6 @@ try {
 if ($is_ajax) {
     if (ob_get_length()) { ob_clean(); }
     header('Content-Type: application/json');
-    $items_summary = [];
-    foreach ($cart as $ci) {
-        $sc = !empty($ci['scent']) ? $ci['scent'] : (!empty($ci['fragrance_name']) ? $ci['fragrance_name'] : (!empty($ci['size_name']) ? $ci['size_name'] : 'Standard'));
-        $pr = floatval($ci['price'] ?? 0);
-        $qt = intval($ci['qty'] ?? 1);
-        $items_summary[] = [
-            'product_name' => $ci['name'] ?? 'Handcrafted Candle',
-            'scent'        => $sc,
-            'quantity'     => $qt,
-            'price'        => $pr,
-            'subtotal'     => $pr * $qt,
-            'image'        => $ci['image'] ?? ''
-        ];
-    }
 
     echo json_encode([
         'success'         => true,

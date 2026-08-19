@@ -14,6 +14,28 @@ if (empty($cart) && isset($_POST['sync_cart'])) {
     $_SESSION['cart'] = $cart;
 }
 
+$dbSkus = [];
+if (!empty($cart) && isset($conn) && $conn instanceof \mysqli) {
+    $pIds = [];
+    foreach ($cart as $it) {
+        $pid = intval($it['product_id'] ?? $it['id'] ?? 0);
+        if ($pid > 0) {
+            $pIds[] = $pid;
+        }
+    }
+    if (!empty($pIds)) {
+        $pIdsList = implode(',', array_unique($pIds));
+        $skuQuery = @$conn->query("SELECT product_id, sku FROM products WHERE product_id IN ($pIdsList)");
+        if ($skuQuery) {
+            while ($sr = $skuQuery->fetch_assoc()) {
+                if (!empty($sr['sku'])) {
+                    $dbSkus[$sr['product_id']] = $sr['sku'];
+                }
+            }
+        }
+    }
+}
+
 $totalItems = 0;
 $subtotal = 0;
 foreach ($cart as $item) {
@@ -613,7 +635,26 @@ textarea { resize: vertical; min-height: 80px; }
     text-overflow: ellipsis;
 }
 
-.item-variant { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.item-variant { font-size: 11px; color: var(--muted); margin-bottom: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.item-sku-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3.5px;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    color: #1e293b;
+    background: #f1f5f9;
+    padding: 1.5px 5.5px;
+    border-radius: 4px;
+    border: 1px solid #cbd5e1;
+    letter-spacing: 0.3px;
+    line-height: 1.3;
+}
+.item-sku-tag i {
+    font-size: 9px;
+    color: #64748b;
+}
 
 .item-qty-row {
     display: flex;
@@ -1616,10 +1657,21 @@ textarea { resize: vertical; min-height: 80px; }
                                 <div class="item-name"><?php echo htmlspecialchars($item['name'] ?? 'Product'); ?></div>
                                 <div class="item-variant">
                                     <?php 
+                                        $itemSku = !empty($item['sku']) ? $item['sku'] : (!empty($item['product_id']) && !empty($dbSkus[$item['product_id']]) ? $dbSkus[$item['product_id']] : '');
+                                        if (!empty($itemSku)): 
+                                    ?>
+                                        <span class="item-sku-tag">
+                                            <i class="fas fa-barcode"></i> SKU: <?php echo htmlspecialchars($itemSku); ?>
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php 
                                         $scentName = !empty($item['scent']) ? $item['scent'] : (!empty($item['fragrance_name']) ? $item['fragrance_name'] : 'Standard');
                                         echo '<span style="font-weight:600; color:#0f4c5c;">Scent: ' . htmlspecialchars($scentName) . '</span>';
                                         if (!empty($item['size_name']) && strpos($item['name'] ?? '', $item['size_name']) === false) {
                                             echo ' · <span style="color:#6D8491; font-size:12px;">' . htmlspecialchars($item['size_name']) . '</span>';
+                                        }
+                                        if (!empty($item['box_name']) && strpos($item['name'] ?? '', $item['box_name']) === false) {
+                                            echo ' · <span style="color:#6D8491; font-size:12px;">Box: ' . htmlspecialchars($item['box_name']) . '</span>';
                                         }
                                     ?>
                                 </div>
@@ -1935,12 +1987,16 @@ textarea { resize: vertical; min-height: 80px; }
         container.innerHTML = cart.map((item, idx) => {
             const scentName = item.scent || item.fragrance_name || 'Standard Scent';
             const sizeDetail = (item.size_name && (!item.name || !item.name.includes(item.size_name))) ? ` · <span style="color:#6D8491; font-size:12px;">${esc(item.size_name)}</span>` : '';
+            const boxDetail = (item.box_name && (!item.name || !item.name.includes(item.box_name))) ? ` · <span style="color:#6D8491; font-size:12px;">Box: ${esc(item.box_name)}</span>` : '';
+            const itemSku = item.sku || (item.id && typeof item.id === 'string' && item.id.length <= 15 && !item.id.startsWith('prod_') ? item.id : '');
+            const skuHtml = itemSku ? `<span class="item-sku-tag"><i class="fas fa-barcode"></i> SKU: ${esc(itemSku)}</span>` : '';
+
             return `
             <div class="cart-item" data-index="${idx}" data-price="${parseFloat(item.price)||0}">
                 <img class="item-img" src="${esc(item.image || '/img/placeholder.jpg')}" alt="${esc(item.name||'')}">
                 <div class="item-details">
                     <div class="item-name">${esc(item.name||'Product')}</div>
-                    <div class="item-variant"><span style="font-weight:600; color:#0f4c5c;">Scent: ${esc(scentName)}</span>${sizeDetail}</div>
+                    <div class="item-variant">${skuHtml}<span style="font-weight:600; color:#0f4c5c;">Scent: ${esc(scentName)}</span>${sizeDetail}${boxDetail}</div>
                     <div class="item-qty-row">
                         <button type="button" class="qty-btn" onclick="changeQty(this, -1)">−</button>
                         <span class="qty-val">${parseInt(item.qty)||1}</span>
@@ -2793,6 +2849,7 @@ textarea { resize: vertical; min-height: 80px; }
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px dashed #e2e8f0; font-size:13px;">
                     <div>
                         <strong style="color:#1E2F3A;">${esc(item.product_name)}</strong>
+                        ${item.sku ? `<br><span class="item-sku-tag" style="margin-top:3px; display:inline-flex;"><i class="fas fa-barcode"></i> SKU: ${esc(item.sku)}</span>` : ''}
                         ${item.scent ? `<br><span style="color:#0F4C5C; font-weight:600; font-size:12px;">Scent: ${esc(item.scent)}</span>` : ''}
                         <span style="color:#64748b; font-size:12px;"> × ${item.quantity}</span>
                     </div>

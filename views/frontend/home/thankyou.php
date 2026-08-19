@@ -49,8 +49,8 @@ if ($order_id > 0) {
 if (!$order) {
     $order_not_found = true;
 } else {
-    // Fetch order items
-    $stmt_items = $conn->prepare("SELECT * FROM order_items WHERE order_id = ?");
+    // Fetch order items with SKU
+    $stmt_items = $conn->prepare("SELECT oi.*, p.sku AS product_sku FROM order_items oi LEFT JOIN products p ON oi.product_id = p.product_id WHERE oi.order_id = ?");
     if ($stmt_items) {
         $stmt_items->bind_param("i", $order['id']);
         $stmt_items->execute();
@@ -392,9 +392,13 @@ $customer_email = $order['email'] ?? 'your email';
                         <summary><i class="fa-regular fa-receipt"></i> Ordered Items (<?php echo count($order_items); ?>)</summary>
                         <div class="items-list" style="margin-top: 8px;">
                             <?php foreach ($order_items as $item): ?>
+                            <?php $itemSku = !empty($item['sku']) ? $item['sku'] : (!empty($item['product_sku']) ? $item['product_sku'] : ''); ?>
                             <p style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:6px; border-bottom:1px dashed #e2e8f0;">
                                 <span>
                                     <strong><?php echo htmlspecialchars($item['product_name']); ?></strong>
+                                    <?php if (!empty($itemSku)): ?>
+                                        <br><span style="display:inline-flex; align-items:center; gap:3px; color:#1e293b; font-size:10.5px; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; background:#f1f5f9; border:1px solid #cbd5e1; padding:1px 6px; border-radius:4px; font-weight:600; margin-top:2px;"><i class="fas fa-barcode" style="font-size:9.5px; color:#64748b;"></i> SKU: <?php echo htmlspecialchars($itemSku); ?></span>
+                                    <?php endif; ?>
                                     <?php if (!empty($item['scent'])): ?>
                                         <br><span style="color:#0F4C5C; font-weight:600; font-size:12px;">Scent: <?php echo htmlspecialchars($item['scent']); ?></span>
                                     <?php endif; ?>
