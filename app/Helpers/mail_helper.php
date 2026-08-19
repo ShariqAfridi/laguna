@@ -34,7 +34,7 @@ if (!function_exists('send_mail')) {
 
         // Resend API Handler (Fastest REST API delivery)
         if (str_starts_with($password, 're_') || str_contains($host, 'resend')) {
-            $senderEmail = (str_contains($fromEmail, 'resend.dev')) ? $fromEmail : 'onboarding@resend.dev';
+            $senderEmail = !empty($fromEmail) ? $fromEmail : 'orders@lagunavibe.com';
             $payload = [
                 'from'     => "{$fromName} <{$senderEmail}>",
                 'to'       => [$to],
@@ -59,6 +59,26 @@ if (!function_exists('send_mail')) {
             $debugLog[] = "Resend API HTTP {$httpCode}: {$response}";
             if ($httpCode >= 200 && $httpCode < 300) {
                 return true;
+            }
+
+            // Fallback during DNS propagation
+            if ($httpCode === 403 && $senderEmail !== 'onboarding@resend.dev') {
+                $payload['from'] = "{$fromName} <onboarding@resend.dev>";
+                $ch2 = curl_init('https://api.resend.com/emails');
+                curl_setopt($ch2, CURLOPT_HTTPHEADER, [
+                    'Authorization: Bearer ' . $password,
+                    'Content-Type: application/json'
+                ]);
+                curl_setopt($ch2, CURLOPT_POST, true);
+                curl_setopt($ch2, CURLOPT_POSTFIELDS, json_encode($payload));
+                curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+                $res2 = curl_exec($ch2);
+                $code2 = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+                curl_close($ch2);
+                $debugLog[] = "Resend Fallback HTTP {$code2}: {$res2}";
+                if ($code2 >= 200 && $code2 < 300) {
+                    return true;
+                }
             }
         }
 
