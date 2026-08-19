@@ -1556,9 +1556,9 @@ textarea { resize: vertical; min-height: 80px; }
         <h2 class="section-title" style="margin-bottom:0;">
             <span class="step-num">5</span> Payment Details
         </h2>
-        <div style="display:inline-flex; align-items:center; gap:6px; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-size:11.5px; font-weight:700; padding:4px 12px; border-radius:20px;">
-            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#dc2626;"></span>
-            Bank of America® Merchant Gateway
+        <div style="display:inline-flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d; font-size:11.5px; font-weight:700; padding:4px 12px; border-radius:20px;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#16a34a;"></span>
+            Bank of America® Merchant Gateway · Live
         </div>
     </div>
 
@@ -1573,9 +1573,6 @@ textarea { resize: vertical; min-height: 80px; }
                 <div style="font-size:11.5px; color:#64748b;">Merchant # 80161475 &bull; Direct Visa, MasterCard, AMEX, Discover</div>
             </div>
         </div>
-        <button type="button" onclick="fillTestCard()" style="background:#0F4C5C; color:white; border:none; border-radius:6px; padding:6px 14px; font-size:11.5px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            ⚡ Fill Test Card
-        </button>
     </div>
 
     <!-- Embedded Card Fields -->
@@ -2525,29 +2522,7 @@ textarea { resize: vertical; min-height: 80px; }
         });
     }
 
-    // ── Test Card Fill Helper ──
-    window.fillTestCard = function() {
-        const num = document.getElementById('cardNumber');
-        const exp = document.getElementById('cardExpiry');
-        const cvc = document.getElementById('cardCvc');
-        const name = document.getElementById('cardName');
-        if (num) num.value = '4242  4242  4242  4242';
-        if (exp) exp.value = '12 / 28';
-        if (cvc) cvc.value = '123';
-        if (name) {
-            const fName = document.getElementById('firstName')?.value || 'Jane';
-            const lName = document.getElementById('lastName')?.value || 'Doe';
-            name.value = `${fName} ${lName}`.trim() || 'Jane Doe';
-        }
-        ['cardNumber', 'cardExpiry', 'cardCvc', 'cardName'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.classList.remove('error');
-            const err = document.getElementById(id + 'Error');
-            if (err) err.style.display = 'none';
-        });
-        const icon = document.getElementById('cardBrandIcon');
-        if (icon) icon.innerHTML = '<i class="fab fa-cc-visa" style="color:#1A1F71;"></i>';
-    };
+
 
     function setupCardFormatters() {
         const num = document.getElementById('cardNumber');
