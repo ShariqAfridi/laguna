@@ -295,7 +295,8 @@ foreach ($cart as $cItem) {
             <td style='padding:8px 12px;border-bottom:1px solid #eee;'>" . htmlspecialchars($product_name) . $sku_html . "</td>
             <td style='padding:8px 12px;border-bottom:1px solid #eee;'>" . htmlspecialchars($scent) . "</td>
             <td style='padding:8px 12px;border-bottom:1px solid #eee;text-align:center;'>" . $qty . "</td>
-            <td style='padding:8px 12px;border-bottom:1px solid #eee;text-align:right;'>$" . number_format($item_total, 2) . "</td>
+            <td style='padding:8px 12px;border-bottom:1px solid #eee;text-align:right;'>$" . number_format($price, 2) . "</td>
+            <td style='padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:600;'>$" . number_format($item_total, 2) . "</td>
         </tr>
     ";
 
@@ -322,25 +323,25 @@ $payment_label  = match ($payment_method) {
 };
 
 $discount_row_html = $discount > 0
-    ? "<tr><td colspan='3' style='padding:8px 12px;text-align:right;color:#6b7280;'>Promo ({$promo_code}):</td><td style='padding:8px 12px;text-align:right;color:#059669;font-weight:600;'>−$" . number_format($discount, 2) . "</td></tr>"
+    ? "<tr><td colspan='4' style='padding:8px 12px;text-align:right;color:#6b7280;'>Promo ({$promo_code}):</td><td style='padding:8px 12px;text-align:right;color:#059669;font-weight:600;'>−$" . number_format($discount, 2) . "</td></tr>"
     : '';
 
 $totals_html = "
     <tr style='background:#f9fafb;'>
-        <td colspan='3' style='padding:8px 12px;text-align:right;color:#6b7280;'>Subtotal:</td>
-        <td style='padding:8px 12px;text-align:right;'>$" . number_format($subtotal, 2) . "</td>
+        <td colspan='4' style='padding:8px 12px;text-align:right;color:#6b7280;'>Subtotal:</td>
+        <td style='padding:8px 12px;text-align:right;font-weight:600;'>$" . number_format($subtotal, 2) . "</td>
     </tr>
     <tr style='background:#f9fafb;'>
-        <td colspan='3' style='padding:8px 12px;text-align:right;color:#6b7280;'>Shipping:</td>
-        <td style='padding:8px 12px;text-align:right;'>" . ($shipping == 0 ? '<span style=\"color:#059669;font-weight:600;\">FREE</span>' : '$' . number_format($shipping, 2)) . "</td>
+        <td colspan='4' style='padding:8px 12px;text-align:right;color:#6b7280;'>Shipping:</td>
+        <td style='padding:8px 12px;text-align:right;'>" . ($shipping == 0 ? '<span style="color:#059669;font-weight:600;">FREE</span>' : '$' . number_format($shipping, 2)) . "</td>
     </tr>
     <tr style='background:#f9fafb;'>
-        <td colspan='3' style='padding:8px 12px;text-align:right;color:#6b7280;'>Tax (8%):</td>
+        <td colspan='4' style='padding:8px 12px;text-align:right;color:#6b7280;'>Tax (8%):</td>
         <td style='padding:8px 12px;text-align:right;'>$" . number_format($tax, 2) . "</td>
     </tr>
     {$discount_row_html}
     <tr style='background:#0f4c5c;color:#fff;'>
-        <td colspan='3' style='padding:12px;text-align:right;font-weight:700;'>TOTAL:</td>
+        <td colspan='4' style='padding:12px;text-align:right;font-weight:700;'>TOTAL:</td>
         <td style='padding:12px;text-align:right;font-weight:700;font-size:16px;'>$" . number_format($total, 2) . "</td>
     </tr>";
 
@@ -423,6 +424,7 @@ $customer_email_html = "
         <thead>
           <tr style='background:#f9fafb;'>
             <th style='padding:10px 12px;text-align:left;font-size:11px;letter-spacing:0.08em;color:#6b7280;text-transform:uppercase;'>Product</th>
+            <th style='padding:10px 12px;text-align:left;font-size:11px;letter-spacing:0.08em;color:#6b7280;text-transform:uppercase;'>Variant</th>
             <th style='padding:10px 12px;text-align:center;font-size:11px;letter-spacing:0.08em;color:#6b7280;text-transform:uppercase;'>Qty</th>
             <th style='padding:10px 12px;text-align:right;font-size:11px;letter-spacing:0.08em;color:#6b7280;text-transform:uppercase;'>Price</th>
             <th style='padding:10px 12px;text-align:right;font-size:11px;letter-spacing:0.08em;color:#6b7280;text-transform:uppercase;'>Total</th>
