@@ -22,6 +22,7 @@ if (!function_exists('send_mail')) {
             }
         }
 
+        $mailer     = env('MAIL_MAILER', 'smtp');
         $host       = env('MAIL_HOST', 'mail.lagunavibe.com');
         $pop3Host   = env('POP3_HOST', 'mail.lagunavibe.com');
         $port       = (int) env('MAIL_PORT', 465);
@@ -34,33 +35,37 @@ if (!function_exists('send_mail')) {
         $mail = new PHPMailer(true);
 
         try {
-            $mail->isSMTP();
-            $mail->Host       = $host;
-            $mail->SMTPAuth   = !empty($username) && !empty($password);
-            $mail->Username   = $username;
-            $mail->Password   = $password;
-            
-            // SSL / TLS configuration
-            if (strtolower($encryption) === 'ssl' || $port === 465) {
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-            } elseif (strtolower($encryption) === 'tls' || $port === 587) {
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            if (strtolower($mailer) === 'mail') {
+                $mail->isMail();
             } else {
-                $mail->SMTPAutoTLS = false;
+                $mail->isSMTP();
+                $mail->Host       = $host;
+                $mail->SMTPAuth   = !empty($username) && !empty($password);
+                $mail->Username   = $username;
+                $mail->Password   = $password;
+                
+                // SSL / TLS configuration
+                if (strtolower($encryption) === 'ssl' || $port === 465) {
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                } elseif (strtolower($encryption) === 'tls' || $port === 587) {
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                } else {
+                    $mail->SMTPAutoTLS = false;
+                }
+
+                // Stream SSL options for maximum compatibility across environments
+                $mail->SMTPOptions = [
+                    'ssl' => [
+                        'verify_peer'       => false,
+                        'verify_peer_name'  => false,
+                        'allow_self_signed' => true
+                    ]
+                ];
+
+                $mail->Port       = $port;
+                $mail->Timeout    = 8;
             }
-
-            // Stream SSL options for maximum compatibility across environments
-            $mail->SMTPOptions = [
-                'ssl' => [
-                    'verify_peer'       => false,
-                    'verify_peer_name'  => false,
-                    'allow_self_signed' => true
-                ]
-            ];
-
-            $mail->Port       = $port;
-            $mail->CharSet    = 'UTF-8';
-            $mail->Timeout    = 8;
+            $mail->CharSet = 'UTF-8';
 
             // Debug output capture if requested
             $mail->SMTPDebug = 2;
