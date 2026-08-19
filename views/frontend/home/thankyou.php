@@ -113,8 +113,12 @@ $customer_email = $order['email'] ?? 'your email';
 
         body {
             font-family: 'Inter', sans-serif;
-            background: url('https://images.pexels.com/photos/37162119/pexels-photo-37162119.jpeg') center/cover no-repeat fixed;
-            background-color: #2c4a3b;
+            background: 
+                radial-gradient(circle at 15% 20%, rgba(15, 76, 92, 0.45) 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(15, 76, 92, 0.35) 0%, transparent 45%),
+                linear-gradient(135deg, rgba(7, 25, 36, 0.94) 0%, rgba(15, 76, 92, 0.88) 100%),
+                url('https://images.pexels.com/photos/37162119/pexels-photo-37162119.jpeg') center/cover no-repeat fixed;
+            background-color: #071924;
             min-height: 100vh;
         }
 
@@ -123,8 +127,10 @@ $customer_email = $order['email'] ?? 'your email';
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            padding: 2rem 1.5rem;
-            background: rgba(15, 28, 22, 0.35);
+            padding: 2.5rem 1.5rem;
+            background: rgba(7, 25, 36, 0.65);
+            backdrop-filter: blur(20px) saturate(140%);
+            -webkit-backdrop-filter: blur(20px) saturate(140%);
         }
 
         .thankyou-card {
