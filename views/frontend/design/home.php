@@ -10,47 +10,6 @@ if (!isset($base)) {
 require_once __DIR__ . '/../../../db.php';
 $dbConn = get_db_connection();
 
-if (!function_exists('get_candle_listing_specs')) {
-    function get_candle_listing_specs($vesselCodeOrName, $catData = null) {
-        $v = strtolower((string)$vesselCodeOrName);
-        if (strpos($v, 'e') !== false || strpos($v, '18') !== false || strpos($v, 'triple') !== false) {
-            $size = '18 oz Wax';
-            $burn = '90–100 Hours';
-            $container = '4" × 4.5"';
-        } elseif (strpos($v, 'd') !== false || strpos($v, '14') !== false || strpos($v, 'double') !== false) {
-            $size = '14 oz Wax';
-            $burn = '70–80 Hours';
-            $container = '3.5" × 4"';
-        } else {
-            $size = '10 oz Wax';
-            $burn = '50–60 Hours';
-            $container = '3" × 3.5"';
-        }
-
-        if (is_array($catData)) {
-            if (!empty($catData['category_name']) && preg_match('/(\d+\s*oz)/i', $catData['category_name'], $m)) {
-                $size = $m[1] . ' Wax';
-            }
-            if (!empty($catData['burn_time_badge'])) {
-                $b = trim($catData['burn_time_badge']);
-                if (strpos(strtolower($b), 'hour') === false && strpos(strtolower($b), 'hrs') === false) {
-                    $b .= ' Hours';
-                }
-                $burn = $b;
-            }
-            if (!empty($catData['dimensions_subtitle'])) {
-                $container = trim($catData['dimensions_subtitle']);
-            }
-        }
-
-        return [
-            'candle_size'    => $size,
-            'burn_time'      => $burn,
-            'container_size' => $container
-        ];
-    }
-}
-
 $pricingSettingsRes = $dbConn->query('SELECT setting_key, setting_value FROM builder_pricing_settings');
 $pricingSettings = [
     'vessel_c_price'        => 30.00,
@@ -1436,21 +1395,6 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
                 <?php if ($wickType): ?>
                   <div><span class="wick-badge"><?= htmlspecialchars($wickType); ?></span></div>
                 <?php endif; ?>
-                <?php $bvSpecs = get_candle_listing_specs($vesselKey, $cat); ?>
-                <div class="candle-listing-specs" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #f1f5f9;">
-                  <div class="spec-col">
-                    <span class="spec-label">Candle Size</span>
-                    <span class="spec-val"><?= htmlspecialchars($bvSpecs['candle_size']); ?></span>
-                  </div>
-                  <div class="spec-col">
-                    <span class="spec-label">Burn Time</span>
-                    <span class="spec-val"><?= htmlspecialchars($bvSpecs['burn_time']); ?></span>
-                  </div>
-                  <div class="spec-col">
-                    <span class="spec-label">Container Size</span>
-                    <span class="spec-val"><?= htmlspecialchars($bvSpecs['container_size']); ?></span>
-                  </div>
-                </div>
               </div>
             </div>
           <?php endforeach; ?>
