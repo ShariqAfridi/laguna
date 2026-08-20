@@ -70,7 +70,7 @@
             margin: 0 auto;
             padding: 70px 24px 20px 24px;
             flex: 1;
-            justify-content: center; 
+            justify-content: center;   
         }
         
         @media (min-width: 1280px) {
