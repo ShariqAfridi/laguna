@@ -235,8 +235,18 @@ if (!isset($base)) {
             <div class="promo-icon" style="color: #1d3557;"><i data-lucide="tag"></i></div>
             <h2 class="promo-title">Promo Code</h2>
             <p class="promo-text">Apply a code at checkout for an instant discount on your order. New codes drop with every collection.</p>
+            <?php
+            require_once __DIR__ . '/../../../db.php';
+            $activeCouponCode = 'LAGUNA20';
+            if (isset($conn) && $conn) {
+                $cQuery = $conn->query("SELECT code FROM coupons WHERE status = 1 ORDER BY id DESC LIMIT 1");
+                if ($cQuery && $cRow = $cQuery->fetch_assoc()) {
+                    $activeCouponCode = htmlspecialchars($cRow['code']);
+                }
+            }
+            ?>
             <div>
-                <span class="promo-code">TRY LAGUNA15</span>
+                <span class="promo-code">TRY <?= $activeCouponCode; ?></span>
             </div>
         </div>
 
