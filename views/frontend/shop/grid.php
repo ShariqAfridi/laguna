@@ -3,6 +3,47 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../../../db.php';
 $base = function_exists('base_url') ? rtrim(base_url(), '/') : '';
 
+if (!function_exists('get_candle_listing_specs')) {
+    function get_candle_listing_specs($vesselCodeOrName, $catData = null) {
+        $v = strtolower((string)$vesselCodeOrName);
+        if (strpos($v, 'e') !== false || strpos($v, '18') !== false || strpos($v, 'triple') !== false) {
+            $size = '18 oz Wax';
+            $burn = '90–100 Hours';
+            $container = '4" × 4.5"';
+        } elseif (strpos($v, 'd') !== false || strpos($v, '14') !== false || strpos($v, 'double') !== false) {
+            $size = '14 oz Wax';
+            $burn = '70–80 Hours';
+            $container = '3.5" × 4"';
+        } else {
+            $size = '10 oz Wax';
+            $burn = '50–60 Hours';
+            $container = '3" × 3.5"';
+        }
+
+        if (is_array($catData)) {
+            if (!empty($catData['category_name']) && preg_match('/(\d+\s*oz)/i', $catData['category_name'], $m)) {
+                $size = $m[1] . ' Wax';
+            }
+            if (!empty($catData['burn_time_badge'])) {
+                $b = trim($catData['burn_time_badge']);
+                if (strpos(strtolower($b), 'hour') === false && strpos(strtolower($b), 'hrs') === false) {
+                    $b .= ' Hours';
+                }
+                $burn = $b;
+            }
+            if (!empty($catData['dimensions_subtitle'])) {
+                $container = trim($catData['dimensions_subtitle']);
+            }
+        }
+
+        return [
+            'candle_size'    => $size,
+            'burn_time'      => $burn,
+            'container_size' => $container
+        ];
+    }
+}
+
 // Get vessel, filter parameters, and target product ID from URL
 $selectedVessel    = isset($_GET['vessel']) ? strtolower($_GET['vessel']) : '';
 $targetProductId   = isset($_GET['product_id']) ? (int)$_GET['product_id'] : (isset($_GET['product']) ? (int)$_GET['product'] : 0);
@@ -622,6 +663,39 @@ if (!empty($boxes)) {
     .product-detail-row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
     .product-fragrance { font-size: 11px; font-weight: 600; color: #004b66; background: #e0f2fe; padding: 3px 8px; border-radius: 12px; }
     .product-price { font-size: 14px; font-weight: 600; color: #004b66; }
+
+    .candle-listing-specs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #eef3f6;
+        text-align: center;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .candle-listing-specs .spec-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .candle-listing-specs .spec-label {
+        font-size: 9px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #8fa3b0;
+        margin-bottom: 2px;
+        white-space: nowrap;
+    }
+    .candle-listing-specs .spec-val {
+        font-size: 11px;
+        font-weight: 600;
+        color: #1a2a3a;
+        white-space: nowrap;
+    }
     .add-to-cart-btn.btn-disabled,
     .add-to-cart-btn:disabled {
         background: #94a3b8 !important;
@@ -1173,6 +1247,21 @@ if (!empty($boxes)) {
                     <?php endif; ?>
                 </div>
                 <span class="vessel-wick"><?= $wickIcon ?> <?= $wickText ?></span>
+                <?php $vSpecs = get_candle_listing_specs($vesselCode, $catRow); ?>
+                <div class="candle-listing-specs" style="margin-top: 14px; padding-top: 12px;">
+                    <div class="spec-col">
+                        <span class="spec-label">Candle Size</span>
+                        <span class="spec-val"><?= htmlspecialchars($vSpecs['candle_size']) ?></span>
+                    </div>
+                    <div class="spec-col">
+                        <span class="spec-label">Burn Time</span>
+                        <span class="spec-val"><?= htmlspecialchars($vSpecs['burn_time']) ?></span>
+                    </div>
+                    <div class="spec-col">
+                        <span class="spec-label">Container Size</span>
+                        <span class="spec-val"><?= htmlspecialchars($vSpecs['container_size']) ?></span>
+                    </div>
+                </div>
                 <div>
                     <span class="shop-now-btn">Shop Collection →</span>
                 </div>
@@ -1310,6 +1399,21 @@ if (!empty($boxes)) {
                             <?php endif; ?>
                             <span class="product-price">$<?= number_format($var['price'], 2) ?></span>
                         </div>
+                        <?php $specs = get_candle_listing_specs($selectedVessel, $currentCategory); ?>
+                        <div class="candle-listing-specs">
+                            <div class="spec-col">
+                                <span class="spec-label">Candle Size</span>
+                                <span class="spec-val"><?= htmlspecialchars($specs['candle_size']) ?></span>
+                            </div>
+                            <div class="spec-col">
+                                <span class="spec-label">Burn Time</span>
+                                <span class="spec-val"><?= htmlspecialchars($specs['burn_time']) ?></span>
+                            </div>
+                            <div class="spec-col">
+                                <span class="spec-label">Container Size</span>
+                                <span class="spec-val"><?= htmlspecialchars($specs['container_size']) ?></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -1354,8 +1458,16 @@ if (!empty($boxes)) {
                     <span id="modalSKU" class="info-value"></span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Size</span>
-                    <span id="modalSizeValue" class="info-value"></span>
+                    <span class="info-label">Candle Size</span>
+                    <span id="modalCandleSizeValue" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Burn Time</span>
+                    <span id="modalBurnTimeValue" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Container Size</span>
+                    <span id="modalContainerSizeValue" class="info-value"></span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Color</span>
@@ -1626,10 +1738,39 @@ function switchFragranceItem(productData) {
     let vesselCode = getProductVesselCode(currentProduct).toLowerCase();
     let catObj = (categoriesData && categoriesData[vesselCode]) ? categoriesData[vesselCode] : (categoriesData ? categoriesData['c'] : null);
 
-    let sizeLabel = catObj ? catObj.category_name : ('Vessel ' + vesselCode.toUpperCase());
-    let sizeDetails = catObj ? catObj.size_details : '3" · 45 HRS';
+    let candleSizeVal = '10 oz Wax';
+    let burnTimeVal = '50–60 Hours';
+    let containerSizeVal = '3" × 3.5"';
 
-    document.getElementById('modalSizeValue').innerText = sizeLabel + (sizeDetails ? ' (' + sizeDetails + ')' : '');
+    if (vesselCode === 'e' || vesselCode.includes('18')) {
+        candleSizeVal = '18 oz Wax';
+        burnTimeVal = '90–100 Hours';
+        containerSizeVal = '4" × 4.5"';
+    } else if (vesselCode === 'd' || vesselCode.includes('14')) {
+        candleSizeVal = '14 oz Wax';
+        burnTimeVal = '70–80 Hours';
+        containerSizeVal = '3.5" × 4"';
+    }
+
+    if (catObj) {
+        if (catObj.category_name && catObj.category_name.match(/(\d+\s*oz)/i)) {
+            candleSizeVal = catObj.category_name.match(/(\d+\s*oz)/i)[1] + ' Wax';
+        }
+        if (catObj.burn_time_badge) {
+            let b = catObj.burn_time_badge.trim();
+            if (!b.toLowerCase().includes('hour') && !b.toLowerCase().includes('hrs')) {
+                b += ' Hours';
+            }
+            burnTimeVal = b;
+        }
+        if (catObj.dimensions_subtitle) {
+            containerSizeVal = catObj.dimensions_subtitle.trim();
+        }
+    }
+
+    if (document.getElementById('modalCandleSizeValue')) document.getElementById('modalCandleSizeValue').innerText = candleSizeVal;
+    if (document.getElementById('modalBurnTimeValue')) document.getElementById('modalBurnTimeValue').innerText = burnTimeVal;
+    if (document.getElementById('modalContainerSizeValue')) document.getElementById('modalContainerSizeValue').innerText = containerSizeVal;
 
     let colorNameText = 'Standard';
     if (productData.color_id && productData.color_id.length > 0) {

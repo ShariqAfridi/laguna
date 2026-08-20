@@ -18,6 +18,47 @@ if (!function_exists('lvc_base_url')) {
     }
 } 
 
+if (!function_exists('get_candle_listing_specs')) {
+    function get_candle_listing_specs($vesselCodeOrName, $catData = null) {
+        $v = strtolower((string)$vesselCodeOrName);
+        if (strpos($v, 'e') !== false || strpos($v, '18') !== false || strpos($v, 'triple') !== false) {
+            $size = '18 oz Wax';
+            $burn = '90–100 Hours';
+            $container = '4" × 4.5"';
+        } elseif (strpos($v, 'd') !== false || strpos($v, '14') !== false || strpos($v, 'double') !== false) {
+            $size = '14 oz Wax';
+            $burn = '70–80 Hours';
+            $container = '3.5" × 4"';
+        } else {
+            $size = '10 oz Wax';
+            $burn = '50–60 Hours';
+            $container = '3" × 3.5"';
+        }
+
+        if (is_array($catData)) {
+            if (!empty($catData['category_name']) && preg_match('/(\d+\s*oz)/i', $catData['category_name'], $m)) {
+                $size = $m[1] . ' Wax';
+            }
+            if (!empty($catData['burn_time_badge'])) {
+                $b = trim($catData['burn_time_badge']);
+                if (strpos(strtolower($b), 'hour') === false && strpos(strtolower($b), 'hrs') === false) {
+                    $b .= ' Hours';
+                }
+                $burn = $b;
+            }
+            if (!empty($catData['dimensions_subtitle'])) {
+                $container = trim($catData['dimensions_subtitle']);
+            }
+        }
+
+        return [
+            'candle_size'    => $size,
+            'burn_time'      => $burn,
+            'container_size' => $container
+        ];
+    }
+}
+
 // Fetch active categories to construct valid vessels map and size details
 $categoriesMap = [];
 $catQuery = $conn->query("SELECT id, category_name, LOWER(sku) AS sku, wick_type, dimensions_subtitle, burn_time_badge FROM categories WHERE status = 1");
@@ -250,6 +291,21 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
           </div>
           <span class="lvc-price">$<?php echo number_format($var['price'], 0); ?></span>
         </div>
+        <?php $cSpecs = get_candle_listing_specs($var['vessel_name'] ?? ''); ?>
+        <div class="candle-listing-specs" style="padding: 8px 12px 12px; background: white; border-top: 1px solid #eef3f6;">
+          <div class="spec-col">
+            <span class="spec-label">Candle Size</span>
+            <span class="spec-val"><?= htmlspecialchars($cSpecs['candle_size']) ?></span>
+          </div>
+          <div class="spec-col">
+            <span class="spec-label">Burn Time</span>
+            <span class="spec-val"><?= htmlspecialchars($cSpecs['burn_time']) ?></span>
+          </div>
+          <div class="spec-col">
+            <span class="spec-label">Container Size</span>
+            <span class="spec-val"><?= htmlspecialchars($cSpecs['container_size']) ?></span>
+          </div>
+        </div>
       </div>
     <?php endforeach; ?>
   </div>
@@ -281,8 +337,16 @@ $homepageVariations = array_slice($colorVariations, 0, 6);
                     <span id="modalSKU" class="info-value"></span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Size</span>
-                    <span id="modalSizeValue" class="info-value"></span>
+                    <span class="info-label">Candle Size</span>
+                    <span id="modalCandleSizeValue" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Burn Time</span>
+                    <span id="modalBurnTimeValue" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Container Size</span>
+                    <span id="modalContainerSizeValue" class="info-value"></span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Color</span>
@@ -1203,10 +1267,39 @@ function switchFragranceItem(productData) {
     let vesselCode = getProductVesselCode(currentProduct).toLowerCase();
     let catObj = (categoriesData && categoriesData[vesselCode]) ? categoriesData[vesselCode] : (categoriesData ? categoriesData['c'] : null);
 
-    let sizeLabel = catObj ? catObj.category_name : ('Vessel ' + vesselCode.toUpperCase());
-    let sizeDetails = catObj ? catObj.size_details : '3" · 45 HRS';
+    let candleSizeVal = '10 oz Wax';
+    let burnTimeVal = '50–60 Hours';
+    let containerSizeVal = '3" × 3.5"';
 
-    document.getElementById('modalSizeValue').innerText = sizeLabel + (sizeDetails ? ' (' + sizeDetails + ')' : '');
+    if (vesselCode === 'e' || vesselCode.includes('18')) {
+        candleSizeVal = '18 oz Wax';
+        burnTimeVal = '90–100 Hours';
+        containerSizeVal = '4" × 4.5"';
+    } else if (vesselCode === 'd' || vesselCode.includes('14')) {
+        candleSizeVal = '14 oz Wax';
+        burnTimeVal = '70–80 Hours';
+        containerSizeVal = '3.5" × 4"';
+    }
+
+    if (catObj) {
+        if (catObj.category_name && catObj.category_name.match(/(\d+\s*oz)/i)) {
+            candleSizeVal = catObj.category_name.match(/(\d+\s*oz)/i)[1] + ' Wax';
+        }
+        if (catObj.burn_time_badge) {
+            let b = catObj.burn_time_badge.trim();
+            if (!b.toLowerCase().includes('hour') && !b.toLowerCase().includes('hrs')) {
+                b += ' Hours';
+            }
+            burnTimeVal = b;
+        }
+        if (catObj.dimensions_subtitle) {
+            containerSizeVal = catObj.dimensions_subtitle.trim();
+        }
+    }
+
+    if (document.getElementById('modalCandleSizeValue')) document.getElementById('modalCandleSizeValue').innerText = candleSizeVal;
+    if (document.getElementById('modalBurnTimeValue')) document.getElementById('modalBurnTimeValue').innerText = burnTimeVal;
+    if (document.getElementById('modalContainerSizeValue')) document.getElementById('modalContainerSizeValue').innerText = containerSizeVal;
 
     let colorNameText = 'Standard';
     if (currentVariation && currentVariation.color_name) {
