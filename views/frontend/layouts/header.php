@@ -16,19 +16,19 @@ if (!isset($base)) {
   <base href="<?php echo rtrim($base, '/') . '/'; ?>">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>L V B — Luxury Fashion | Desktop Header</title>
+  <title>Laguna Vibe</title>
   <link rel="icon" type="image/png" href="favicon.png">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://lagunavibe.com/">
-  <meta property="og:title" content="L V B - Luxury Fashion">
-  <meta property="og:description" content="Discover premium fashion and luxury styles at LVB. Shop latest collections online.">
+  <meta property="og:title" content="Laguna Vibe">
+  <meta property="og:description" content="Hand-poured candles inspired by the Pacific. Designed and finished in Laguna Beach.">
   <meta property="og:image" content="https://lagunavibe.com/img/logo.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/png">
-  <meta property="og:site_name" content="LVB">
+  <meta property="og:site_name" content="Laguna Vibe">
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
