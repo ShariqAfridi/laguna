@@ -321,14 +321,46 @@ if (!isset($base)) {
     .user-dropdown-menu a:hover svg {
       stroke: #14222B;
     }
-    .dropdown-divider {
-      height: 1px;
-      background: #EEF3F6;
-      margin: 6px 0;
+    .header-ada-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #F4F8FA;
+      border: 1px solid #E2E9EF;
+      border-radius: 20px;
+      padding: 6px 12px;
+      color: #1E2F3A;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .header-ada-btn:hover {
+      background: #1E2F3A;
+      color: #FFFFFF;
+      border-color: #1E2F3A;
+    }
+    .header-ada-btn:hover svg {
+      stroke: #FFFFFF;
+      fill: #FFFFFF;
     }
   </style>
 
-  <div style="flex:1; display:flex; align-items:center; justify-content:flex-end; gap:20px;">
+  <div style="flex:1; display:flex; align-items:center; justify-content:flex-end; gap:16px;">
+    <!-- Accessibility (ADA) Button on White Header Line -->
+    <button type="button" class="header-ada-btn" onclick="if(typeof window.openAdaPanel==='function'){window.openAdaPanel();}else if(document.getElementById('adaTriggerBtn')){document.getElementById('adaTriggerBtn').click();}" aria-label="Open Accessibility Menu" title="Accessibility Tools (Alt+A)">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px; height:15px;">
+        <circle cx="12" cy="4" r="2.3"/>
+        <path d="M12 7.8C8 7.8 4.8 9.1 4.8 9.1L5.5 11C5.5 11 7.8 9.9 10.2 9.7V14L7.8 19.8H10L11.4 16.2H12.6L14 19.8H16.2L13.8 14V9.7C16.2 9.9 18.5 11 18.5 11L19.2 9.1C19.2 9.1 16 7.8 12 7.8Z"/>
+      </svg>
+      <span>Accessibility</span>
+    </button>
+
     <!-- Search Icon Button -->
     <button class="user-dropdown-trigger" id="desktopSearchBtn" aria-label="Search Products" title="Search Products" style="background:none; border:none; cursor:pointer; padding:4px; display:flex; align-items:center; justify-content:center; color:inherit; outline:none;">
       <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
