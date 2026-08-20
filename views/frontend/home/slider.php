@@ -68,21 +68,21 @@
             width: 100%;
             max-width: 1280px;
             margin: 0 auto;
-            padding: 90px 24px 180px 24px;
+            padding: 70px 24px 20px 24px;
             flex: 1;
             justify-content: center;
         }
         
         @media (min-width: 1280px) {
             .lvh-content-wrapper {
-                padding-top: 80px;
-                padding-bottom: 190px;
+                padding-top: 70px;
+                padding-bottom: 20px;
             }
         }
         @media (max-height: 800px) and (min-width: 1024px) {
             .lvh-content-wrapper {
                 padding-top: 50px;
-                padding-bottom: 170px;
+                padding-bottom: 15px;
             }
         }
         
@@ -185,12 +185,11 @@
         
         /* ---------- INFINITE SCROLLING MARQUEE (ALIGNED FLUSH TO BOTTOM OF HERO VIDEO) ---------- */
         .lvh-marquee-section {
-            position: absolute;
-            bottom: 0;
-            left: 0;
+            position: relative;
             width: 100%;
-            padding: 10px 0 16px 0;
+            padding: 10px 0 20px 0;
             z-index: 15;
+            margin-top: auto;
             background: transparent !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
