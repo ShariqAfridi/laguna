@@ -21,7 +21,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
-          port: 21098
+          port: 22
           script: |
             cd /home/lagumobu/www/
             git reset --hard HEAD
