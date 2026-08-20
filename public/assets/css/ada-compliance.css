@@ -234,26 +234,9 @@ body.ada-cursor-big-light * {
 #adaReadingMaskTop { top: 0; }
 #adaReadingMaskBottom { bottom: 0; }
 
-/* ── 19. Accessibility Trigger Button (Upper-Right Header Bar Line) ── */
+/* ── 19. Floating Side Trigger Button Hidden (Replaced by Upper-Right Header Bar Button) ── */
 #adaTriggerBtn {
-    position: fixed;
-    top: 24px;
-    right: 24px;
-    height: 40px;
-    padding: 0 16px;
-    border-radius: 20px;
-    background: #FFFFFF;
-    color: #1E2F3A;
-    border: 1.5px solid #D6E8F0;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    z-index: 999990;
-    transition: all 0.25s ease;
-    outline: none;
+    display: none !important;
 }
 #adaTriggerBtn:hover {
     background: #1E2F3A;
