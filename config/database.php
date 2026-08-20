@@ -92,6 +92,30 @@ function get_db_connection()
             if ($res_o_boa && $res_o_boa->num_rows === 0) {
                 @$conn->query("ALTER TABLE orders ADD COLUMN boa_transaction_id VARCHAR(100) DEFAULT NULL AFTER stripe_payment_intent_id");
             }
+
+            // 6. Ensure builder_pricing_settings table exists & seed default values
+            @$conn->query("CREATE TABLE IF NOT EXISTS `builder_pricing_settings` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `setting_key` varchar(100) NOT NULL,
+                `setting_value` varchar(255) NOT NULL,
+                `description` varchar(255) DEFAULT NULL,
+                `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `idx_setting_key` (`setting_key`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            // Seed initial defaults if missing
+            $defaults = [
+                'vessel_c_price' => '30.00',
+                'vessel_d_price' => '40.00',
+                'vessel_e_price' => '55.00',
+                'builder_shipping_fee' => '9.00',
+                'customization_fee' => '0.00',
+                'enable_custom_pricing' => '1',
+            ];
+            foreach ($defaults as $key => $val) {
+                @$conn->query("INSERT IGNORE INTO `builder_pricing_settings` (`setting_key`, `setting_value`) VALUES ('" . $conn->real_escape_string($key) . "', '" . $conn->real_escape_string($val) . "')");
+            }
         }
     }
     return $conn;

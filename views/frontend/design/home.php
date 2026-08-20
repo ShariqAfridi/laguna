@@ -10,6 +10,21 @@ if (!isset($base)) {
 require_once __DIR__ . '/../../../db.php';
 $dbConn = get_db_connection();
 
+$pricingSettingsRes = $dbConn->query('SELECT setting_key, setting_value FROM builder_pricing_settings');
+$pricingSettings = [
+    'vessel_c_price'        => 30.00,
+    'vessel_d_price'        => 40.00,
+    'vessel_e_price'        => 55.00,
+    'builder_shipping_fee'  => 9.00,
+    'customization_fee'     => 0.00,
+    'enable_custom_pricing' => 1,
+];
+if ($pricingSettingsRes && $pricingSettingsRes->num_rows > 0) {
+    while ($pRow = $pricingSettingsRes->fetch_assoc()) {
+        $pricingSettings[$pRow['setting_key']] = (float)$pRow['setting_value'];
+    }
+}
+
 $categoriesResult = $dbConn->query('SELECT * FROM categories WHERE status = 1 ORDER BY id ASC');
 $categoriesList = [];
 if ($categoriesResult && $categoriesResult->num_rows > 0) {
@@ -1353,12 +1368,12 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
             $burnTime = !empty($cat['burn_time_badge']) ? $cat['burn_time_badge'] : '';
             $wickType = !empty($cat['wick_type']) ? $cat['wick_type'] : '';
             $desc = !empty($cat['description']) ? $cat['description'] : '';
-            $price = 30;
+            $price = $pricingSettings['vessel_c_price'] ?? 30;
             if (strcasecmp($vesselKey, 'D') === 0) {
-              $price = 40;
+              $price = $pricingSettings['vessel_d_price'] ?? 40;
             }
             if (strcasecmp($vesselKey, 'E') === 0) {
-              $price = 55;
+              $price = $pricingSettings['vessel_e_price'] ?? 55;
             }
             ?>
             <div class="vessel-card" data-vessel="<?= htmlspecialchars($vesselKey); ?>" data-sku="<?= htmlspecialchars($cat['sku'] ?? $vesselKey); ?>" data-price="<?= $price; ?>" onclick="selectVessel(this)">
@@ -1539,10 +1554,9 @@ if ($fragrancesResult && $fragrancesResult->num_rows > 0) {
     </div>
     <div class="price-rows">
       <div class="price-row"><span>SUBTOTAL</span><span id="mSubtotal">$40.00</span></div>
-      <div class="price-row"><span>SHIPPING</span><span>$9.00</span></div>
-      <div class="price-row"><span>ESTIMATED DELIVERY</span><span>5–7 business days</span></div>
+      <div class="price-row"><span>SHIPPING</span><span style="font-size:12px; color:#6b7280;">Calculated at checkout (FedEx)</span></div>
     </div>
-    <div class="price-total"><span>Total</span><span id="mTotal">$49.00</span></div>
+    <div class="price-total"><span>Total</span><span id="mTotal">$40.00</span></div>
     <div class="modal-actions">
       <button class="btn-edit" onclick="closeReview()">EDIT DETAILS</button>
       <button class="btn-cart">ADD TO CART</button>
@@ -3004,8 +3018,8 @@ function recalcPrice() {
   const subtotal = (state.vesselPrice + state.boxPrice) * state.qty;
   const mSub = document.getElementById('mSubtotal');
   const mTot = document.getElementById('mTotal');
-  if (mSub) mSub.textContent = `$${subtotal}.00`;
-  if (mTot) mTot.textContent = `$${subtotal + 9}.00`;
+  if (mSub) mSub.textContent = `$${subtotal.toFixed(2)}`;
+  if (mTot) mTot.textContent = `$${subtotal.toFixed(2)}`;
 }
 
 function changeQty(delta) {

@@ -30,6 +30,8 @@ return [
         '/admin/coupons/edit'       => 'Admin\CouponController@edit',
         '/admin/coupons/delete'     => 'Admin\CouponController@delete',
         '/admin/coupons/toggle'     => 'Admin\CouponController@toggle',
+        '/admin/candle_pricing'     => 'Admin\CandlePricingController@index',
+        '/admin/candle_pricing/update' => 'Admin\CandlePricingController@update',
         '/admin/logout'             => 'Admin\AdminLoginController@logout',
     ],
     'redirects' => [
@@ -49,6 +51,8 @@ return [
         '/add_accessory'   => '/admin/add_accessory',
         '/edit_accessory'  => '/admin/edit_accessory',
         '/list_accessory'  => '/admin/list_accessory',
+        '/candle_pricing'  => '/admin/candle_pricing',
+        '/builder_pricing' => '/admin/candle_pricing',
     ]
 ];
 ?>

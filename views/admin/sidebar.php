@@ -760,6 +760,14 @@ $base = ($scriptDir === '/' || $scriptDir === '.') ? '' : $scriptDir;
                     </svg>
                     Users
                 </a></li>
+                <!-- Candle Pricing - create a candle product pricing settings -->
+                <li><a href="<?php echo $base; ?>/admin/candle_pricing" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    Candle Pricing
+                </a></li>
                 <!-- Logout option (end session & redirect to /admin) -->
                 <li class="logout-item"><a href="<?php echo $base; ?>/admin/logout" id="logoutBtn" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
