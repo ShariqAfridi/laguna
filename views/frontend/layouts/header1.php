@@ -38,7 +38,12 @@
     .mobile-actions {
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 18px;
+    }
+    @media (max-width: 440px) {
+        .mobile-actions {
+            gap: 12px;
+        }
     }
 
     /* Cart icon wrapper inside mobile-actions */
@@ -230,6 +235,13 @@ if (!isset($base)) {
     <img class="logo-img" src="<?php echo $base; ?>/img/logo-wihtout-bg.png" alt="L V B luxury brand logo">
 </a>
     <div class="mobile-actions">
+        <!-- Accessibility ADA icon -->
+        <button class="mobile-cart-btn" onclick="if(typeof window.openAdaPanel==='function'){window.openAdaPanel();}else if(document.getElementById('adaTriggerBtn')){document.getElementById('adaTriggerBtn').click();}" aria-label="Accessibility Tools" title="Accessibility Tools (Alt+A)">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <circle cx="12" cy="4" r="2.2"/>
+                <path d="M12 7.5C8.2 7.5 5 8.7 5 8.7L5.7 10.5C5.7 10.5 7.9 9.5 10.2 9.3V13.5L7.8 19.3H10L11.4 15.7H12.6L14 19.3H16.2L13.8 13.5V9.3C16.1 9.5 18.3 10.5 18.3 10.5L19 8.7C19 8.7 15.8 7.5 12 7.5Z"/>
+            </svg>
+        </button>
         <!-- Search icon -->
         <button class="mobile-cart-btn" id="mobileSearchBtn" aria-label="Search products">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
