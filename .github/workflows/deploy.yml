@@ -1,4 +1,4 @@
-name: Deploy to Namecheap
+name: Laguna VIBE Live
 
 on:
   push:
@@ -23,6 +23,6 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           port: 21098
           script: |
-            cd /home/onlifwko/lagunavibe.onlinedemoserver2.com
+            cd /home/lagumobu/www/
             git reset --hard HEAD
             git pull https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ShariqAfridi/laguna.git main
