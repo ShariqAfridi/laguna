@@ -19,8 +19,8 @@ if (!isset($base)) {
             </svg>
         </button>
         <div class="lvb-popup-image-container">
-            <img src="<?php echo $base; ?>/img/popup-grand-opening.jpg" 
-                 alt="Laguna Vibe Grand Opening - 20% Off Your First Order - Code: LAGUNA20" 
+            <img src="<?php echo $base; ?>/img/popup-grand-opening.jpg?v=<?php echo filemtime(__DIR__ . '/../../public/assets/img/popup-grand-opening.jpg'); ?>" 
+                 alt="Laguna Vibe Grand Opening - 15% Off Your First Order - Code: LAGUNA15" 
                  class="lvb-popup-main-img" 
                  loading="eager" 
                  draggable="false" />
