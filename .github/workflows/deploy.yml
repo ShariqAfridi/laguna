@@ -21,8 +21,18 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
-          port: 21098 
+          port: 21098
+          timeout: 60s
+          command_timeout: 10m
           script: |
+            set -e
+
             cd /home/lagumobu/www/
+
+            echo "Resetting local changes..."
             git reset --hard HEAD
+
+            echo "Pulling latest code..."
             git pull https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ShariqAfridi/laguna.git main
+
+            echo "Deployment completed successfully."
